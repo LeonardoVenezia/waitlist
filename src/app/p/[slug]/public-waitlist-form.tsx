@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,10 +24,7 @@ interface SubscribeResult {
 
 declare global {
   interface Window {
-    turnstile?: {
-      render: (id: string, opts: { sitekey: string; callback: (token: string) => void }) => void;
-      reset: (id: string) => void;
-    };
+    turnstileCallback?: (token: string) => void;
   }
 }
 
@@ -44,33 +41,12 @@ export function PublicWaitlistForm({ publicKey, settings }: WaitlistFormProps) {
   const [result, setResult] = useState<SubscribeResult | null>(null);
   const [copied, setCopied] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
-  const turnstileRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Load Turnstile
+  // Register global callback for Turnstile auto-render
   useEffect(() => {
-    // Load Turnstile script if not already loaded
-    if (!document.getElementById("cf-turnstile-script")) {
-      const script = document.createElement("script");
-      script.id = "cf-turnstile-script";
-      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-    }
-
-    // Render Turnstile widget when script is ready
-    const checkTurnstile = setInterval(() => {
-      if (window.turnstile && turnstileRef.current) {
-        window.turnstile.render(turnstileRef.current.id, {
-          sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "",
-          callback: (token: string) => setTurnstileToken(token),
-        });
-        clearInterval(checkTurnstile);
-      }
-    }, 200);
-
-    return () => clearInterval(checkTurnstile);
+    window.turnstileCallback = (token: string) => setTurnstileToken(token);
+    return () => { window.turnstileCallback = undefined; };
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -193,9 +169,9 @@ export function PublicWaitlistForm({ publicKey, settings }: WaitlistFormProps) {
         </div>
 
         <div
-          id="turnstile-widget"
-          ref={turnstileRef}
-          className="flex justify-center"
+          className="cf-turnstile flex justify-center"
+          data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+          data-callback="turnstileCallback"
         />
 
         <Button type="submit" className="w-full" disabled={loading || !turnstileToken}>
