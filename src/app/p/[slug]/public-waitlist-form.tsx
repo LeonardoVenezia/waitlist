@@ -43,10 +43,37 @@ export function PublicWaitlistForm({ publicKey, settings }: WaitlistFormProps) {
   const [turnstileToken, setTurnstileToken] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Register global callback for Turnstile auto-render
+  // Load Turnstile script and render manually
   useEffect(() => {
-    window.turnstileCallback = (token: string) => setTurnstileToken(token);
-    return () => { window.turnstileCallback = undefined; };
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+    if (!siteKey) return;
+
+    const containerId = "turnstile-widget";
+
+    // Load the script if not already present
+    if (!document.querySelector('script[src*="turnstile"]')) {
+      const script = document.createElement("script");
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=turnstileReady";
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+
+    // Define the global onload callback
+    (window as any).turnstileReady = () => {
+      const el = document.getElementById(containerId);
+      if (el && (window as any).turnstile) {
+        (window as any).turnstile.render("#" + containerId, {
+          sitekey: siteKey,
+          callback: (token: string) => setTurnstileToken(token),
+        });
+      }
+    };
+
+    // If turnstile already loaded, render immediately
+    if ((window as any).turnstile) {
+      (window as any).turnstileReady();
+    }
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {

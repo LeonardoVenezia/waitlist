@@ -2,8 +2,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export interface LeaderboardEntry {
   position: number;
-  email: string;
+  email: string; // masked: j***@gmail.com
   referral_count: number;
+}
+
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!local || !domain) return email;
+  const visible = local.slice(0, Math.min(2, local.length));
+  return `${visible}${"*".repeat(Math.max(1, local.length - 2))}@${domain}`;
 }
 
 export async function getLeaderboard(
@@ -25,7 +32,7 @@ export async function getLeaderboard(
 
   return data.map((entry, index) => ({
     position: index + 1,
-    email: entry.email,
+    email: maskEmail(entry.email),
     referral_count: entry.referral_count,
   }));
 }

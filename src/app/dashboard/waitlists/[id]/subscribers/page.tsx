@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { SubscribersTable } from "./subscribers-table";
 
 export default async function SubscribersPage(props: { params: Promise<{ id: string }> }) {
@@ -42,6 +44,14 @@ export default async function SubscribersPage(props: { params: Promise<{ id: str
             {waitlist.name} — {subscribers?.length ?? 0} active
             {hiddenCount ? ` (${hiddenCount} hidden)` : ""}
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href={`/dashboard/waitlists/${id}/export`}>
+            <Button variant="outline" size="sm">Export</Button>
+          </Link>
+          <Link href={`/dashboard/waitlists/${id}/upgrade`}>
+            <Button size="sm">Upgrade plan</Button>
+          </Link>
         </div>
       </div>
       <SubscribersTable
