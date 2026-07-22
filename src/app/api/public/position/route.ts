@@ -1,6 +1,10 @@
-import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSubscriberPosition } from "@/lib/api/position";
+import { jsonResponse, corsOptionsResponse } from "@/lib/api/cors";
+
+export async function OPTIONS() {
+  return corsOptionsResponse();
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -8,7 +12,7 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
 
   if (!publicKey || !code) {
-    return NextResponse.json(
+    return jsonResponse(
       { error: "Missing public_key or code" },
       { status: 400 },
     );
@@ -25,7 +29,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (!waitlist) {
-    return NextResponse.json(
+    return jsonResponse(
       { error: "Invalid public key" },
       { status: 404 },
     );
@@ -40,7 +44,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (!subscriber) {
-    return NextResponse.json(
+    return jsonResponse(
       { error: "Subscriber not found" },
       { status: 404 },
     );
@@ -48,7 +52,7 @@ export async function GET(request: Request) {
 
   const position = await getSubscriberPosition(subscriber.id);
 
-  return NextResponse.json({
+  return jsonResponse({
     position,
     referral_count: subscriber.referral_count,
   });

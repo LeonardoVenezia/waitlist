@@ -1,5 +1,9 @@
-import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { jsonResponse, corsOptionsResponse } from "@/lib/api/cors";
+
+export async function OPTIONS() {
+  return corsOptionsResponse();
+}
 
 export async function GET(
   _request: Request,
@@ -17,14 +21,14 @@ export async function GET(
     .maybeSingle();
 
   if (!waitlist) {
-    return NextResponse.json(
+    return jsonResponse(
       { error: "Waitlist not found" },
       { status: 404 },
     );
   }
 
   // Only expose what the widget/hosted page needs
-  return NextResponse.json({
+  return jsonResponse({
     name: waitlist.name,
     slug: waitlist.slug,
     settings: waitlist.settings,

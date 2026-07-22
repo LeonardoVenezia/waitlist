@@ -13,8 +13,13 @@ import { renderVerificationEmail } from "@/emails/verify";
 import { createVerificationToken } from "@/lib/api/verify-token";
 import { sendSlackNotification } from "@/lib/api/slack";
 import { hasFeature } from "@/lib/plan-gates";
+import { jsonResponse, corsOptionsResponse } from "@/lib/api/cors";
 import { headers } from "next/headers";
 import type { Json } from "@/lib/supabase/types";
+
+export async function OPTIONS() {
+  return corsOptionsResponse();
+}
 
 export async function POST(request: Request) {
   const supabase = createAdminClient();
@@ -45,7 +50,7 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (!waitlist) {
-    return NextResponse.json(
+    return jsonResponse(
       { error: "Invalid public key" },
       { status: 404 },
     );
@@ -58,7 +63,7 @@ export async function POST(request: Request) {
   if (turnstileToken) {
     const valid = await validateTurnstileToken(turnstileToken);
     if (!valid) {
-      return NextResponse.json(
+      return jsonResponse(
         { error: "Invalid captcha. Please try again." },
         { status: 400 },
       );
@@ -68,7 +73,7 @@ export async function POST(request: Request) {
   // 3. Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    return NextResponse.json(
+    return jsonResponse(
       { error: "Invalid email format" },
       { status: 400 },
     );
@@ -76,7 +81,7 @@ export async function POST(request: Request) {
 
   // 4. Check disposable email
   if (isDisposableEmail(email)) {
-    return NextResponse.json(
+    return jsonResponse(
       { error: "Disposable email addresses are not allowed" },
       { status: 400 },
     );
@@ -87,7 +92,7 @@ export async function POST(request: Request) {
   const ip = headersList.get("x-forwarded-for") ?? headersList.get("x-real-ip") ?? "unknown";
   const rateCheck = checkRateLimit(ip);
   if (!rateCheck.allowed) {
-    return NextResponse.json(
+    return jsonResponse(
       { error: "Too many requests. Please try again later." },
       { status: 429 },
     );
@@ -111,7 +116,7 @@ export async function POST(request: Request) {
     referralCode = generateReferralCode();
   }
   if (codeExists) {
-    return NextResponse.json(
+    return jsonResponse(
       { error: "Failed to generate unique code. Please try again." },
       { status: 500 },
     );
@@ -126,7 +131,7 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (existingSubscriber) {
-    return NextResponse.json(
+    return jsonResponse(
       { error: "This email is already on the waitlist" },
       { status: 409 },
     );
@@ -178,12 +183,12 @@ export async function POST(request: Request) {
   if (insertError) {
     // Handle duplicate email race condition
     if (insertError.code === "23505") {
-      return NextResponse.json(
+      return jsonResponse(
         { error: "This email is already on the waitlist" },
         { status: 409 },
       );
     }
-    return NextResponse.json(
+    return jsonResponse(
       { error: "Failed to join waitlist" },
       { status: 500 },
     );
@@ -281,7 +286,7 @@ export async function POST(request: Request) {
     ).catch(() => {});
   }
 
-  return NextResponse.json({
+  return jsonResponse({
     id: subscriber.id,
     email,
     position,
