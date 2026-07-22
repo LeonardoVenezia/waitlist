@@ -1,5 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getAccountId } from "@/lib/api/account";
 import { CreateWaitlistForm } from "./create-waitlist-form";
 
 export default async function NewWaitlistPage() {
@@ -10,14 +11,8 @@ export default async function NewWaitlistPage() {
 
   if (!user) redirect("/login");
 
-  // Get the user's account
-  const { data: member } = await supabase
-    .from("account_members")
-    .select("account_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const accountId = await getAccountId(user.id);
+  if (!accountId) redirect("/login");
 
-  if (!member) redirect("/login");
-
-  return <CreateWaitlistForm accountId={member.account_id} />;
+  return <CreateWaitlistForm accountId={accountId} />;
 }
