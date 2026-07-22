@@ -61,7 +61,7 @@ export function CreateWaitlistForm({
                 name="slug"
                 placeholder="my-product"
                 required
-                pattern="[a-z0-9-]+"
+                pattern="[a-z0-9\-]+"
                 title="Lowercase letters, numbers, and hyphens only"
               />
               <p className="text-xs text-muted-foreground">

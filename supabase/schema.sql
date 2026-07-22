@@ -50,10 +50,9 @@ create policy "Members read" on account_members
 create policy "Owner manage members" on account_members
   for all using (
     exists (
-      select 1 from account_members am
-      where am.account_id = account_members.account_id
-        and am.user_id = auth.uid()
-        and am.role = 'owner'
+      select 1 from accounts
+      where accounts.id = account_members.account_id
+        and accounts.owner_id = auth.uid()
     )
   );
 
