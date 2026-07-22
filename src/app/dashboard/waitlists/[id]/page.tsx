@@ -41,11 +41,14 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
           <p className="text-sm text-muted-foreground">/p/{waitlist.slug}</p>
         </div>
         <div className="flex gap-2">
+          <Link href={`/dashboard/waitlists/${id}/subscribers`}>
+            <Button size="sm">Subscribers</Button>
+          </Link>
+          <Link href={`/dashboard/waitlists/${id}/analytics`}>
+            <Button variant="outline" size="sm">Analytics</Button>
+          </Link>
           <Link href={`/dashboard/waitlists/${id}/settings`}>
             <Button variant="outline" size="sm">Settings</Button>
-          </Link>
-          <Link href={`/dashboard/waitlists/${id}/embed`}>
-            <Button variant="outline" size="sm">Embed</Button>
           </Link>
         </div>
       </div>
@@ -60,17 +63,59 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
         </div>
       ) : null}
 
+      {/* Navigation tabs */}
+      <nav className="flex gap-1 border-b">
+        <Link
+          href={`/dashboard/waitlists/${id}/subscribers`}
+          className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          Subscribers
+        </Link>
+        <Link
+          href={`/dashboard/waitlists/${id}/analytics`}
+          className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          Analytics
+        </Link>
+        <Link
+          href={`/dashboard/waitlists/${id}/export`}
+          className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          Export
+        </Link>
+        <Link
+          href={`/dashboard/waitlists/${id}/embed`}
+          className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          Embed
+        </Link>
+        <Link
+          href={`/dashboard/waitlists/${id}/settings`}
+          className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          Settings
+        </Link>
+        <Link
+          href={`/dashboard/waitlists/${id}/upgrade`}
+          className="px-3 py-2 text-sm font-medium text-primary hover:text-primary/80"
+        >
+          Upgrade
+        </Link>
+      </nav>
+
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Subscribers
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{activeCount ?? 0}</p>
-          </CardContent>
-        </Card>
+        <Link href={`/dashboard/waitlists/${id}/subscribers`}>
+          <Card className="transition-colors hover:bg-accent/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Subscribers
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{activeCount ?? 0}</p>
+            </CardContent>
+          </Card>
+        </Link>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
