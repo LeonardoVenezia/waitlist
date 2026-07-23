@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/types";
-import { getPaddleClientToken, getPaddlePriceIds } from "@/lib/paddle";
+import { getPaddlePriceIds } from "@/lib/paddle";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,18 +16,17 @@ import {
 
 type Waitlist = Database["public"]["Tables"]["waitlists"]["Row"];
 
-type PaddleInstance = {
-  Checkout: {
-    open: (options: {
-      items: Array<{ priceId: string; quantity: number }>;
-      customData: Record<string, string>;
-    }) => void;
-  };
-};
-
 declare global {
   interface Window {
-    Paddle?: PaddleInstance;
+    Paddle?: {
+      Checkout: {
+        open: (options: {
+          items: Array<{ priceId: string; quantity: number }>;
+          customer?: { email: string };
+          customData: Record<string, string>;
+        }) => void;
+      };
+    };
   }
 }
 
@@ -41,8 +41,26 @@ interface PlanOption {
 
 export function UpgradeContent({ waitlist }: { waitlist: Waitlist }) {
   const [paddleReady, setPaddleReady] = useState(false);
-  const clientToken = getPaddleClientToken();
+  const [userEmail, setUserEmail] = useState("");
   const priceIds = getPaddlePriceIds();
+
+  useEffect(() => {
+    createClient()
+      .auth.getUser()
+      .then(({ data }) => {
+        if (data?.user?.email) setUserEmail(data.user.email);
+      });
+  }, []);
+
+  useEffect(() => {
+    const check = setInterval(() => {
+      if (window.Paddle) {
+        clearInterval(check);
+        setPaddleReady(true);
+      }
+    }, 200);
+    return () => clearInterval(check);
+  }, []);
 
   const plans: PlanOption[] = [
     {
@@ -77,20 +95,6 @@ export function UpgradeContent({ waitlist }: { waitlist: Waitlist }) {
     },
   ];
 
-  useEffect(() => {
-    if (!clientToken) return;
-    // Paddle initializes via the script loaded in the layout
-    // It reads NEXT_PUBLIC_PADDLE_CLIENT_TOKEN from the global Paddle object
-    const checkPaddle = () => {
-      if (window.Paddle) {
-        setPaddleReady(true);
-      } else {
-        setTimeout(checkPaddle, 200);
-      }
-    };
-    checkPaddle();
-  }, [clientToken]);
-
   const openCheckout = useCallback(
     (planId: string) => {
       const plan = plans.find((p) => p.id === planId);
@@ -98,6 +102,7 @@ export function UpgradeContent({ waitlist }: { waitlist: Waitlist }) {
 
       window.Paddle.Checkout.open({
         items: [{ priceId: plan.priceId, quantity: 1 }],
+        customer: { email: userEmail },
         customData: {
           account_id: waitlist.account_id,
           waitlist_id: waitlist.id,
@@ -105,7 +110,7 @@ export function UpgradeContent({ waitlist }: { waitlist: Waitlist }) {
         },
       });
     },
-    [waitlist.account_id, waitlist.id, plans],
+    [waitlist.account_id, waitlist.id, plans, userEmail],
   );
 
   if (waitlist.plan === "scale") {
@@ -130,16 +135,13 @@ export function UpgradeContent({ waitlist }: { waitlist: Waitlist }) {
       <div className="grid gap-6 sm:grid-cols-2">
         {plans.map((plan) => {
           const isCurrent = waitlist.plan === plan.id;
-          const isDowngrade =
-            (waitlist.plan === "grow" && plan.id === "launch");
+          const isDowngrade = waitlist.plan === "grow" && plan.id === "launch";
           const canBuy = !isCurrent && !isDowngrade && paddleReady;
 
           return (
             <Card
               key={plan.id}
-              className={
-                isCurrent ? "border-muted opacity-60" : ""
-              }
+              className={isCurrent ? "border-muted opacity-60" : ""}
             >
               <CardHeader>
                 <CardTitle>{plan.name}</CardTitle>
