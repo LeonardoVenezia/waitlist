@@ -18,11 +18,6 @@ type Waitlist = Database["public"]["Tables"]["waitlists"]["Row"];
 type PaddleInstance = {
   Checkout: {
     open: (options: {
-      settings: {
-        displayMode: "overlay" | "inline";
-        theme: string;
-        locale: string;
-      };
       items: Array<{ priceId: string; quantity: number }>;
       customData: Record<string, string>;
     }) => void;
@@ -102,11 +97,6 @@ export function UpgradeContent({ waitlist }: { waitlist: Waitlist }) {
       if (!plan || !window.Paddle) return;
 
       window.Paddle.Checkout.open({
-        settings: {
-          displayMode: "overlay",
-          theme: "light",
-          locale: "en",
-        },
         items: [{ priceId: plan.priceId, quantity: 1 }],
         customData: {
           account_id: waitlist.account_id,

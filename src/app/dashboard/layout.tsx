@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import Script from "next/script";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { UserNav } from "@/components/dashboard/user-nav";
+import { PaddleInit } from "@/components/shared/paddle-init";
 
 export default async function DashboardLayout({
   children,
@@ -35,9 +37,14 @@ export default async function DashboardLayout({
         </header>
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
-      {/* Paddle script loaded here */}
       {process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN && (
-        <script src="https://cdn.paddle.com/paddle/v2/paddle.js" />
+        <>
+          <Script
+            src="https://cdn.paddle.com/paddle/v2/paddle.js"
+            strategy="afterInteractive"
+          />
+          <PaddleInit />
+        </>
       )}
     </div>
   );
