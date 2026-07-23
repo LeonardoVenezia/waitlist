@@ -19,5 +19,13 @@ export default async function UpgradePage(props: { params: Promise<{ id: string 
 
   if (!waitlist) notFound();
 
-  return <UpgradeContent waitlist={waitlist} />;
+  return (
+    <UpgradeContent
+      waitlist={waitlist}
+      priceIds={{
+        launch: process.env.PADDLE_PRICE_LAUNCH ?? "",
+        grow: process.env.PADDLE_PRICE_GROW ?? "",
+      }}
+    />
+  );
 }

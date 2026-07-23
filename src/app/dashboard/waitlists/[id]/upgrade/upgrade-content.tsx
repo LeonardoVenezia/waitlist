@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/types";
-import { getPaddlePriceIds } from "@/lib/paddle";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -39,10 +38,16 @@ interface PlanOption {
   features: string[];
 }
 
-export function UpgradeContent({ waitlist }: { waitlist: Waitlist }) {
+export function UpgradeContent({
+  waitlist,
+  priceIds,
+}: {
+  waitlist: Waitlist;
+  priceIds: { launch: string; grow: string };
+}) {
   const [paddleReady, setPaddleReady] = useState(false);
   const [userEmail, setUserEmail] = useState("");
-  const priceIds = getPaddlePriceIds();
+
 
   useEffect(() => {
     createClient()
