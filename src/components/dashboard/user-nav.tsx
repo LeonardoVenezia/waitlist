@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface UserNavProps {
   email: string;
@@ -36,9 +35,9 @@ export function UserNav({ email, fullName }: UserNavProps) {
         onClick={() => setOpen(!open)}
         className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <Avatar className="h-8 w-8">
-          <AvatarFallback>{initials}</AvatarFallback>
-        </Avatar>
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm select-none">
+          {initials}
+        </span>
       </button>
 
       {open && (
