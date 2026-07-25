@@ -1,7 +1,6 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   Table,
   TableBody,
@@ -12,46 +11,30 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-type Purchase = {
-  id: string;
-  plan: string;
-  amount: number;
-  currency: string;
-  created_at: string;
-  status: string;
-};
+export default async function PurchasesPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-export default function PurchasesPage() {
-  const [purchases, setPurchases] = useState<Purchase[] | null>(null);
-  const [loading, setLoading] = useState(true);
+  if (!user) redirect("/login");
 
-  useEffect(() => {
-    const supabase = createClient();
+  // Use admin client to avoid cookie conflicts with the layout's server client
+  const admin = createAdminClient();
 
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
+  const { data: account } = await admin
+    .from("accounts")
+    .select("id")
+    .eq("owner_id", user.id)
+    .maybeSingle();
 
-      const { data: account } = await supabase
-        .from("accounts")
-        .select("id")
-        .eq("owner_id", user.id)
-        .maybeSingle();
+  if (!account) return null;
 
-      if (!account) {
-        setLoading(false);
-        return;
-      }
-
-      const { data } = await supabase
-        .from("purchases")
-        .select("*")
-        .eq("account_id", account.id)
-        .order("created_at", { ascending: false });
-
-      setPurchases(data ?? []);
-      setLoading(false);
-    });
-  }, []);
+  const { data: purchases } = await admin
+    .from("purchases")
+    .select("*")
+    .eq("account_id", account.id)
+    .order("created_at", { ascending: false });
 
   return (
     <div className="space-y-6">
@@ -61,9 +44,7 @@ export default function PurchasesPage() {
           <CardTitle>Transaction history</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <p className="text-sm text-muted-foreground">Loading...</p>
-          ) : purchases && purchases.length > 0 ? (
+          {purchases && purchases.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
