@@ -66,7 +66,12 @@ export default async function PurchasesPage() {
               </TableBody>
             </Table>
           ) : (
-            <p className="text-sm text-muted-foreground">No purchases yet.</p>
+            <div className="flex flex-col items-center py-12 text-center">
+              <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-base mb-3">
+                🧾
+              </div>
+              <p className="text-sm text-muted-foreground">No purchases yet.</p>
+            </div>
           )}
         </CardContent>
       </Card>

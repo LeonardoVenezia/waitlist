@@ -126,7 +126,7 @@ export function PublicWaitlistForm({ publicKey, settings }: WaitlistFormProps) {
 
         {thankYou.show_leaderboard !== false && result.leaderboard && result.leaderboard.length > 0 && (
           <div className="rounded-lg border p-4 text-left">
-            <h3 className="mb-2 text-sm font-semibold">Leaderboard</h3>
+            <h3 className="mb-2 text-sm font-medium">Leaderboard</h3>
             <div className="space-y-1 text-sm">
               {result.leaderboard.map((entry) => (
                 <div key={entry.position} className="flex items-center justify-between">

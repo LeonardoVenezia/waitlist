@@ -38,7 +38,7 @@ export default async function HostedPage(props: { params: Promise<{ slug: string
           />
         )}
 
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-3xl">
           {(hero.title as string) || waitlist.name}
         </h1>
 

@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function WaitlistDetailPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params;
@@ -21,128 +20,172 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
 
   if (!waitlist) notFound();
 
-  const { count: activeCount } = await supabase
-    .from("subscribers")
-    .select("*", { count: "exact", head: true })
-    .eq("waitlist_id", id)
-    .eq("status", "active");
+  const [{ count: activeCount }, { count: hiddenCount }, { data: recent }] = await Promise.all([
+    supabase
+      .from("subscribers")
+      .select("*", { count: "exact", head: true })
+      .eq("waitlist_id", id)
+      .eq("status", "active"),
+    supabase
+      .from("subscribers")
+      .select("*", { count: "exact", head: true })
+      .eq("waitlist_id", id)
+      .eq("status", "hidden"),
+    supabase
+      .from("subscribers")
+      .select("email, referral_count, created_at")
+      .eq("waitlist_id", id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(5),
+  ]);
 
-  const { count: hiddenCount } = await supabase
-    .from("subscribers")
-    .select("*", { count: "exact", head: true })
-    .eq("waitlist_id", id)
-    .eq("status", "hidden");
+  const totalActive = activeCount ?? 0;
+  const totalHidden = hiddenCount ?? 0;
+  const nearLimit = waitlist.submission_limit && totalActive >= waitlist.submission_limit * 0.8;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl">{waitlist.name}</h1>
-          <p className="text-sm text-muted-foreground">/p/{waitlist.slug}</p>
+    <div className="space-y-8">
+      {/* Header: title + slug + upgrade action */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl truncate">{waitlist.name}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            /p/{waitlist.slug}
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Link href={`/dashboard/waitlists/${id}/subscribers`}>
-            <Button size="sm">Subscribers</Button>
-          </Link>
-          <Link href={`/dashboard/waitlists/${id}/analytics`}>
-            <Button variant="outline" size="sm">Analytics</Button>
-          </Link>
-          <Link href={`/dashboard/waitlists/${id}/settings`}>
-            <Button variant="outline" size="sm">Settings</Button>
-          </Link>
+        <Link href={`/dashboard/waitlists/${id}/upgrade`}>
+          <Button size="sm">Upgrade plan</Button>
+        </Link>
+      </div>
+
+      {/* Compact stat bar */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg bg-card px-5 py-3 text-sm">
+        <div>
+          <span className="text-muted-foreground">Subscribers</span>
+          <span className="ml-2 font-medium">{totalActive}</span>
+          {totalHidden > 0 && (
+            <span className="ml-1 text-muted-foreground">
+              ({totalHidden} hidden)
+            </span>
+          )}
+        </div>
+        <div className="h-4 w-px bg-border" />
+        <div>
+          <span className="text-muted-foreground">Plan</span>
+          <span className="ml-2 font-medium capitalize">{waitlist.plan}</span>
+          <span className="ml-1 text-muted-foreground">
+            {waitlist.submission_limit ? `/ ${waitlist.submission_limit} max` : "· Unlimited"}
+          </span>
+        </div>
+        <div className="h-4 w-px bg-border" />
+        <div>
+          <span className="text-muted-foreground">Referral link</span>
+          <code className="ml-2 text-xs text-muted-foreground">
+            {process.env.NEXT_PUBLIC_APP_URL}/p/{waitlist.slug}
+          </code>
         </div>
       </div>
 
-      {hiddenCount && hiddenCount > 0 ? (
+      {/* Hidden subscribers alert */}
+      {totalHidden > 0 && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          {hiddenCount} subscriber{hiddenCount === 1 ? "" : "s"} hidden —{" "}
+          {totalHidden} subscriber{totalHidden === 1 ? "" : "s"} hidden —{" "}
           <Link href={`/dashboard/waitlists/${id}/upgrade`} className="font-medium underline">
             upgrade your plan
           </Link>{" "}
           to see them.
         </div>
-      ) : null}
+      )}
 
-      {/* Navigation tabs */}
+      {/* Near-limit alert */}
+      {nearLimit && totalHidden === 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          You&apos;re approaching your plan limit ({totalActive} of {waitlist.submission_limit}).{" "}
+          <Link href={`/dashboard/waitlists/${id}/upgrade`} className="font-medium underline">
+            Upgrade to keep growing
+          </Link>
+        </div>
+      )}
+
+      {/* Tab navigation */}
       <nav className="flex gap-1 border-b">
-        <Link
-          href={`/dashboard/waitlists/${id}/subscribers`}
-          className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
-        >
-          Subscribers
-        </Link>
-        <Link
-          href={`/dashboard/waitlists/${id}/analytics`}
-          className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
-        >
-          Analytics
-        </Link>
-        <Link
-          href={`/dashboard/waitlists/${id}/export`}
-          className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
-        >
-          Export
-        </Link>
-        <Link
-          href={`/dashboard/waitlists/${id}/embed`}
-          className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
-        >
-          Embed
-        </Link>
-        <Link
-          href={`/dashboard/waitlists/${id}/settings`}
-          className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
-        >
-          Settings
-        </Link>
-        <Link
-          href={`/dashboard/waitlists/${id}/upgrade`}
-          className="px-3 py-2 text-sm font-medium text-primary hover:text-primary/80"
-        >
-          Upgrade
-        </Link>
+        {[
+          { label: "Subscribers", href: "subscribers" },
+          { label: "Analytics", href: "analytics" },
+          { label: "Export", href: "export" },
+          { label: "Embed", href: "embed" },
+          { label: "Settings", href: "settings" },
+        ].map((tab) => {
+          // Overview tab is the current page — no link needed since we're on it
+          return (
+            <Link
+              key={tab.href}
+              href={`/dashboard/waitlists/${id}/${tab.href}`}
+              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {tab.label}
+            </Link>
+          );
+        })}
       </nav>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Link href={`/dashboard/waitlists/${id}/subscribers`}>
-          <Card className="transition-colors hover:bg-accent/50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Subscribers
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl">{activeCount ?? 0}</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Plan
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold capitalize">{waitlist.plan}</p>
-            <p className="text-xs text-muted-foreground">
-              {waitlist.submission_limit
-                ? `${waitlist.submission_limit} max`
-                : "Unlimited"}
+      {/* Overview content: recent signups + quick stats */}
+      <div className="grid gap-8 lg:grid-cols-3">
+        {/* Left: recent signups */}
+        <div className="lg:col-span-2 space-y-4">
+          <h2 className="text-base">Recent signups</h2>
+          {recent && recent.length > 0 ? (
+            <div className="space-y-1">
+              {recent.map((s, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-accent/30 transition-colors"
+                >
+                  <span>{s.email}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {s.referral_count > 0
+                      ? `${s.referral_count} referral${s.referral_count > 1 ? "s" : ""}`
+                      : "new"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No signups yet. Share your waitlist to get started.
             </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Referral link
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground break-all">
-              {process.env.NEXT_PUBLIC_APP_URL}/p/{waitlist.slug}
-            </p>
-          </CardContent>
-        </Card>
+          )}
+          {recent && recent.length > 0 && (
+            <Link
+              href={`/dashboard/waitlists/${id}/subscribers`}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              View all subscribers →
+            </Link>
+          )}
+        </div>
+
+        {/* Right: quick stats */}
+        <div className="space-y-4">
+          <h2 className="text-base">At a glance</h2>
+          <div className="space-y-3">
+            <div className="rounded-lg bg-card px-4 py-3">
+              <p className="text-xs text-muted-foreground">Active subscribers</p>
+              <p className="text-xl mt-0.5">{totalActive}</p>
+            </div>
+            <div className="rounded-lg bg-card px-4 py-3">
+              <p className="text-xs text-muted-foreground">Plan limit</p>
+              <p className="text-xl mt-0.5">{waitlist.submission_limit ?? "Unlimited"}</p>
+            </div>
+            <div className="rounded-lg bg-card px-4 py-3">
+              <p className="text-xs text-muted-foreground">Referral link</p>
+              <p className="text-xs font-mono mt-1 text-muted-foreground break-all">
+                {process.env.NEXT_PUBLIC_APP_URL}/p/{waitlist.slug}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
