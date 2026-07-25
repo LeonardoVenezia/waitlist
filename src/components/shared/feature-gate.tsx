@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { hasFeature, type Plan } from "@/lib/plan-gates";
+import { hasFeature, type Plan } from "@/lib/plans";
 
 interface FeatureGateProps {
   plan: Plan;

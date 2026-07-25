@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
 import Link from "next/link";
 import type { Database } from "@/lib/supabase/types";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -16,37 +14,19 @@ import {
 
 type Subscriber = Database["public"]["Tables"]["subscribers"]["Row"];
 
-const PAGE_SIZE = 25;
-
 export function SubscribersTable({
   subscribers,
   hiddenCount,
   waitlistId,
+  page,
+  totalPages,
 }: {
   subscribers: Subscriber[];
   hiddenCount: number;
   waitlistId: string;
+  page: number;
+  totalPages: number;
 }) {
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(0);
-
-  const filtered = useMemo(() => {
-    if (!search.trim()) return subscribers;
-    const q = search.toLowerCase();
-    return subscribers.filter(
-      (s) =>
-        s.email.toLowerCase().includes(q) ||
-        s.referral_code.toLowerCase().includes(q),
-    );
-  }, [subscribers, search]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages - 1);
-  const paged = filtered.slice(
-    currentPage * PAGE_SIZE,
-    (currentPage + 1) * PAGE_SIZE,
-  );
-
   return (
     <div className="space-y-4">
       {hiddenCount > 0 && (
@@ -62,16 +42,6 @@ export function SubscribersTable({
         </div>
       )}
 
-      <Input
-        placeholder="Search by email or referral code…"
-        value={search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setPage(0);
-        }}
-        className="max-w-sm"
-      />
-
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -84,20 +54,20 @@ export function SubscribersTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paged.length === 0 ? (
+            {subscribers.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={5}
                   className="text-center text-muted-foreground"
                 >
-                  {search ? "No matching subscribers" : "No subscribers yet"}
+                  No subscribers yet
                 </TableCell>
               </TableRow>
             ) : (
-              paged.map((sub, i) => (
+              subscribers.map((sub, i) => (
                 <TableRow key={sub.id}>
                   <TableCell className="font-mono text-xs">
-                    {currentPage * PAGE_SIZE + i + 1}
+                    {page * 25 + i + 1}
                   </TableCell>
                   <TableCell className="font-medium">{sub.email}</TableCell>
                   <TableCell className="text-center">
@@ -128,28 +98,22 @@ export function SubscribersTable({
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>
-            {filtered.length} subscriber{filtered.length !== 1 ? "s" : ""}
-          </span>
+          <span>Page {page + 1} of {totalPages}</span>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === 0}
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
+            <Link
+              href={page > 0 ? `/dashboard/waitlists/${waitlistId}/subscribers?page=${page}` : "#"}
             >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage >= totalPages - 1}
-              onClick={() =>
-                setPage((p) => Math.min(totalPages - 1, p + 1))
-              }
+              <Button variant="outline" size="sm" disabled={page === 0}>
+                Previous
+              </Button>
+            </Link>
+            <Link
+              href={page < totalPages - 1 ? `/dashboard/waitlists/${waitlistId}/subscribers?page=${page + 2}` : "#"}
             >
-              Next
-            </Button>
+              <Button variant="outline" size="sm" disabled={page >= totalPages - 1}>
+                Next
+              </Button>
+            </Link>
           </div>
         </div>
       )}

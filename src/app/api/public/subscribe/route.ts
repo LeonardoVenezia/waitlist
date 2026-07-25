@@ -12,7 +12,7 @@ import { renderSignupNotificationEmail } from "@/emails/signup-notification";
 import { renderVerificationEmail } from "@/emails/verify";
 import { createVerificationToken } from "@/lib/api/verify-token";
 import { sendSlackNotification } from "@/lib/api/slack";
-import { hasFeature } from "@/lib/plan-gates";
+import { hasFeature } from "@/lib/plans";
 import { jsonResponse, corsOptionsResponse } from "@/lib/api/cors";
 import { headers } from "next/headers";
 import type { Json } from "@/lib/supabase/types";

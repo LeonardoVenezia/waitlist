@@ -2,76 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-const plans = [
-  {
-    name: "Free",
-    price: "$0",
-    description: "Perfect for testing the waters",
-    limit: "150 submissions",
-    features: [
-      "Widget embed",
-      "Custom form",
-      "Referral system",
-      "Export CSV/XLSX",
-      "Basic analytics",
-      "Email notifications",
-    ],
-    cta: "Get started",
-    href: "/signup",
-  },
-  {
-    name: "Launch",
-    price: "$29",
-    description: "For launching your product",
-    limit: "500 submissions",
-    popular: true,
-    features: [
-      "Everything in Free",
-      "Double opt-in verification",
-      "Welcome email",
-      "Slack notifications",
-      "Position adjustments",
-      "Rewards & milestones",
-      "Custom thank-you page",
-      "Multi-language",
-    ],
-    cta: "Buy Launch",
-    href: "/signup",
-  },
-  {
-    name: "Grow",
-    price: "$79",
-    description: "For growing products",
-    limit: "10,000 submissions",
-    features: [
-      "Everything in Launch",
-      "Team members (unlimited)",
-      "Webhooks & Zapier",
-      "Remove branding",
-      "AJAX submissions",
-      "Conversion tracking",
-      "Priority support",
-    ],
-    cta: "Buy Grow",
-    href: "/signup",
-  },
-  {
-    name: "Scale",
-    price: "Custom",
-    description: "For high-volume products",
-    limit: "100,000+ submissions",
-    features: [
-      "Everything in Grow",
-      "Dedicated manager",
-      "Custom integrations",
-      "Beta features",
-      "Onboarding",
-    ],
-    cta: "Talk to us",
-    href: "#contact",
-  },
-];
+import { PLANS } from "@/lib/plans";
 
 export default function PricingPage() {
   return (
@@ -86,9 +17,9 @@ export default function PricingPage() {
           </p>
         </div>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {plans.map((plan) => (
+          {PLANS.map((plan) => (
             <Card
-              key={plan.name}
+              key={plan.id}
               className={`relative flex flex-col ${plan.popular ? "border-primary shadow-lg" : ""}`}
             >
               {plan.popular && (
@@ -104,28 +35,15 @@ export default function PricingPage() {
                 <div>
                   <span className="text-3xl font-bold">{plan.price}</span>
                   {plan.price !== "Custom" && (
-                    <span className="text-sm text-muted-foreground">
-                      {" "}
-                      one-time
-                    </span>
+                    <span className="text-sm text-muted-foreground"> one-time</span>
                   )}
                 </div>
                 <p className="text-sm font-medium">{plan.limit}</p>
                 <ul className="space-y-2 text-sm">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-2">
-                      <svg
-                        className="h-4 w-4 shrink-0 text-primary"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="2"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M4.5 12.75l6 6 9-13.5"
-                        />
+                      <svg className="h-4 w-4 shrink-0 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                       </svg>
                       {feature}
                     </li>
@@ -134,10 +52,7 @@ export default function PricingPage() {
               </CardContent>
               <CardFooter>
                 <Link href={plan.href} className="w-full">
-                  <Button
-                    className="w-full"
-                    variant={plan.popular ? "default" : "outline"}
-                  >
+                  <Button className="w-full" variant={plan.popular ? "default" : "outline"}>
                     {plan.cta}
                   </Button>
                 </Link>

@@ -4,8 +4,16 @@ import { notFound, redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { SubscribersTable } from "./subscribers-table";
 
-export default async function SubscribersPage(props: { params: Promise<{ id: string }> }) {
+const PAGE_SIZE = 25;
+
+export default async function SubscribersPage(props: {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ page?: string }>;
+}) {
   const { id } = await props.params;
+  const sp = await props.searchParams;
+  const pageNum = Math.max(0, Number(sp?.page ?? 1) - 1);
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -21,19 +29,26 @@ export default async function SubscribersPage(props: { params: Promise<{ id: str
 
   if (!waitlist) notFound();
 
-  const { data: subscribers } = await supabase
-    .from("subscribers")
-    .select("*")
-    .eq("waitlist_id", id)
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(50);
+  const from = pageNum * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
 
-  const { count: hiddenCount } = await supabase
-    .from("subscribers")
-    .select("*", { count: "exact", head: true })
-    .eq("waitlist_id", id)
-    .eq("status", "hidden");
+  const [{ data: subscribers, count: totalCount }, { count: hiddenCount }] =
+    await Promise.all([
+      supabase
+        .from("subscribers")
+        .select("*", { count: "exact", head: false })
+        .eq("waitlist_id", id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .range(from, to),
+      supabase
+        .from("subscribers")
+        .select("*", { count: "exact", head: true })
+        .eq("waitlist_id", id)
+        .eq("status", "hidden"),
+    ]);
+
+  const totalPages = Math.ceil((totalCount ?? 0) / PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -41,7 +56,7 @@ export default async function SubscribersPage(props: { params: Promise<{ id: str
         <div>
           <h1 className="text-2xl font-semibold">Subscribers</h1>
           <p className="text-sm text-muted-foreground">
-            {waitlist.name} — {subscribers?.length ?? 0} active
+            {waitlist.name} — {totalCount ?? 0} active
             {hiddenCount ? ` (${hiddenCount} hidden)` : ""}
           </p>
         </div>
@@ -58,6 +73,8 @@ export default async function SubscribersPage(props: { params: Promise<{ id: str
         subscribers={subscribers ?? []}
         hiddenCount={hiddenCount ?? 0}
         waitlistId={id}
+        page={pageNum}
+        totalPages={totalPages}
       />
     </div>
   );
