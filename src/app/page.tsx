@@ -15,22 +15,20 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-14 items-center justify-between px-4">
-          <Link href="/" className="font-semibold">
+      <header className="sticky top-0 z-50 border-b bg-background/90 backdrop-blur-sm">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
+          <Link href="/" className="font-heading text-xl">
             [PACK]
           </Link>
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-6">
             <Link
               href="/pricing"
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Pricing
             </Link>
             <Link href="/login">
-              <Button variant="outline" size="sm">
-                Sign in
-              </Button>
+              <Button variant="outline" size="sm">Sign in</Button>
             </Link>
             <Link href="/signup">
               <Button size="sm">Get started</Button>
@@ -39,45 +37,45 @@ export default async function HomePage() {
         </div>
       </header>
       <main className="flex-1">
-        <div className="flex flex-col items-center justify-center px-4 py-24 text-center">
+        <div className="flex flex-col items-center px-6 py-32 text-center">
           <div className="max-w-3xl space-y-8">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
+            <h1 className="text-5xl leading-tight sm:text-6xl lg:text-7xl">
               Build hype before you launch
             </h1>
-            <p className="mx-auto max-w-xl text-lg text-muted-foreground">
+            <p className="mx-auto max-w-xl text-base text-muted-foreground leading-relaxed">
               Create a viral waitlist with unique referral links. Watch your list
               grow as people share and climb the ranks.
             </p>
             <div className="flex items-center justify-center gap-4">
               <Link href="/signup">
-                <Button size="lg">Create your waitlist</Button>
+                <Button size="lg" className="h-10 px-6">Create your waitlist</Button>
               </Link>
               <Link href="/pricing">
-                <Button variant="outline" size="lg">
+                <Button variant="outline" size="lg" className="h-10 px-6">
                   See pricing
                 </Button>
               </Link>
             </div>
           </div>
 
-          <div className="mt-24 grid gap-8 sm:grid-cols-3">
-            <div className="space-y-2">
-              <h3 className="font-semibold">Referral loop</h3>
-              <p className="text-sm text-muted-foreground">
+          <div className="mt-32 grid max-w-4xl gap-12 sm:grid-cols-3">
+            <div className="space-y-3">
+              <h3 className="text-base">Referral loop</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Every signup gets a unique referral link. Subscribers climb the
                 leaderboard by bringing friends.
               </p>
             </div>
-            <div className="space-y-2">
-              <h3 className="font-semibold">Embed anywhere</h3>
-              <p className="text-sm text-muted-foreground">
+            <div className="space-y-3">
+              <h3 className="text-base">Embed anywhere</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Add our widget to your site with a single script tag, or use our
                 hosted page.
               </p>
             </div>
-            <div className="space-y-2">
-              <h3 className="font-semibold">One-time payment</h3>
-              <p className="text-sm text-muted-foreground">
+            <div className="space-y-3">
+              <h3 className="text-base">One-time payment</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Pay once, use forever. No subscriptions. Free up to 150
                 subscribers.
               </p>
@@ -88,4 +86,3 @@ export default async function HomePage() {
     </div>
   );
 }
-

@@ -34,7 +34,7 @@ export default async function PurchasesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Purchases & receipts</h1>
+      <h1 className="text-2xl">Purchases & receipts</h1>
       <Card>
         <CardHeader>
           <CardTitle>Transaction history</CardTitle>

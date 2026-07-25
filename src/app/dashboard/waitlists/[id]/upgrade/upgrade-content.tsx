@@ -85,7 +85,7 @@ export function UpgradeContent({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Upgrade plan</h1>
+        <h1 className="text-2xl">Upgrade plan</h1>
         <p className="text-sm text-muted-foreground">
           Current plan: <span className="font-medium capitalize">{waitlist.plan}</span>
         </p>

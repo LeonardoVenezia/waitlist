@@ -37,7 +37,7 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">{waitlist.name}</h1>
+          <h1 className="text-2xl">{waitlist.name}</h1>
           <p className="text-sm text-muted-foreground">/p/{waitlist.slug}</p>
         </div>
         <div className="flex gap-2">
@@ -112,7 +112,7 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{activeCount ?? 0}</p>
+              <p className="text-2xl">{activeCount ?? 0}</p>
             </CardContent>
           </Card>
         </Link>

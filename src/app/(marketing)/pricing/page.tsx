@@ -9,10 +9,10 @@ export default function PricingPage() {
     <div className="px-4 py-16">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          <h1 className="text-3xl sm:text-4xl">
             Simple, one-time pricing
           </h1>
-          <p className="mt-4 text-lg text-muted-foreground">
+          <p className="mt-4 text-base text-muted-foreground">
             Pay once, own it forever. No subscriptions, no hidden fees.
           </p>
         </div>

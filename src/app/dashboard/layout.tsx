@@ -19,23 +19,25 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [{ data: profile }, { data: waitlists }] = await Promise.all([
+    supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("waitlists")
+      .select("id, name, slug, plan")
+      .order("created_at", { ascending: false }),
+  ]);
 
   return (
     <div className="flex h-screen">
-      <Sidebar />
+      <Sidebar waitlists={waitlists ?? []} />
       <div className="flex flex-1 flex-col">
-        <header className="flex h-14 items-center justify-end border-b px-6">
+        <header className="flex h-12 items-center justify-end border-b px-8">
           <UserNav
             email={user.email!}
             fullName={profile?.full_name ?? null}
           />
         </header>
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-8">{children}</main>
       </div>
       {process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN && (
         <>

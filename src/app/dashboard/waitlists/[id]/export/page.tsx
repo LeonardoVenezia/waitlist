@@ -23,7 +23,7 @@ export default async function ExportPage(props: { params: Promise<{ id: string }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Export</h1>
+      <h1 className="text-2xl">Export</h1>
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
           <CardHeader>

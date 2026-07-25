@@ -20,13 +20,16 @@ export default async function DashboardPage() {
 
   if (!waitlist) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        <h2 className="text-2xl font-semibold">Welcome to Waitlist</h2>
-        <p className="text-muted-foreground">
-          Create your first waitlist to get started.
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 max-w-sm mx-auto text-center">
+        <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center text-2xl">
+          🎯
+        </div>
+        <h1 className="text-2xl">Welcome to [PACK]</h1>
+        <p className="text-sm text-muted-foreground">
+          Create your first project to get started with waitlists, coming-soon pages, and more.
         </p>
         <Link href="/dashboard/waitlists/new">
-          <Button>Create waitlist</Button>
+          <Button size="lg">Create your first project</Button>
         </Link>
       </div>
     );

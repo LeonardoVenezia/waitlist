@@ -23,7 +23,7 @@ export default async function EmbedPage(props: { params: Promise<{ id: string }>
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Embed</h1>
+      <h1 className="text-2xl">Embed</h1>
 
       <Card>
         <CardHeader>
