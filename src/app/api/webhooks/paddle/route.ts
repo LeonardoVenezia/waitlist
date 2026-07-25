@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { PLAN_LIMITS_FROM_PADDLE } from "@/lib/paddle";
+
+const PLAN_LIMITS: Record<string, number> = {
+  launch: 500,
+  grow: 10000,
+};
 
 async function verifyPaddleSignature(request: Request): Promise<{ raw: string; payload: unknown } | null> {
   const raw = await request.text();
@@ -60,7 +64,7 @@ export async function POST(request: Request) {
         );
       }
 
-      const limit = PLAN_LIMITS_FROM_PADDLE[plan] ?? null;
+      const limit = PLAN_LIMITS[plan] ?? null;
       const amount = data.details?.line_items?.[0]?.total ?? "0";
       const currency = data.currency_code ?? "USD";
 

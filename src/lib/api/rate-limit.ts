@@ -1,5 +1,5 @@
-// Simple in-memory rate limiter. For production on Vercel,
-// use Upstash Redis or a database-based rate limiter.
+// ponytail: in-memory Map, does not work across Vercel instances
+// swap to Upstash Redis if deploying multi-instance
 const ipRequests = new Map<string, { count: number; resetAt: number }>();
 
 const WINDOW_MS = 60_000; // 1 minute
