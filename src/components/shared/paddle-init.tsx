@@ -11,8 +11,7 @@ export function PaddleInit() {
       if (typeof window !== "undefined" && (window as any).Paddle) {
         clearInterval(check);
         try {
-          const env = token.startsWith("test_") ? "sandbox" : "production";
-          (window as any).Paddle.Initialize({ token, environment: env });
+          (window as any).Paddle.Initialize({ token });
         } catch (e) {
           console.error("Paddle init error:", e);
         }
