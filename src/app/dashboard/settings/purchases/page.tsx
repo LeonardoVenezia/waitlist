@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import {
   Table,
   TableBody,
@@ -10,27 +12,46 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default async function PurchasesPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+type Purchase = {
+  id: string;
+  plan: string;
+  amount: number;
+  currency: string;
+  created_at: string;
+  status: string;
+};
 
-  if (!user) redirect("/login");
+export default function PurchasesPage() {
+  const [purchases, setPurchases] = useState<Purchase[] | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const { data: account } = await supabase
-    .from("accounts")
-    .select("id")
-    .eq("owner_id", user.id)
-    .maybeSingle();
+  useEffect(() => {
+    const supabase = createClient();
 
-  if (!account) return null;
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
 
-  const { data: purchases } = await supabase
-    .from("purchases")
-    .select("*")
-    .eq("account_id", account.id)
-    .order("created_at", { ascending: false });
+      const { data: account } = await supabase
+        .from("accounts")
+        .select("id")
+        .eq("owner_id", user.id)
+        .maybeSingle();
+
+      if (!account) {
+        setLoading(false);
+        return;
+      }
+
+      const { data } = await supabase
+        .from("purchases")
+        .select("*")
+        .eq("account_id", account.id)
+        .order("created_at", { ascending: false });
+
+      setPurchases(data ?? []);
+      setLoading(false);
+    });
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -40,7 +61,9 @@ export default async function PurchasesPage() {
           <CardTitle>Transaction history</CardTitle>
         </CardHeader>
         <CardContent>
-          {purchases && purchases.length > 0 ? (
+          {loading ? (
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          ) : purchases && purchases.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
