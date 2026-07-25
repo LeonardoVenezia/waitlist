@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getAccountId } from "@/lib/api/account";
 import {
   Table,
   TableBody,
@@ -19,13 +18,18 @@ export default async function PurchasesPage() {
 
   if (!user) redirect("/login");
 
-  const accountId = await getAccountId(user.id);
-  if (!accountId) return null;
+  const { data: account } = await supabase
+    .from("accounts")
+    .select("id")
+    .eq("owner_id", user.id)
+    .maybeSingle();
+
+  if (!account) return null;
 
   const { data: purchases } = await supabase
     .from("purchases")
     .select("*")
-    .eq("account_id", accountId)
+    .eq("account_id", account.id)
     .order("created_at", { ascending: false });
 
   return (
