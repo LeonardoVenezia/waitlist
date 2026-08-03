@@ -8,7 +8,8 @@
       "Shell(npx tsc --noEmit 2 >& 1)",
       "Shell(npx eslint src/app/dashboard/waitlists/[id]/integration/ src/app/w/ src/components/dashboard/sidebar.tsx public/widget.js 2 >& 1)",
       "Shell(npx eslint src/app/dashboard/waitlists/[id]/integration/ src/app/w/ src/components/dashboard/sidebar.tsx 2 >& 1)",
-      "Shell(npx eslint src/app/dashboard/waitlists/[id]/page-builder/ src/app/p/ src/components/dashboard/sidebar.tsx 2 >& 1)"
+      "Shell(npx eslint src/app/dashboard/waitlists/[id]/page-builder/ src/app/p/ src/components/dashboard/sidebar.tsx 2 >& 1)",
+      "Shell(npx eslint src/app/dashboard/waitlists/[id]/settings/ 2 >& 1)"
     ],
     "deny": [],
     "defaultMode": "default"

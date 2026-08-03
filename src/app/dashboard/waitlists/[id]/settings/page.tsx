@@ -19,5 +19,12 @@ export default async function SettingsPage(props: { params: Promise<{ id: string
 
   if (!waitlist) notFound();
 
-  return <SettingsForm waitlist={waitlist} />;
+  // Fetch team members
+  const { data: members } = await supabase
+    .from("account_members")
+    .select("id, user_id, role, profiles(email, full_name)")
+    .eq("account_id", waitlist.account_id)
+    .order("role");
+
+  return <SettingsForm waitlist={waitlist} members={members ?? []} />;
 }
