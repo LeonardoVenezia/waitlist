@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Shell(npx next lint --dir src/app/dashboard/waitlists 2 >& 1)",
+      "Shell(npx eslint src/app/dashboard/waitlists/ src/app/api/waitlists/subscribers/ src/lib/supabase/types.ts 2 >& 1)",
+      "Shell(npx next build 2 >& 1)",
+      "Shell(mkdir:*)",
+      "Shell(npx tsc --noEmit 2 >& 1)",
+      "Shell(npx eslint src/app/dashboard/waitlists/[id]/integration/ src/app/w/ src/components/dashboard/sidebar.tsx public/widget.js 2 >& 1)",
+      "Shell(npx eslint src/app/dashboard/waitlists/[id]/integration/ src/app/w/ src/components/dashboard/sidebar.tsx 2 >& 1)",
+      "Shell(npx eslint src/app/dashboard/waitlists/[id]/page-builder/ src/app/p/ src/components/dashboard/sidebar.tsx 2 >& 1)"
+    ],
+    "deny": [],
+    "defaultMode": "default"
+  }
+}

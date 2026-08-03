@@ -11,6 +11,9 @@ interface WaitlistFormProps {
   waitlistId: string;
   settings: Record<string, unknown>;
   slug: string;
+  ctaLabel?: string;
+  buttonColor?: string;
+  buttonTextColor?: string;
 }
 
 interface SubscribeResult {
@@ -28,7 +31,7 @@ declare global {
   }
 }
 
-export function PublicWaitlistForm({ publicKey, settings }: WaitlistFormProps) {
+export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor, buttonTextColor }: WaitlistFormProps) {
   const searchParams = useSearchParams();
   const refCode = searchParams.get("ref") ?? undefined;
   const errorParam = searchParams.get("error");
@@ -174,8 +177,8 @@ export function PublicWaitlistForm({ publicKey, settings }: WaitlistFormProps) {
           data-callback="turnstileCallback"
         />
 
-        <Button type="submit" className="w-full" disabled={loading || !turnstileToken}>
-          {loading ? "Joining..." : (settings.hero as Record<string, unknown>)?.cta_label as string || "Join the waitlist"}
+        <Button type="submit" className="w-full" disabled={loading || !turnstileToken} style={buttonColor ? { backgroundColor: buttonColor, color: buttonTextColor ?? "#fff", borderColor: buttonColor } : undefined}>
+          {loading ? "Joining..." : ctaLabel || (settings.hero as Record<string, unknown>)?.cta_label as string || "Join the waitlist"}
         </Button>
       </form>
     </>

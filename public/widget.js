@@ -1,28 +1,14 @@
+/**
+ * Widget loader for waitlist embeds.
+ * Supports both legacy (.wl-waitlist[data-key]) and new (.launchlist-widget[data-key-id]) selectors.
+ */
 (function () {
   "use strict";
 
   var API_BASE = "/api/public";
 
-  // Find all waitlist container elements
-  var containers = document.querySelectorAll(".wl-waitlist");
-  if (!containers.length) return;
+  if (typeof window === "undefined") return;
 
-  containers.forEach(function (container) {
-    var publicKey = container.getAttribute("data-key");
-    if (!publicKey) return;
-
-    // Fetch waitlist config
-    fetch(API_BASE + "/waitlist/" + publicKey)
-      .then(function (res) { return res.json(); })
-      .then(function (config) {
-        renderForm(container, publicKey, config);
-      })
-      .catch(function () {
-        container.innerHTML = "<p style=\"color:#888;font-size:14px;\">Failed to load waitlist.</p>";
-      });
-  });
-
-  // Get referral code from parent URL
   function getRefCode() {
     var params = new URLSearchParams(window.location.search);
     return params.get("ref") || undefined;
@@ -43,13 +29,11 @@
     var primaryColor = branding.primary_color || "#22c563";
     var ctaLabel = hero.cta_label || "Join the waitlist";
 
-    // Container styles
     container.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
     container.style.color = "#111";
     container.style.maxWidth = "400px";
     container.style.margin = "0 auto";
 
-    // Render initial form
     container.innerHTML =
       (branding.logo_url
         ? "<img src=\"" + escapeHtml(branding.logo_url) + "\" alt=\"Logo\" style=\"height:32px;margin:0 auto 16px;display:block;\">"
@@ -80,7 +64,6 @@
       var email = formEl.querySelector("input[name=email]").value;
       var turnstileToken = formEl.querySelector("input[name=turnstile_token]").value;
 
-      // Show loading
       var submitBtn = formEl.querySelector("button[type=submit]");
       var originalText = submitBtn.textContent;
       submitBtn.textContent = "Joining...";
@@ -106,7 +89,6 @@
             return;
           }
 
-          // Success — show position, referral link, leaderboard
           formEl.style.display = "none";
           successEl.style.display = "block";
 
@@ -114,11 +96,9 @@
           if (thankYou.message) {
             html += "<p style=\"font-size:16px;text-align:center;margin:0 0 8px;\">" + escapeHtml(thankYou.message) + "</p>";
           }
-
           if (thankYou.show_position !== false && data.position) {
             html += "<p style=\"font-size:14px;text-align:center;color:#666;margin:0 0 16px;\">Your position: #" + data.position + "</p>";
           }
-
           if (thankYou.show_referral_link !== false) {
             html += "<div style=\"margin-bottom:12px;\">";
             html += "<p style=\"font-size:14px;font-weight:500;margin:0 0 6px;\">Share your referral link:</p>";
@@ -127,7 +107,6 @@
             html += "<button onclick=\"navigator.clipboard.writeText('" + escapeHtml(data.referral_link) + "');this.textContent='Copied!';setTimeout(function(){this.textContent='Copy'}.bind(this),2000);\" style=\"padding:8px 12px;background:" + primaryColor + ";color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;\">Copy</button>";
             html += "</div></div>";
           }
-
           if (thankYou.show_leaderboard !== false && data.leaderboard && data.leaderboard.length) {
             html += "<div style=\"border:1px solid #e5e7eb;border-radius:8px;padding:12px;\">";
             html += "<h3 style=\"font-size:14px;font-weight:600;margin:0 0 8px;\">Leaderboard</h3>";
@@ -141,7 +120,6 @@
             });
             html += "</div></div>";
           }
-
           successEl.innerHTML = html;
         })
         .catch(function () {
@@ -151,5 +129,72 @@
           submitBtn.disabled = false;
         });
     });
+  }
+
+  // ── iframe method (launchlist-widget + data-key-id) ──
+  function mountIframes() {
+    var widgets = document.querySelectorAll(".launchlist-widget[data-key-id]");
+    if (widgets.length === 0) return;
+
+    var base = document.currentScript
+      ? new URL(document.currentScript.src).origin
+      : window.location.origin;
+
+    widgets.forEach(function (el) {
+      var key = el.getAttribute("data-key-id");
+      if (!key || el.querySelector("iframe")) return;
+
+      var iframe = document.createElement("iframe");
+      iframe.src = base + "/w/e/" + encodeURIComponent(key);
+      iframe.style.width = "100%";
+      iframe.style.border = "none";
+      iframe.style.display = "block";
+      iframe.style.minHeight = "200px";
+      iframe.scrolling = "no";
+      iframe.setAttribute("frameborder", "0");
+
+      iframe.addEventListener("load", function () {
+        try {
+          var doc = iframe.contentDocument || iframe.contentWindow.document;
+          var h = doc.documentElement.scrollHeight;
+          if (h > 0) iframe.style.height = h + "px";
+        } catch (_) {
+          /* cross-origin */
+        }
+      });
+
+      el.appendChild(iframe);
+    });
+  }
+
+  // ── legacy method (wl-waitlist + data-key) ──
+  function mountLegacy() {
+    var containers = document.querySelectorAll(".wl-waitlist");
+    if (!containers.length) return;
+
+    containers.forEach(function (container) {
+      var publicKey = container.getAttribute("data-key");
+      if (!publicKey) return;
+
+      fetch(API_BASE + "/waitlist/" + publicKey)
+        .then(function (res) { return res.json(); })
+        .then(function (config) {
+          renderForm(container, publicKey, config);
+        })
+        .catch(function () {
+          container.innerHTML = "<p style=\"color:#888;font-size:14px;\">Failed to load waitlist.</p>";
+        });
+    });
+  }
+
+  function init() {
+    mountIframes();
+    mountLegacy();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
   }
 })();

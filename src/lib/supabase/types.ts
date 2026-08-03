@@ -157,6 +157,9 @@ export interface Database {
           status: "active" | "hidden" | "blocked";
           metadata: Json;
           created_at: string;
+          email_status: string | null;
+          name: string | null;
+          country: string | null;
         };
         Insert: {
           id?: string;
@@ -169,6 +172,9 @@ export interface Database {
           status?: "active" | "hidden" | "blocked";
           metadata?: Json;
           created_at?: string;
+          email_status?: string | null;
+          name?: string | null;
+          country?: string | null;
         };
         Update: {
           id?: string;
@@ -181,6 +187,9 @@ export interface Database {
           status?: "active" | "hidden" | "blocked";
           metadata?: Json;
           created_at?: string;
+          email_status?: string | null;
+          name?: string | null;
+          country?: string | null;
         };
         Relationships: [
           {

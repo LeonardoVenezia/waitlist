@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
+import Script from "next/script";
+import { PaddleInit } from "@/components/shared/paddle-init";
 import { UpgradeContent } from "./upgrade-content";
 
 export default async function UpgradePage(props: { params: Promise<{ id: string }> }) {
@@ -22,25 +24,16 @@ export default async function UpgradePage(props: { params: Promise<{ id: string 
   const launchPriceId = process.env.PADDLE_PRICE_LAUNCH ?? "";
   const growPriceId = process.env.PADDLE_PRICE_GROW ?? "";
 
-  // Debug: detect missing price IDs
-  if (!launchPriceId || !growPriceId) {
-    console.error(
-      "Missing Paddle price IDs in env:",
-      { launch: !!launchPriceId, grow: !!growPriceId },
-    );
-  }
-
   return (
     <div>
-      {(!launchPriceId || !growPriceId) && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 mb-4">
-          ⚠️ Missing Paddle price IDs. Set <code>PADDLE_PRICE_LAUNCH</code> and{" "}
-          <code>PADDLE_PRICE_GROW</code> in your Vercel environment variables.
-          {launchPriceId && <span> Launch: OK</span>}
-          {!launchPriceId && <span> Launch: MISSING</span>}
-          {growPriceId && <span> Grow: OK</span>}
-          {!growPriceId && <span> Grow: MISSING</span>}
-        </div>
+      {process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN && (
+        <>
+          <Script
+            src="https://cdn.paddle.com/paddle/v2/paddle.js"
+            strategy="afterInteractive"
+          />
+          <PaddleInit />
+        </>
       )}
       <UpgradeContent
         waitlist={waitlist}

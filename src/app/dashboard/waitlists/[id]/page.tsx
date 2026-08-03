@@ -112,12 +112,13 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
       <nav className="flex gap-1 border-b">
         {[
           { label: "Subscribers", href: "subscribers" },
+          { label: "Page Builder", href: "page-builder" },
+          { label: "Integration", href: "integration" },
           { label: "Analytics", href: "analytics" },
           { label: "Export", href: "export" },
           { label: "Embed", href: "embed" },
           { label: "Settings", href: "settings" },
         ].map((tab) => {
-          // Overview tab is the current page — no link needed since we're on it
           return (
             <Link
               key={tab.href}

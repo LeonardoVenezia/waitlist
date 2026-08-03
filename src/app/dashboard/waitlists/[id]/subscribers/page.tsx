@@ -8,11 +8,23 @@ const PAGE_SIZE = 25;
 
 export default async function SubscribersPage(props: {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ page?: string }>;
+  searchParams?: Promise<{
+    page?: string;
+    search?: string;
+    verified?: string;
+    date_from?: string;
+    date_until?: string;
+    email_status?: string;
+  }>;
 }) {
   const { id } = await props.params;
   const sp = await props.searchParams;
   const pageNum = Math.max(0, Number(sp?.page ?? 1) - 1);
+  const search = sp?.search ?? "";
+  const verified = sp?.verified ?? "";
+  const dateFrom = sp?.date_from ?? "";
+  const dateUntil = sp?.date_until ?? "";
+  const emailStatus = sp?.email_status ?? "";
 
   const supabase = await createClient();
   const {
@@ -23,24 +35,43 @@ export default async function SubscribersPage(props: {
 
   const { data: waitlist } = await supabase
     .from("waitlists")
-    .select("id, name, submission_limit")
+    .select("id, name, submission_limit, plan")
     .eq("id", id)
     .maybeSingle();
 
   if (!waitlist) notFound();
+
+  let query = supabase
+    .from("subscribers")
+    .select("*", { count: "exact", head: false })
+    .eq("waitlist_id", id)
+    .eq("status", "active");
+
+  if (search) {
+    query = query.ilike("email", `%${search}%`);
+  }
+  if (verified === "verified") {
+    query = query.eq("verified", true);
+  } else if (verified === "unverified") {
+    query = query.eq("verified", false);
+  }
+  if (dateFrom) {
+    query = query.gte("created_at", dateFrom);
+  }
+  if (dateUntil) {
+    const untilEnd = dateUntil + "T23:59:59.999Z";
+    query = query.lte("created_at", untilEnd);
+  }
+  if (emailStatus) {
+    query = query.eq("email_status", emailStatus);
+  }
 
   const from = pageNum * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
   const [{ data: subscribers, count: totalCount }, { count: hiddenCount }] =
     await Promise.all([
-      supabase
-        .from("subscribers")
-        .select("*", { count: "exact", head: false })
-        .eq("waitlist_id", id)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .range(from, to),
+      query.order("created_at", { ascending: false }).range(from, to),
       supabase
         .from("subscribers")
         .select("*", { count: "exact", head: true })
@@ -75,6 +106,9 @@ export default async function SubscribersPage(props: {
         waitlistId={id}
         page={pageNum}
         totalPages={totalPages}
+        totalCount={totalCount ?? 0}
+        pageSize={PAGE_SIZE}
+        filters={{ search, verified, dateFrom, dateUntil, emailStatus }}
       />
     </div>
   );
