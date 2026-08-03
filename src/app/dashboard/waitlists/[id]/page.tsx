@@ -20,28 +20,25 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
 
   if (!waitlist) notFound();
 
-  const [{ count: activeCount }, { count: hiddenCount }, { data: recent }] = await Promise.all([
-    supabase
-      .from("subscribers")
-      .select("*", { count: "exact", head: true })
-      .eq("waitlist_id", id)
-      .eq("status", "active"),
-    supabase
-      .from("subscribers")
-      .select("*", { count: "exact", head: true })
-      .eq("waitlist_id", id)
-      .eq("status", "hidden"),
-    supabase
-      .from("subscribers")
-      .select("email, referral_count, created_at")
-      .eq("waitlist_id", id)
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(5),
+  const [
+    { count: activeCount },
+    { count: hiddenCount },
+    { data: recent },
+    { count: totalViews },
+    { count: pageSignups },
+  ] = await Promise.all([
+    supabase.from("subscribers").select("*", { count: "exact", head: true }).eq("waitlist_id", id).eq("status", "active"),
+    supabase.from("subscribers").select("*", { count: "exact", head: true }).eq("waitlist_id", id).eq("status", "hidden"),
+    supabase.from("subscribers").select("email, referral_count, created_at").eq("waitlist_id", id).eq("status", "active").order("created_at", { ascending: false }).limit(5),
+    supabase.from("page_events").select("*", { count: "exact", head: true }).eq("waitlist_id", id).eq("type", "view"),
+    supabase.from("page_events").select("*", { count: "exact", head: true }).eq("waitlist_id", id).eq("type", "signup"),
   ]);
 
   const totalActive = activeCount ?? 0;
   const totalHidden = hiddenCount ?? 0;
+  const pageViews = totalViews ?? 0;
+  const pageSignupCount = pageSignups ?? 0;
+  const conversionRate = pageViews > 0 ? Math.round((pageSignupCount / pageViews) * 1000) / 10 : null;
   const nearLimit = waitlist.submission_limit && totalActive >= waitlist.submission_limit * 0.8;
 
   return (
@@ -130,6 +127,32 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
           );
         })}
       </nav>
+
+      {/* Hosted page analytics */}
+      {pageViews > 0 && (
+        <section className="mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Hosted page analytics</h2>
+            <span className="text-[11px] text-muted-foreground/60">Hosted page only</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Link href={`/dashboard/waitlists/${id}/analytics`} className="block p-5 rounded-xl border bg-card hover:bg-accent/30 transition-colors">
+              <dt className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Page views</dt>
+              <dd className="mt-2 text-3xl font-semibold tabular-nums">{pageViews}</dd>
+            </Link>
+            <Link href={`/dashboard/waitlists/${id}/analytics`} className="block p-5 rounded-xl border bg-card hover:bg-accent/30 transition-colors">
+              <dt className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Signups from page</dt>
+              <dd className="mt-2 text-3xl font-semibold tabular-nums">{pageSignupCount}</dd>
+            </Link>
+            <div className="p-5 rounded-xl border bg-card">
+              <dt className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Conversion rate</dt>
+              <dd className="mt-2 text-3xl font-semibold tabular-nums">
+                {conversionRate !== null ? `${conversionRate}%` : <span className="text-muted-foreground/40">—</span>}
+              </dd>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Overview content: recent signups + quick stats */}
       <div className="grid gap-8 lg:grid-cols-3">

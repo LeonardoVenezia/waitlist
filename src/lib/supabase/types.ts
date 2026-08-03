@@ -255,6 +255,34 @@ export interface Database {
           },
         ];
       };
+      page_events: {
+        Row: {
+          id: string;
+          waitlist_id: string;
+          type: "view" | "signup";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          waitlist_id: string;
+          type: "view" | "signup";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          waitlist_id?: string;
+          type?: "view" | "signup";
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "page_events_waitlist_id_fkey";
+            columns: ["waitlist_id"];
+            referencedRelation: "waitlists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {

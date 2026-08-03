@@ -286,6 +286,12 @@ export async function POST(request: Request) {
     ).catch(() => {});
   }
 
+  // Track signup event (fire-and-forget)
+  void supabase.from("page_events").insert({
+    waitlist_id: waitlist.id,
+    type: "signup",
+  });
+
   return jsonResponse({
     id: subscriber.id,
     email,
