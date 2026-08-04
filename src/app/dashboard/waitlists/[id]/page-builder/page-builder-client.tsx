@@ -371,12 +371,12 @@ export function PageBuilderClient({ waitlistId, slug, initialSections, initialGl
 
   const save = useCallback(async () => {
     setSaving(true);
-    await savePageSections(waitlistId, sections, global);
+    await savePageSections(waitlistId, slug, sections, global);
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     router.refresh();
-  }, [waitlistId, sections, global, router]);
+  }, [waitlistId, slug, sections, global, router]);
 
   const addSection = (type: Section["type"]) => {
     setSections([...sections, makeSection(type, sections.length)]);

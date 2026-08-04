@@ -8,6 +8,7 @@ type Json = Database["public"]["Tables"]["waitlists"]["Row"]["settings"];
 
 export async function savePageSections(
   waitlistId: string,
+  slug: string,
   sections: unknown,
   global: unknown,
 ) {
@@ -35,5 +36,6 @@ export async function savePageSections(
   if (error) return { error: error.message };
 
   revalidatePath(`/dashboard/waitlists/${waitlistId}/page-builder`);
+  revalidatePath(`/p/${slug}`, "page");
   return { success: true };
 }
