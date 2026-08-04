@@ -111,7 +111,7 @@ export async function updateWaitlistSettings(
       positions_per_referral: positionToMove,
       starting_position_offset: initialPosition,
       reward_text: (formData.get("referral.reward_text") as string) || "",
-      milestones: ((existing.referral as Record<string, unknown>)?.milestones as unknown[]) ?? [],
+      milestones: parseMilestones(formData.get("referral.milestones") as string),
     },
     notifications,
     email: emailSettings,
@@ -192,4 +192,15 @@ export async function removeTeamMember(waitlistId: string, memberId: string) {
   if (error) return { error: error.message };
   revalidatePath(`/dashboard/waitlists/${waitlistId}/settings`);
   return { success: true };
+}
+
+function parseMilestones(raw: string | null): Array<{ count: number; reward: string }> {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.filter((m: { count: number; reward: string }) => m.count > 0 && m.reward);
+    return [];
+  } catch {
+    return [];
+  }
 }

@@ -73,6 +73,50 @@ const TABS = [
   "Branding", "Hero", "Thank You", "Submissions", "Email", "Notifications", "Team", "Block",
 ] as const;
 
+// ── Milestones Editor ──
+function MilestonesEditor({ defaultMilestones }: { defaultMilestones: Array<{ count: number; reward: string }> }) {
+  const [milestones, setMilestones] = useState(defaultMilestones);
+
+  return (
+    <div className="space-y-2">
+      <input type="hidden" name="referral.milestones" value={JSON.stringify(milestones)} />
+      {milestones.map((m, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">At</span>
+          <input
+            type="number"
+            value={m.count}
+            min={1}
+            onChange={(e) => {
+              const next = [...milestones];
+              next[i] = { ...next[i], count: Number(e.target.value) };
+              setMilestones(next);
+            }}
+            className="w-16 rounded-lg border border-input bg-transparent px-2 py-1 text-xs text-center"
+            placeholder="5"
+          />
+          <span className="text-xs text-muted-foreground whitespace-nowrap">referrals →</span>
+          <input
+            type="text"
+            value={m.reward}
+            onChange={(e) => {
+              const next = [...milestones];
+              next[i] = { ...next[i], reward: e.target.value };
+              setMilestones(next);
+            }}
+            className="flex-1 rounded-lg border border-input bg-transparent px-2 py-1 text-xs"
+            placeholder="Unlock premium badge"
+          />
+          <button type="button" onClick={() => setMilestones(milestones.filter((_, j) => j !== i))} className="text-xs text-destructive hover:underline shrink-0">✕</button>
+        </div>
+      ))}
+      <button type="button" onClick={() => setMilestones([...milestones, { count: 5, reward: "" }])} className="text-xs text-primary hover:underline">
+        + Add milestone
+      </button>
+    </div>
+  );
+}
+
 // ── Main ──
 export function SettingsForm({ waitlist, members }: { waitlist: Waitlist; members: TeamMember[] }) {
   const settings = waitlist.settings as Record<string, unknown>;
@@ -294,6 +338,12 @@ export function SettingsForm({ waitlist, members }: { waitlist: Waitlist; member
             <div className="space-y-2">
               <Label htmlFor="referral.reward_text">Reward text</Label>
               <Input id="referral.reward_text" name="referral.reward_text" defaultValue={(referral.reward_text as string) ?? ""} placeholder="Refer friends to climb the leaderboard!" />
+            </div>
+            {/* Referral milestones */}
+            <div className="border-t pt-4 mt-4">
+              <Label className="mb-2 block">Referral milestones</Label>
+              <p className="text-xs text-muted-foreground mb-3">Set rewards that unlock at specific referral counts. These appear on the thank-you page.</p>
+              <MilestonesEditor defaultMilestones={(referral.milestones as Array<{ count: number; reward: string }>) ?? []} />
             </div>
           </CardContent>
         </Card>

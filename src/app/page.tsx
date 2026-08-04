@@ -58,23 +58,26 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="mt-32 grid max-w-4xl gap-12 sm:grid-cols-3">
-            <div className="space-y-3">
-              <h3 className="text-base">Referral loop</h3>
+          <div className="mt-32 grid max-w-4xl gap-8 sm:grid-cols-3">
+            <div className="space-y-3 rounded-2xl border bg-card p-6 text-left">
+              <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-xl">🔄</div>
+              <h3 className="text-base font-semibold">Referral loop</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Every signup gets a unique referral link. Subscribers climb the
                 leaderboard by bringing friends.
               </p>
             </div>
-            <div className="space-y-3">
-              <h3 className="text-base">Embed anywhere</h3>
+            <div className="space-y-3 rounded-2xl border bg-card p-6 text-left">
+              <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-xl">📦</div>
+              <h3 className="text-base font-semibold">Embed anywhere</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Add our widget to your site with a single script tag, or use our
                 hosted page.
               </p>
             </div>
-            <div className="space-y-3">
-              <h3 className="text-base">One-time payment</h3>
+            <div className="space-y-3 rounded-2xl border bg-card p-6 text-left">
+              <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-xl">💸</div>
+              <h3 className="text-base font-semibold">One-time payment</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Pay once, use forever. No subscriptions. Free up to 150
                 subscribers.

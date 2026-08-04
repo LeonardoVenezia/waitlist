@@ -4,6 +4,20 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { PublicWaitlistForm } from "./public-waitlist-form";
 import { PageViewTracker } from "@/components/shared/page-view-tracker";
 
+function MilestonesDisplay({ milestones }: { milestones: Array<{ count: number; reward: string }> }) {
+  if (!milestones || milestones.length === 0) return null;
+  return (
+    <div className="rounded-xl border bg-card p-4 mt-4">
+      <h3 className="text-sm font-semibold mb-2">Rewards</h3>
+      <ul className="space-y-1 text-sm text-muted-foreground">
+        {milestones.map((m, i) => (
+          <li key={i}>🎁 {m.reward} at {m.count} referrals</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 interface PageSection {
   id: string;
   type: "hero" | "features" | "how_it_works" | "faq" | "form";
@@ -263,6 +277,7 @@ export default async function HostedPage(props: {
                 );
             }
           })}
+          <MilestonesDisplay milestones={(settings.referral as { milestones?: Array<{ count: number; reward: string }> })?.milestones ?? []} />
         </div>
       </div>
     );
