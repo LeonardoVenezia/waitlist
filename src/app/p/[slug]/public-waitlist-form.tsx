@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,12 @@ interface SubscribeResult {
 
 declare global {
   interface Window {
-    turnstileCallback?: (token: string) => void;
+    turnstile?: {
+      render: (el: string | HTMLElement, opts: Record<string, unknown>) => string;
+      execute: (el: string | HTMLElement, opts?: Record<string, unknown>) => void;
+      reset: (el: string | HTMLElement) => void;
+    };
+    __cfTurnstileCallback?: (token: string) => void;
   }
 }
 
@@ -43,34 +48,89 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
   const [error, setError] = useState<string | null>(errorParam ?? null);
   const [result, setResult] = useState<SubscribeResult | null>(null);
   const [copied, setCopied] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState("");
-  const formRef = useRef<HTMLFormElement>(null);
+  const [turnstileReady, setTurnstileReady] = useState(false);
+  const turnstileWidgetId = useRef<string | null>(null);
+  const turnstileToken = useRef<string>("");
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Register global callback for Turnstile auto-render
+  // Load Turnstile script and render invisible widget
   useEffect(() => {
-    window.turnstileCallback = (token: string) => setTurnstileToken(token);
-    return () => { window.turnstileCallback = undefined; };
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+    if (!siteKey) {
+      setTurnstileReady(true);
+      return;
+    }
+
+    const onLoad = () => {
+      if (!window.turnstile || !containerRef.current) return;
+      const id = window.turnstile.render(containerRef.current, {
+        sitekey: siteKey,
+        size: "invisible",
+        callback: (token: string) => {
+          turnstileToken.current = token;
+        },
+      });
+      turnstileWidgetId.current = id;
+      setTurnstileReady(true);
+    };
+
+    if (window.turnstile) {
+      onLoad();
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__cfTLOnLoad";
+      script.async = true;
+      script.defer = true;
+      window.__cfTurnstileCallback = onLoad;
+      (window as unknown as Record<string, unknown>).__cfTLOnLoad = onLoad;
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      if (turnstileWidgetId.current && window.turnstile) {
+        window.turnstile.reset(turnstileWidgetId.current);
+      }
+    };
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!turnstileToken) {
-      setError("Please complete the captcha");
-      return;
-    }
     setLoading(true);
     setError(null);
 
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+    // If no siteKey configured, skip captcha
+    if (!siteKey) {
+      await doSubmit("");
+      return;
+    }
+
+    // Execute invisible challenge, then submit when token is ready
+    const originalCallback = (window as unknown as Record<string, (token: string) => void>).__cfTurnstileCallback;
+    (window as unknown as Record<string, (token: string) => void>).__cfTurnstileCallback = async (token: string) => {
+      if (originalCallback) originalCallback(token);
+      await doSubmit(token);
+    };
+
+    if (window.turnstile && turnstileWidgetId.current) {
+      window.turnstile.execute(turnstileWidgetId.current);
+    }
+  }
+
+  async function doSubmit(token: string) {
     try {
+      const body: Record<string, string> = {
+        public_key: publicKey,
+        email,
+      };
+      if (refCode) body.ref = refCode;
+      if (token) body.turnstile_token = token;
+
       const res = await fetch("/api/public/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          public_key: publicKey,
-          email,
-          ref: refCode,
-          turnstile_token: turnstileToken,
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -150,6 +210,8 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
   }
 
   // Form state
+  const hero = (settings.hero ?? {}) as Record<string, unknown>;
+
   return (
     <>
       {error && (
@@ -158,7 +220,7 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
         </div>
       )}
 
-      <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2 text-left">
           <Label htmlFor="email">Email</Label>
           <Input
@@ -171,14 +233,11 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
           />
         </div>
 
-        <div
-          className="cf-turnstile flex justify-center"
-          data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-          data-callback="turnstileCallback"
-        />
+        {/* Invisible Turnstile container — nothing visible */}
+        <div ref={containerRef} className="hidden" />
 
-        <Button type="submit" className="w-full" disabled={loading || !turnstileToken} style={buttonColor ? { backgroundColor: buttonColor, color: buttonTextColor ?? "#fff", borderColor: buttonColor } : undefined}>
-          {loading ? "Joining..." : ctaLabel || (settings.hero as Record<string, unknown>)?.cta_label as string || "Join the waitlist"}
+        <Button type="submit" className="w-full" disabled={loading} style={buttonColor ? { backgroundColor: buttonColor, color: buttonTextColor ?? "#fff", borderColor: buttonColor } : undefined}>
+          {loading ? "Joining..." : ctaLabel || hero.cta_label as string || "Join the waitlist"}
         </Button>
       </form>
     </>
