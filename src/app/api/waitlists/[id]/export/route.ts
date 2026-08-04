@@ -9,17 +9,30 @@ export async function GET(
   const { id } = await params;
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") ?? "csv";
+  const search = searchParams.get("search") ?? "";
+  const verified = searchParams.get("verified") ?? "";
+  const dateFrom = searchParams.get("date_from") ?? "";
+  const dateUntil = searchParams.get("date_until") ?? "";
+  const emailStatus = searchParams.get("email_status") ?? "";
 
   const supabase = createAdminClient();
 
-  const { data: subscribers } = await supabase
+  let query = supabase
     .from("subscribers")
-    .select(
-      "id, email, referral_code, referral_count, referred_by, status, metadata, created_at",
-    )
+    .select("id, email, name, country, referral_code, referral_count, referred_by, status, verified, email_status, metadata, created_at")
     .eq("waitlist_id", id)
-    .eq("status", "active")
-    .order("created_at", { ascending: false });
+    .eq("status", "active");
+
+  if (search) query = query.ilike("email", `%${search}%`);
+  if (verified === "verified") query = query.eq("verified", true);
+  else if (verified === "unverified") query = query.eq("verified", false);
+  if (dateFrom) query = query.gte("created_at", dateFrom);
+  if (dateUntil) query = query.lte("created_at", dateUntil + "T23:59:59.999Z");
+  if (emailStatus) query = query.eq("email_status", emailStatus);
+
+  query = query.order("created_at", { ascending: false });
+
+  const { data: subscribers } = await query;
 
   if (!subscribers || subscribers.length === 0) {
     return new NextResponse("No subscribers to export", { status: 404 });
@@ -29,11 +42,14 @@ export async function GET(
     const meta = (s.metadata ?? {}) as Record<string, unknown>;
     return {
       email: s.email,
+      name: s.name ?? "",
+      country: s.country ?? (meta.country as string) ?? "",
       referral_code: s.referral_code,
       referral_count: s.referral_count,
       referred_by: s.referred_by ?? "",
       status: s.status,
-      country: (meta.country as string) ?? "",
+      verified: s.verified ? "Yes" : "No",
+      email_status: s.email_status ?? "",
       created_at: s.created_at,
     };
   });
@@ -46,31 +62,20 @@ export async function GET(
 
     return new NextResponse(buffer, {
       headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="subscribers.xlsx"`,
       },
     });
   }
 
-  // CSV (default)
-  const header =
-    "email,referral_code,referral_count,referred_by,status,country,created_at\n";
-  const csv =
-    header +
-    rows
-      .map((r) =>
-        [
-          escapeCsv(r.email),
-          r.referral_code,
-          r.referral_count,
-          escapeCsv(r.referred_by),
-          r.status,
-          escapeCsv(r.country),
-          r.created_at,
-        ].join(","),
-      )
-      .join("\n");
+  const header = "email,name,country,referral_code,referral_count,referred_by,status,verified,email_status,created_at\n";
+  const csv = header + rows
+    .map((r) => [
+      escapeCsv(r.email), escapeCsv(r.name), escapeCsv(r.country),
+      r.referral_code, r.referral_count, escapeCsv(r.referred_by),
+      r.status, r.verified, r.email_status, r.created_at,
+    ].join(","))
+    .join("\n");
 
   return new NextResponse(csv, {
     headers: {

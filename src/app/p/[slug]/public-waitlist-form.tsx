@@ -14,6 +14,8 @@ interface WaitlistFormProps {
   ctaLabel?: string;
   buttonColor?: string;
   buttonTextColor?: string;
+  showCount?: boolean;
+  showLeaderboard?: boolean;
 }
 
 interface SubscribeResult {
@@ -36,7 +38,7 @@ declare global {
   }
 }
 
-export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor, buttonTextColor }: WaitlistFormProps) {
+export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor, buttonTextColor, showCount = true, showLeaderboard = true }: WaitlistFormProps) {
   const searchParams = useSearchParams();
   const refCode = searchParams.get("ref") ?? undefined;
   const errorParam = searchParams.get("error");
@@ -187,7 +189,7 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
           </div>
         )}
 
-        {thankYou.show_leaderboard !== false && result.leaderboard && result.leaderboard.length > 0 && (
+        {showLeaderboard && thankYou.show_leaderboard !== false && result.leaderboard && result.leaderboard.length > 0 && (
           <div className="rounded-lg border p-4 text-left">
             <h3 className="mb-2 text-sm font-medium">Leaderboard</h3>
             <div className="space-y-1 text-sm">

@@ -81,6 +81,15 @@ export default async function SubscribersPage(props: {
 
   const totalPages = Math.ceil((totalCount ?? 0) / PAGE_SIZE);
 
+  // Build export link with current filters
+  const exportParams = new URLSearchParams();
+  if (search) exportParams.set("search", search);
+  if (verified) exportParams.set("verified", verified);
+  if (dateFrom) exportParams.set("date_from", dateFrom);
+  if (dateUntil) exportParams.set("date_until", dateUntil);
+  if (emailStatus) exportParams.set("email_status", emailStatus);
+  const exportQs = exportParams.toString();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -92,7 +101,7 @@ export default async function SubscribersPage(props: {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href={`/dashboard/waitlists/${id}/export`}>
+          <Link href={`/dashboard/waitlists/${id}/export${exportQs ? "?" + exportQs : ""}`}>
             <Button variant="outline" size="sm">Export</Button>
           </Link>
           <Link href={`/dashboard/waitlists/${id}/upgrade`}>

@@ -2,14 +2,15 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
-export default async function ExportPage(props: { params: Promise<{ id: string }> }) {
+export default async function ExportPage(props: {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ search?: string; verified?: string; date_from?: string; date_until?: string; email_status?: string }>;
+}) {
   const { id } = await props.params;
+  const sp = await props.searchParams;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
 
@@ -21,34 +22,54 @@ export default async function ExportPage(props: { params: Promise<{ id: string }
 
   if (!waitlist) notFound();
 
+  const params = new URLSearchParams();
+  if (sp?.search) params.set("search", sp.search);
+  if (sp?.verified) params.set("verified", sp.verified);
+  if (sp?.date_from) params.set("date_from", sp.date_from);
+  if (sp?.date_until) params.set("date_until", sp.date_until);
+  if (sp?.email_status) params.set("email_status", sp.email_status);
+  const filterQs = params.toString();
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl">Export</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl">Export</h1>
+        <a href={`/dashboard/waitlists/${id}/subscribers${filterQs ? "?" + filterQs : ""}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          ← Back to subscribers
+        </a>
+      </div>
+
+      {/* Active filters */}
+      {filterQs && (
+        <div className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
+          Exporting with current filters.{" "}
+          <a href={`/dashboard/waitlists/${id}/export`} className="text-primary hover:underline">
+            Clear filters → export all
+          </a>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>CSV</CardTitle>
-            <CardDescription>
-              Export your subscribers as a CSV file.
-            </CardDescription>
+            <CardDescription>Export your subscribers as a CSV file.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href={`/api/waitlists/${id}/export?format=csv`}>
+            <a href={`/api/waitlists/${id}/export?format=csv${filterQs ? "&" + filterQs : ""}`}>
               <Button>Export CSV</Button>
-            </Link>
+            </a>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle>XLSX</CardTitle>
-            <CardDescription>
-              Export your subscribers as an Excel file.
-            </CardDescription>
+            <CardDescription>Export your subscribers as an Excel file.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href={`/api/waitlists/${id}/export?format=xlsx`}>
+            <a href={`/api/waitlists/${id}/export?format=xlsx${filterQs ? "&" + filterQs : ""}`}>
               <Button variant="outline">Export XLSX</Button>
-            </Link>
+            </a>
           </CardContent>
         </Card>
       </div>

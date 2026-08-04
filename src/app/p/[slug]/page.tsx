@@ -91,8 +91,11 @@ export default async function HostedPage(props: {
   const sections = pageSections.sections ?? [];
   const global = pageSections.global ?? ({} as PageGlobal);
 
-  // If page_sections exist and page is enabled, render page builder
-  if (sections.length > 0 && global.page_enabled !== false) {
+  // If page is explicitly disabled, 404
+  if (global.page_enabled === false) notFound();
+
+  // If page_sections exist, render page builder
+  if (sections.length > 0) {
     const visibleSections = sections
       .filter((s) => s.visible)
       .sort((a, b) => a.order - b.order);
@@ -129,6 +132,8 @@ export default async function HostedPage(props: {
                       ctaLabel={(s.cta_label as string) || "Join the waitlist"}
                       buttonColor={global.button_color ?? "#0ea5e9"}
                       buttonTextColor={global.button_text_color ?? "#ffffff"}
+                      showCount={global.show_count ?? true}
+                      showLeaderboard={global.show_leaderboard ?? true}
                     />
                   </section>
                 );
@@ -272,6 +277,8 @@ export default async function HostedPage(props: {
                       ctaLabel="Join the waitlist"
                       buttonColor={global.button_color ?? "#0ea5e9"}
                       buttonTextColor={global.button_text_color ?? "#ffffff"}
+                      showCount={global.show_count ?? true}
+                      showLeaderboard={global.show_leaderboard ?? true}
                     />
                   </section>
                 );
