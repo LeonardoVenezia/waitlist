@@ -11,14 +11,60 @@ interface WaitlistSummary {
   plan: string;
 }
 
-const subNavItems = [
+const waitlistSubNav = [
   { label: "Overview", href: (id: string) => `/dashboard/waitlists/${id}`, icon: "📊" },
   { label: "Submissions", href: (id: string) => `/dashboard/waitlists/${id}/subscribers`, icon: "📧" },
   { label: "Page Builder", href: (id: string) => `/dashboard/waitlists/${id}/page-builder`, icon: "📄" },
   { label: "Integration", href: (id: string) => `/dashboard/waitlists/${id}/integration`, icon: "🔌" },
-  { label: "Showcase", href: (id: string) => `/dashboard/waitlists/${id}/showcase`, icon: "🏪" },
+  { label: "Analytics", href: (id: string) => `/dashboard/waitlists/${id}/analytics`, icon: "📈" },
+  { label: "Export", href: (id: string) => `/dashboard/waitlists/${id}/export`, icon: "📦" },
   { label: "Settings", href: (id: string) => `/dashboard/waitlists/${id}/settings`, icon: "⚙️" },
 ];
+
+const showcaseSubNav = [
+  { label: "Overview", href: (id: string) => `/dashboard/showcases/${id}`, icon: "🏪" },
+];
+
+function SubNavSection({
+  label,
+  items,
+  currentId,
+  pathname,
+}: {
+  label: string;
+  items: Array<{ label: string; href: (id: string) => string; icon: string }>;
+  currentId: string;
+  pathname: string;
+}) {
+  return (
+    <div className="px-3 pb-2 shrink-0">
+      <p className="px-2 pt-3 pb-2 text-xs font-medium tracking-widest uppercase text-muted-foreground">
+        {label}
+      </p>
+      <nav className="space-y-0.5">
+        {items.map((item) => {
+          const href = item.href(currentId);
+          const isActive = pathname === href || (item.label === "Overview" && pathname.startsWith(href));
+          return (
+            <Link
+              key={item.label}
+              href={href}
+              className={cn(
+                "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
+                isActive
+                  ? "bg-accent text-accent-foreground font-medium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+              )}
+            >
+              <span className="text-sm shrink-0">{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
 
 export function Sidebar({
   waitlists,
@@ -26,8 +72,7 @@ export function Sidebar({
   waitlists: WaitlistSummary[];
 }) {
   const pathname = usePathname();
-
-  const currentId = pathname.match(/\/dashboard\/waitlists\/([^/]+)/)?.[1] ?? null;
+  const currentId = pathname.match(/\/(?:waitlists|showcases)\/([^/]+)/)?.[1] ?? null;
 
   return (
     <aside className="flex w-60 flex-col border-r bg-card overflow-y-auto">
@@ -78,34 +123,12 @@ export function Sidebar({
         )}
       </nav>
 
-      {/* Project sub-navigation */}
+      {/* Products — separated by section */}
       {currentId && (
-        <div className="px-3 pb-2 shrink-0">
-          <p className="px-2 pt-3 pb-2 text-xs font-medium tracking-widest uppercase text-muted-foreground">
-            Manage your waitlist
-          </p>
-          <nav className="space-y-0.5">
-            {subNavItems.map((item) => {
-              const href = item.href(currentId);
-              const isActive = pathname === href || (item.label === "Overview" ? pathname === `/dashboard/waitlists/${currentId}` : pathname.startsWith(href));
-              return (
-                <Link
-                  key={item.label}
-                  href={href}
-                  className={cn(
-                    "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
-                    isActive
-                      ? "bg-accent text-accent-foreground font-medium"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                  )}
-                >
-                  <span className="text-sm shrink-0">{item.icon}</span>
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+        <>
+          <SubNavSection label="Waitlist" items={waitlistSubNav} currentId={currentId} pathname={pathname} />
+          <SubNavSection label="Showcase" items={showcaseSubNav} currentId={currentId} pathname={pathname} />
+        </>
       )}
 
       <div className="flex-1" />

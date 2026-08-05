@@ -50,7 +50,7 @@ export async function createShowcase(waitlistId: string, formData: FormData) {
     return { error: error.message };
   }
 
-  revalidatePath(`/dashboard/waitlists/${waitlistId}/showcase`);
+  revalidatePath(`/dashboard/showcases/${waitlistId}`);
   return { success: true, id: created.id };
 }
 
@@ -84,7 +84,7 @@ export async function updateShowcase(waitlistId: string, showcaseId: string, for
     return { error: error.message };
   }
 
-  revalidatePath(`/dashboard/waitlists/${waitlistId}/showcase`);
+  revalidatePath(`/dashboard/showcases/${waitlistId}`);
   revalidatePath("/showcase", "layout");
   return { success: true };
 }
@@ -128,7 +128,7 @@ export async function publishShowcase(waitlistId: string, showcaseId: string, li
 
   if (error) return { error: error.message };
 
-  revalidatePath(`/dashboard/waitlists/${waitlistId}/showcase`);
+  revalidatePath(`/dashboard/showcases/${waitlistId}`);
   revalidatePath("/showcase", "layout");
   return { success: true };
 }
@@ -142,7 +142,7 @@ export async function updateShowcaseStatus(waitlistId: string, showcaseId: strin
     .eq("id", showcaseId);
 
   if (error) return { error: error.message };
-  revalidatePath(`/dashboard/waitlists/${waitlistId}/showcase`);
+  revalidatePath(`/dashboard/showcases/${waitlistId}`);
   revalidatePath("/showcase", "layout");
   return { success: true };
 }

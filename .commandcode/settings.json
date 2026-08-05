@@ -12,7 +12,10 @@
       "Shell(npx eslint src/app/dashboard/waitlists/[id]/settings/ 2 >& 1)",
       "Shell(pnpm:*)",
       "Shell(which:*)",
-      "Shell(npx supabase --version 2 > /dev/null)"
+      "Shell(npx supabase --version 2 > /dev/null)",
+      "Shell(mv:*)",
+      "Shell(rmdir:*)",
+      "Shell(rm:*)"
     ],
     "deny": [],
     "defaultMode": "default"
