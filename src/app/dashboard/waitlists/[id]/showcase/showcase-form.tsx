@@ -275,7 +275,7 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
               <div className="flex flex-wrap gap-3">
                 {images.map((path) => (
                   <div key={path} className="relative size-24 rounded-lg border overflow-hidden">
-                    <img src={`${getAppUrl()}/storage/v1/object/public/showcase-images/${path}`} alt="" className="size-full object-cover" />
+                    <img src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/showcase-images/${path}`} alt="" className="size-full object-cover" />
                     <button
                       type="button"
                       onClick={() => handleRemoveImage(path)}

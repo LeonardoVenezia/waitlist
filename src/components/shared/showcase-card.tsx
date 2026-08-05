@@ -13,10 +13,11 @@ interface ShowcaseCardData {
   link: string;
 }
 
-export function ShowcaseCard({ data, appUrl }: { data: ShowcaseCardData; appUrl: string }) {
+export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
   const firstImage = data.images?.[0];
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const imageUrl = firstImage
-    ? `${appUrl}/storage/v1/object/public/showcase-images/${firstImage}`
+    ? `${supabaseUrl}/storage/v1/object/public/showcase-images/${firstImage}`
     : null;
 
   return (

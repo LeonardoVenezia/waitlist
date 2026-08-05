@@ -75,7 +75,7 @@ export default async function ShowcasePage(props: {
         >
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {showcases.map((s) => (
-              <ShowcaseCard key={s.slug} data={s} appUrl={APP_URL} />
+              <ShowcaseCard key={s.slug} data={s} />
             ))}
           </div>
 
