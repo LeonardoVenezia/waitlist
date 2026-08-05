@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,6 @@ import {
   updateShowcaseStatus,
   uploadShowcaseImage,
   removeShowcaseImage,
-  runQualityChecks,
 } from "./actions";
 
 interface Props {
@@ -42,6 +41,22 @@ interface ShowcaseData {
   spam_check_passed: boolean;
 }
 
+function buildFormData(state: {
+  name: string; slug: string; link: string; desc: string;
+  cat1: string; cat2: string | null; videoUrl: string; featuredB: boolean;
+}) {
+  const fd = new FormData();
+  fd.set("name", state.name);
+  fd.set("slug", state.slug);
+  fd.set("link", state.link);
+  fd.set("description", state.desc);
+  fd.set("category_1", state.cat1);
+  if (state.cat2) fd.set("category_2", state.cat2);
+  if (state.videoUrl) fd.set("video_url", state.videoUrl);
+  if (state.featuredB) fd.set("featured_badge", "on");
+  return fd;
+}
+
 export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
   const router = useRouter();
   const isNew = !showcase;
@@ -56,86 +71,98 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
   const [images, setImages] = useState<string[]>(showcase?.images ?? []);
   const [featuredB, setFeaturedB] = useState(showcase?.featured_badge ?? false);
   const [status, setStatus] = useState(showcase?.status ?? "draft");
-  const [domainOk, setDomainOk] = useState(showcase?.domain_check_passed ?? false);
-  const [spamOk, setSpamOk] = useState(showcase?.spam_check_passed ?? false);
 
-  const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [checksRunning, setChecksRunning] = useState(false);
-  const descRef = useRef<HTMLTextAreaElement>(null);
 
   function getAppUrl() {
     return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   }
 
-  async function save(shouldPublish = false) {
-    setSaving(true);
-    setError(null);
+  const formState = { name, slug, link, desc, cat1, cat2, videoUrl, featuredB };
 
-    const fd = new FormData();
-    fd.set("name", name);
-    fd.set("slug", slug);
-    fd.set("link", link);
-    fd.set("description", desc);
-    fd.set("category_1", cat1);
-    if (cat2) fd.set("category_2", cat2);
-    if (videoUrl) fd.set("video_url", videoUrl);
-    if (featuredB) fd.set("featured_badge", "on");
+  async function handlePublish() {
+    setPublishing(true);
+    setError(null);
+    const fd = buildFormData(formState);
 
     if (isNew) {
-      fd.set("waitlist_id", waitlistId);
       const res = await createShowcase(waitlistId, fd);
-      if (res.error) { setError(res.error); setSaving(false); return; }
-      router.refresh();
-      // We need to re-create so we can publish or run checks
-      // For now, reload to get new ID
-      setSaving(false);
+      if (res.error) { setError(res.error); setPublishing(false); return; }
+      // Publish the newly created showcase
+      const pub = await publishShowcase(waitlistId, res.id!, link, fd);
+      if (pub.error) { setError(pub.error); setPublishing(false); return; }
+      setStatus("published");
+      setPublishing(false);
       window.location.reload();
       return;
     }
 
-    const res = await updateShowcase(waitlistId, showcase!.id, fd);
-    if (res.error) { setError(res.error); setSaving(false); return; }
-
-    if (shouldPublish) {
-      const pub = await publishShowcase(waitlistId, showcase!.id);
-      if (pub.error) { setError(pub.error); setSaving(false); return; }
-      setStatus("published");
-    }
-
+    const pub = await publishShowcase(waitlistId, showcase!.id, link, fd);
+    if (pub.error) { setError(pub.error); setPublishing(false); return; }
+    setStatus("published");
+    setPublishing(false);
     router.refresh();
-    setSaving(false);
   }
 
-  async function runChecks() {
+  async function handleUpdate() {
     if (!showcase) return;
-    setChecksRunning(true);
-    const res = await runQualityChecks(showcase.id, link);
-    if (res.error) { setError(res.error); setChecksRunning(false); return; }
-    setDomainOk(res.domain_ok as boolean);
-    setSpamOk(res.spam_ok as boolean);
-    setChecksRunning(false);
+    setUpdating(true);
+    setError(null);
+    const fd = buildFormData(formState);
+    const res = await updateShowcase(waitlistId, showcase.id, fd);
+    if (res.error) { setError(res.error); setUpdating(false); return; }
+    setUpdating(false);
+    router.refresh();
+  }
+
+  async function handleUnpublish() {
+    if (!showcase) return;
+    setStatus("draft");
+    const res = await updateShowcaseStatus(waitlistId, showcase.id, "draft");
+    if (res.error) setError(res.error);
+    router.refresh();
   }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     if (!showcase) return;
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Optimista: preview local inmediato
+    const localUrl = URL.createObjectURL(file);
+    setImages((prev) => [...prev, localUrl]);
     setUploading(true);
+
     const fd = new FormData();
     fd.set("file", file);
     const res = await uploadShowcaseImage(showcase.id, fd);
-    if (res.error) { setError(res.error); setUploading(false); return; }
-    setImages(res.images as string[]);
+
+    if (res.error) {
+      setImages((prev) => prev.filter((u) => u !== localUrl));
+      setError(res.error);
+    } else {
+      // Reemplazar preview local con path real
+      const realImages = res.images as string[];
+      URL.revokeObjectURL(localUrl);
+      setImages(realImages);
+    }
     setUploading(false);
   }
 
   async function handleRemoveImage(path: string) {
     if (!showcase) return;
+    // Optimista: quitar de la UI inmediatamente
+    const previous = images;
+    setImages((prev) => prev.filter((u) => u !== path));
+
     const res = await removeShowcaseImage(showcase.id, path);
-    if (res.error) { setError(res.error); return; }
-    setImages(res.images as string[]);
+    if (res.error) {
+      setImages(previous);
+      setError(res.error);
+    }
   }
 
   function extractYouTubeId(url: string) {
@@ -143,7 +170,6 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
     return m?.[1] ?? null;
   }
 
-  const publishReady = domainOk && spamOk;
   const showYTPreview = videoUrl && extractYouTubeId(videoUrl);
 
   return (
@@ -152,18 +178,13 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>
       )}
 
-      {/* Status bar (existing showcase) */}
+      {/* Status bar */}
       {showcase && (
         <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3 text-sm">
           <span className="text-muted-foreground">Status:</span>
           <Badge variant={status === "published" ? "default" : status === "rejected" ? "destructive" : "outline"}>
             {status}
           </Badge>
-          {status === "draft" && (
-            <span className="text-xs text-muted-foreground">
-              {publishReady ? "Ready to publish" : "Run quality checks before publishing"}
-            </span>
-          )}
           {status === "published" && (
             <a href={`${getAppUrl()}/showcase/${showcase.slug}`} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline ml-auto">
               View live →
@@ -212,7 +233,6 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
             </div>
             <textarea
               id="desc"
-              ref={descRef}
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
               rows={6}
@@ -241,7 +261,7 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
               <select
                 id="cat2"
                 value={cat2 ?? ""}
-                onChange={(e) => setCat2(e.target.value)}
+                onChange={(e) => setCat2(e.target.value || null)}
                 className="flex h-8 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm"
               >
                 <option value="">Ninguna</option>
@@ -274,12 +294,16 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
               <Label>Images ({images.length}/5)</Label>
               <div className="flex flex-wrap gap-3">
                 {images.map((path) => (
-                  <div key={path} className="relative size-24 rounded-lg border overflow-hidden">
-                    <img src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/showcase-images/${path}`} alt="" className="size-full object-cover" />
+                  <div key={path} className="relative size-24 rounded-lg border overflow-hidden group">
+                    <img
+                      src={path.startsWith("blob:") ? path : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/showcase-images/${path}`}
+                      alt=""
+                      className="size-full object-cover"
+                    />
                     <button
                       type="button"
                       onClick={() => handleRemoveImage(path)}
-                      className="absolute top-1 right-1 size-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center hover:bg-destructive/90"
+                      className="absolute top-1 right-1 size-4 rounded-full bg-black/40 text-[10px] text-white/80 hover:bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       ✕
                     </button>
@@ -313,55 +337,25 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
         </CardContent>
       </Card>
 
-      {/* Quality checks */}
-      {showcase && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Quality checks</CardTitle>
-            <CardDescription>El dominio debe responder y pasar chequeo anti-spam para publicar.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-2 text-sm">
-              <span className={domainOk ? "text-green-600" : "text-muted-foreground"}>
-                {domainOk ? "✓" : "○"}
-              </span>
-              Domain active (HTTP 200)
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <span className={spamOk ? "text-green-600" : "text-muted-foreground"}>
-                {spamOk ? "✓" : "○"}
-              </span>
-              Anti-spam check
-            </div>
-            <Button variant="outline" size="sm" onClick={runChecks} disabled={checksRunning || !link}>
-              {checksRunning ? "Running checks..." : "Run checks"}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Actions */}
+      {/* Actions: single button per state */}
       <div className="flex items-center gap-3">
         {isNew ? (
-          <Button onClick={() => save(false)} disabled={saving}>
-            {saving ? "Creating..." : "Create showcase"}
+          <Button onClick={handlePublish} disabled={publishing}>
+            {publishing ? "Publishing..." : "Publish to showcase"}
           </Button>
-        ) : (
+        ) : status === "published" ? (
           <>
-            <Button onClick={() => save(false)} disabled={saving} variant="outline">
-              {saving ? "Saving..." : "Save"}
+            <Button onClick={handleUpdate} disabled={updating} variant="outline">
+              {updating ? "Updating..." : "Update"}
             </Button>
-            {status === "draft" && publishReady && (
-              <Button onClick={() => save(true)} disabled={saving}>
-                {saving ? "Publishing..." : "Publish"}
-              </Button>
-            )}
-            {status === "published" && (
-              <Button onClick={() => updateShowcaseStatus(waitlistId, showcase.id, "draft")} variant="ghost">
-                Unpublish
-              </Button>
-            )}
+            <Button onClick={handleUnpublish} variant="ghost">
+              Unpublish
+            </Button>
           </>
+        ) : (
+          <Button onClick={handlePublish} disabled={publishing}>
+            {publishing ? "Publishing..." : "Publish"}
+          </Button>
         )}
       </div>
     </div>

@@ -3,8 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
-import { hasFeature } from "@/lib/plans";
-import type { Plan } from "@/lib/plans";
 
 // ── create ──
 export async function createShowcase(waitlistId: string, formData: FormData) {
@@ -33,15 +31,19 @@ export async function createShowcase(waitlistId: string, formData: FormData) {
 
   if (existing) return { error: "Este proyecto ya tiene un showcase." };
 
-  const { error } = await supabase.from("showcases").insert({
-    waitlist_id: waitlistId,
-    name,
-    slug,
-    link,
-    description,
-    category_1: category1,
-    category_2: category2,
-  });
+  const { data: created, error } = await supabase
+    .from("showcases")
+    .insert({
+      waitlist_id: waitlistId,
+      name,
+      slug,
+      link,
+      description,
+      category_1: category1,
+      category_2: category2,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     if (error.code === "23505") return { error: "El slug ya está en uso." };
@@ -49,10 +51,10 @@ export async function createShowcase(waitlistId: string, formData: FormData) {
   }
 
   revalidatePath(`/dashboard/waitlists/${waitlistId}/showcase`);
-  return { success: true };
+  return { success: true, id: created.id };
 }
 
-// ── update ──
+// ── update (guarda cambios sin publicar) ──
 export async function updateShowcase(waitlistId: string, showcaseId: string, formData: FormData) {
   const supabase = await createClient();
 
@@ -72,12 +74,10 @@ export async function updateShowcase(waitlistId: string, showcaseId: string, for
   const featuredBadge = formData.get("featured_badge");
   if (featuredBadge !== null) updates.featured_badge = featuredBadge === "on";
 
-  const { data: updated, error } = await supabase
+  const { error } = await supabase
     .from("showcases")
     .update({ ...updates } as any)
-    .eq("id", showcaseId)
-    .select("images")
-    .single();
+    .eq("id", showcaseId);
 
   if (error) {
     if (error.code === "23505") return { error: "El slug ya está en uso." };
@@ -85,28 +85,45 @@ export async function updateShowcase(waitlistId: string, showcaseId: string, for
   }
 
   revalidatePath(`/dashboard/waitlists/${waitlistId}/showcase`);
-  return { success: true, images: (updated?.images as string[]) ?? [] };
+  revalidatePath("/showcase", "layout");
+  return { success: true };
 }
 
-// ── publish ──
-export async function publishShowcase(waitlistId: string, showcaseId: string) {
-  const supabase = await createClient();
+// ── publish (guarda, corre checks, publica) ──
+export async function publishShowcase(waitlistId: string, showcaseId: string, link: string, formData: FormData) {
+  // 1. Guardar cambios
+  const saveRes = await updateShowcase(waitlistId, showcaseId, formData);
+  if (saveRes.error) return { error: saveRes.error };
 
-  const { data: sc } = await supabase
-    .from("showcases")
-    .select("domain_check_passed, spam_check_passed")
-    .eq("id", showcaseId)
-    .single();
+  // 2. Domain check
+  let domainOk = false;
+  try {
+    const res = await fetch(link, { method: "HEAD", signal: AbortSignal.timeout(10000) });
+    domainOk = res.ok;
+  } catch { /* ignore */ }
 
-  if (!sc) return { error: "Showcase no encontrado." };
-
-  if (!sc.domain_check_passed || !sc.spam_check_passed) {
-    return { error: "El dominio y el chequeo anti-spam deben pasar antes de publicar." };
+  if (!domainOk) {
+    return { error: "Domain not reachable. Make sure your website responds with HTTP 200." };
   }
 
-  const { error } = await supabase
+  // 3. Anti-spam (puntapié)
+  const spamOk = true;
+
+  if (!spamOk) {
+    return { error: "Spam check failed. Your domain has been flagged." };
+  }
+
+  // 4. Guardar checks + publicar
+  const admin = createAdminClient();
+  const { error } = await admin
     .from("showcases")
-    .update({ status: "published" })
+    .update({
+      status: "published",
+      domain_check_passed: true,
+      spam_check_passed: true,
+      last_domain_check: new Date().toISOString(),
+      last_spam_check: new Date().toISOString(),
+    })
     .eq("id", showcaseId);
 
   if (error) return { error: error.message };
@@ -116,7 +133,7 @@ export async function publishShowcase(waitlistId: string, showcaseId: string) {
   return { success: true };
 }
 
-// ── unpublish / delete ──
+// ── unpublish ──
 export async function updateShowcaseStatus(waitlistId: string, showcaseId: string, status: "draft" | "published" | "rejected") {
   const supabase = await createClient();
   const { error } = await supabase
@@ -149,7 +166,6 @@ export async function uploadShowcaseImage(showcaseId: string, formData: FormData
 
   if (error) return { error: error.message };
 
-  // Add to images array
   const { data: sc } = await admin
     .from("showcases")
     .select("images")
@@ -173,8 +189,6 @@ export async function uploadShowcaseImage(showcaseId: string, formData: FormData
 export async function removeShowcaseImage(showcaseId: string, path: string) {
   const admin = createAdminClient();
 
-  await admin.storage.from("showcase-images").remove([path]);
-
   const { data: sc } = await admin
     .from("showcases")
     .select("images")
@@ -183,39 +197,15 @@ export async function removeShowcaseImage(showcaseId: string, path: string) {
 
   const images = ((sc?.images as string[]) ?? []).filter((p: string) => p !== path);
 
+  // Update DB first (optimista: el caller ya mostró el cambio)
   const { error } = await admin
     .from("showcases")
     .update({ images })
     .eq("id", showcaseId);
 
+  // Delete from storage (fire and forget)
+  await admin.storage.from("showcase-images").remove([path]);
+
   if (error) return { error: error.message };
   return { success: true, images };
-}
-
-// ── run quality checks ──
-export async function runQualityChecks(showcaseId: string, link: string) {
-  const admin = createAdminClient();
-
-  // Domain check
-  let domainOk = false;
-  try {
-    const res = await fetch(link, { method: "HEAD", signal: AbortSignal.timeout(10000) });
-    domainOk = res.ok;
-  } catch { /* ignore */ }
-
-  // Anti-spam: skip if no API configured
-  const spamOk = true; // puntapié para futuro
-
-  const { error } = await admin
-    .from("showcases")
-    .update({
-      domain_check_passed: domainOk,
-      spam_check_passed: spamOk,
-      last_domain_check: new Date().toISOString(),
-      last_spam_check: new Date().toISOString(),
-    })
-    .eq("id", showcaseId);
-
-  if (error) return { error: error.message };
-  return { success: true, domain_ok: domainOk, spam_ok: spamOk };
 }
