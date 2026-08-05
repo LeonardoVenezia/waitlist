@@ -132,7 +132,7 @@ export async function updateShowcaseStatus(waitlistId: string, showcaseId: strin
 
 // ── upload image ──
 export async function uploadShowcaseImage(showcaseId: string, formData: FormData) {
-  const supabase = await createClient();
+  const admin = createAdminClient();
 
   const file = formData.get("file") as File;
   if (!file) return { error: "No se recibió archivo." };
@@ -143,14 +143,14 @@ export async function uploadShowcaseImage(showcaseId: string, formData: FormData
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const path = `${showcaseId}/${filename}`;
 
-  const { error } = await supabase.storage
+  const { error } = await admin.storage
     .from("showcase-images")
     .upload(path, file, { upsert: false });
 
   if (error) return { error: error.message };
 
   // Add to images array
-  const { data: sc } = await supabase
+  const { data: sc } = await admin
     .from("showcases")
     .select("images")
     .eq("id", showcaseId)
@@ -159,7 +159,7 @@ export async function uploadShowcaseImage(showcaseId: string, formData: FormData
   const images = (sc?.images as string[]) ?? [];
   images.push(path);
 
-  const { error: updateErr } = await supabase
+  const { error: updateErr } = await admin
     .from("showcases")
     .update({ images })
     .eq("id", showcaseId);
@@ -171,11 +171,11 @@ export async function uploadShowcaseImage(showcaseId: string, formData: FormData
 
 // ── remove image ──
 export async function removeShowcaseImage(showcaseId: string, path: string) {
-  const supabase = await createClient();
+  const admin = createAdminClient();
 
-  await supabase.storage.from("showcase-images").remove([path]);
+  await admin.storage.from("showcase-images").remove([path]);
 
-  const { data: sc } = await supabase
+  const { data: sc } = await admin
     .from("showcases")
     .select("images")
     .eq("id", showcaseId)
@@ -183,7 +183,7 @@ export async function removeShowcaseImage(showcaseId: string, path: string) {
 
   const images = ((sc?.images as string[]) ?? []).filter((p: string) => p !== path);
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("showcases")
     .update({ images })
     .eq("id", showcaseId);
