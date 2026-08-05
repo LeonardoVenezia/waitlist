@@ -16,6 +16,7 @@ const subNavItems = [
   { label: "Submissions", href: (id: string) => `/dashboard/waitlists/${id}/subscribers`, icon: "📧" },
   { label: "Page Builder", href: (id: string) => `/dashboard/waitlists/${id}/page-builder`, icon: "📄" },
   { label: "Integration", href: (id: string) => `/dashboard/waitlists/${id}/integration`, icon: "🔌" },
+  { label: "Showcase", href: (id: string) => `/dashboard/waitlists/${id}/showcase`, icon: "🏪" },
   { label: "Settings", href: (id: string) => `/dashboard/waitlists/${id}/settings`, icon: "⚙️" },
 ];
 

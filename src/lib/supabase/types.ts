@@ -255,6 +255,76 @@ export interface Database {
           },
         ];
       };
+      showcases: {
+        Row: {
+          id: string;
+          waitlist_id: string;
+          name: string;
+          slug: string;
+          link: string;
+          description: string;
+          category_1: string;
+          category_2: string | null;
+          images: Json;
+          video_url: string | null;
+          featured_badge: boolean;
+          status: "draft" | "published" | "rejected";
+          domain_check_passed: boolean;
+          spam_check_passed: boolean;
+          last_domain_check: string | null;
+          last_spam_check: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          waitlist_id: string;
+          name: string;
+          slug: string;
+          link: string;
+          description: string;
+          category_1: string;
+          category_2?: string | null;
+          images?: Json;
+          video_url?: string | null;
+          featured_badge?: boolean;
+          status?: "draft" | "published" | "rejected";
+          domain_check_passed?: boolean;
+          spam_check_passed?: boolean;
+          last_domain_check?: string | null;
+          last_spam_check?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          waitlist_id?: string;
+          name?: string;
+          slug?: string;
+          link?: string;
+          description?: string;
+          category_1?: string;
+          category_2?: string | null;
+          images?: Json;
+          video_url?: string | null;
+          featured_badge?: boolean;
+          status?: "draft" | "published" | "rejected";
+          domain_check_passed?: boolean;
+          spam_check_passed?: boolean;
+          last_domain_check?: string | null;
+          last_spam_check?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "showcases_waitlist_id_fkey";
+            columns: ["waitlist_id"];
+            referencedRelation: "waitlists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       page_events: {
         Row: {
           id: string;

@@ -111,6 +111,7 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
           { label: "Subscribers", href: "subscribers" },
           { label: "Page Builder", href: "page-builder" },
           { label: "Integration", href: "integration" },
+          { label: "Showcase", href: "showcase" },
           { label: "Analytics", href: "analytics" },
           { label: "Export", href: "export" },
           { label: "Embed", href: "embed" },
