@@ -46,4 +46,4 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
       </div>
     </Link>
   );
-}:
+}
