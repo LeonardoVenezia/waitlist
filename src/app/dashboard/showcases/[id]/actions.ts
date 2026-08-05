@@ -154,9 +154,20 @@ export async function uploadShowcaseImage(showcaseId: string, formData: FormData
   const file = formData.get("file") as File;
   if (!file) return { error: "No se recibió archivo." };
   if (!file.type.startsWith("image/")) return { error: "Solo se permiten imágenes." };
-  if (file.size > 5 * 1024 * 1024) return { error: "Máximo 5 MB por imagen." };
+  if (file.size > 1 * 1024 * 1024) return { error: "Máximo 1 MB por imagen." };
 
-  const ext = file.name.split(".").pop() ?? "jpg";
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+  if (!allowedTypes.includes(file.type)) {
+    return { error: "Solo se aceptan JPEG, PNG, WebP o AVIF." };
+  }
+
+  const extMap: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/avif": "avif",
+  };
+  const ext = extMap[file.type] ?? "jpg";
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const path = `${showcaseId}/${filename}`;
 

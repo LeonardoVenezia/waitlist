@@ -24,7 +24,7 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
     <Link href={`/showcase/${data.slug}`} className="group block rounded-xl border bg-card hover:border-primary/40 transition-colors overflow-hidden">
       <div className="aspect-video bg-muted flex items-center justify-center text-4xl">
         {imageUrl ? (
-          <img src={imageUrl} alt={data.name} className="size-full object-contain bg-muted" />
+          <img src={imageUrl} alt={data.name} className="size-full object-cover" />
         ) : (
           "🖼️"
         )}
