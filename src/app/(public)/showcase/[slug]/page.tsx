@@ -2,25 +2,42 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const APP_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:54321";
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:54321";
+
+interface ShowcaseDetail {
+  id: string;
+  waitlist_id: string;
+  name: string;
+  slug: string;
+  link: string;
+  description: string;
+  category_1: string;
+  category_2: string | null;
+  images: string[];
+  video_url: string | null;
+  featured_badge: boolean;
+  main_type: string;
+  status: string;
+}
 
 export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await props.params;
   const admin = createAdminClient();
-  const { data: showcase } = await admin
+  const { data: raw } = await admin
     .from("showcases")
     .select("name, description")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
 
-  if (!showcase) return { title: "Not Found" };
+  if (!raw) return { title: "Not Found" };
 
+  const sc = raw as { name: string; description: string };
   return {
-    title: `${showcase.name} — Showcase`,
-    description: showcase.description.slice(0, 160),
+    title: `${sc.name} — Showcase`,
+    description: sc.description.slice(0, 160),
   };
 }
 
@@ -39,96 +56,84 @@ export default async function ShowcaseDetailPage(props: {
 
   if (!raw) notFound();
 
-  const showcase = raw as {
-    id: string;
-    waitlist_id: string;
-    name: string;
-    slug: string;
-    link: string;
-    description: string;
-    category_1: string;
-    category_2: string | null;
-    images: string[];
-    video_url: string | null;
-    featured_badge: boolean;
-    status: string;
-  };
-
-  // Fetch plan for badge
-  const { data: wl } = await admin
-    .from("waitlists")
-    .select("plan")
-    .eq("id", showcase.waitlist_id)
-    .maybeSingle();
-
-  const plan = wl?.plan ?? "free";
-  const images = showcase.images as string[] ?? [];
-  const videoId = extractYouTubeId(showcase.video_url);
-
-  const hasYTPreview = !!videoId;
+  const showcase = raw as unknown as ShowcaseDetail;
+  const images = Array.isArray(showcase.images) ? showcase.images : [];
+  const isVideo = showcase.main_type === "video" && showcase.video_url;
+  const ytId = isVideo ? extractYouTubeId(showcase.video_url) : null;
+  const mainImage = images[0];
+  const gallery = images.slice(1);
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Hero */}
+      {isVideo && ytId ? (
+        <div className="aspect-video w-full bg-black max-h-[60vh]">
+          <iframe
+            width="100%"
+            height="100%"
+            src={`https://www.youtube.com/embed/${ytId}`}
+            allowFullScreen
+            className="border-0"
+          />
+        </div>
+      ) : mainImage ? (
+        <div className="w-full max-h-[50vh] overflow-hidden bg-muted">
+          <img
+            src={`${SUPABASE_URL}/storage/v1/object/public/showcase-images/${mainImage}`}
+            alt={showcase.name}
+            className="w-full h-full object-cover max-h-[50vh]"
+          />
+        </div>
+      ) : null}
+
       <div className="mx-auto max-w-3xl px-6 py-12">
-        {/* Header */}
-        <div className="space-y-4 mb-8">
-          <p className="text-sm text-muted-foreground">
-            <a href="/showcase" className="hover:text-foreground transition-colors">← Showcase</a>
-          </p>
-          <h1 className="text-3xl font-bold">{showcase.name as string}</h1>
-          <div className="flex flex-wrap gap-2">
-            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{showcase.category_1 as string}</span>
-            {showcase.category_2 && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{showcase.category_2 as string}</span>
-            )}
-            {showcase.featured_badge && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">Featured</span>
-            )}
-          </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          <a href="/showcase" className="hover:text-foreground transition-colors">← Showcase</a>
+        </p>
+
+        <h1 className="text-3xl font-bold mb-3">{showcase.name}</h1>
+
+        <div className="flex flex-wrap gap-2 mb-8">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{showcase.category_1}</span>
+          {showcase.category_2 && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{showcase.category_2}</span>
+          )}
+          {showcase.featured_badge && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">Featured</span>
+          )}
         </div>
 
-        {/* Images gallery */}
-        {images.length > 0 && (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 mb-8">
-            {images.map((path: string) => (
-              <img
-                key={path}
-                src={`${APP_URL}/storage/v1/object/public/showcase-images/${path}`}
-                alt=""
-                className="rounded-xl border object-cover aspect-video w-full"
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Video embed */}
-        {hasYTPreview && (
-          <div className="aspect-video rounded-xl overflow-hidden bg-muted mb-8">
-            <iframe
-              width="100%"
-              height="100%"
-              src={`https://www.youtube.com/embed/${videoId}`}
-              allowFullScreen
-              className="border-0"
-            />
-          </div>
-        )}
-
-        {/* Description */}
-        <div className="prose prose-sm max-w-none mb-8">
-          <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{showcase.description as string}</p>
+        <div className="mb-8">
+          <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{showcase.description}</p>
         </div>
+
+        {/* Gallery */}
+        {gallery.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-sm font-medium mb-3">Gallery</h2>
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
+              {gallery.map((path: string) => (
+                <img
+                  key={path}
+                  src={`${SUPABASE_URL}/storage/v1/object/public/showcase-images/${path}`}
+                  alt=""
+                  className="rounded-xl border object-cover aspect-video w-full"
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Dofollow link */}
         <div className="rounded-xl border bg-card p-6 mb-8 text-center">
           <p className="text-sm text-muted-foreground mb-3">Visit the product</p>
           <a
-            href={showcase.link as string}
+            href={showcase.link}
             target="_blank"
             rel="dofollow"
             className="text-primary font-medium text-lg hover:underline"
           >
-            {showcase.link as string}
+            {showcase.link}
           </a>
         </div>
 

@@ -41,6 +41,7 @@ export async function createShowcase(waitlistId: string, formData: FormData) {
       description,
       category_1: category1,
       category_2: category2,
+      main_type: ((formData.get("main_type") as string) || "image") as "image" | "video",
     })
     .select("id")
     .single();
@@ -59,7 +60,7 @@ export async function updateShowcase(waitlistId: string, showcaseId: string, for
   const supabase = await createClient();
 
   const updates: Record<string, string | boolean | null> = {};
-  for (const key of ["name", "slug", "link", "description", "category_1", "video_url"]) {
+  for (const key of ["name", "slug", "link", "description", "category_1", "video_url", "main_type"]) {
     const val = formData.get(key) as string;
     if (val !== null) updates[key] = val;
   }

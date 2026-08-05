@@ -268,6 +268,7 @@ export interface Database {
           images: Json;
           video_url: string | null;
           featured_badge: boolean;
+          main_type: "image" | "video";
           status: "draft" | "published" | "rejected";
           domain_check_passed: boolean;
           spam_check_passed: boolean;
@@ -288,6 +289,7 @@ export interface Database {
           images?: Json;
           video_url?: string | null;
           featured_badge?: boolean;
+          main_type?: "image" | "video";
           status?: "draft" | "published" | "rejected";
           domain_check_passed?: boolean;
           spam_check_passed?: boolean;
@@ -308,6 +310,7 @@ export interface Database {
           images?: Json;
           video_url?: string | null;
           featured_badge?: boolean;
+          main_type?: "image" | "video";
           status?: "draft" | "published" | "rejected";
           domain_check_passed?: boolean;
           spam_check_passed?: boolean;

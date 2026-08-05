@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,7 @@ interface ShowcaseData {
   images: string[];
   video_url: string | null;
   featured_badge: boolean;
+  main_type: string;
   status: string;
   domain_check_passed: boolean;
   spam_check_passed: boolean;
@@ -43,7 +44,7 @@ interface ShowcaseData {
 
 function buildFormData(state: {
   name: string; slug: string; link: string; desc: string;
-  cat1: string; cat2: string | null; videoUrl: string; featuredB: boolean;
+  cat1: string; cat2: string | null; videoUrl: string; featuredB: boolean; mainType: string;
 }) {
   const fd = new FormData();
   fd.set("name", state.name);
@@ -54,6 +55,7 @@ function buildFormData(state: {
   if (state.cat2) fd.set("category_2", state.cat2);
   if (state.videoUrl) fd.set("video_url", state.videoUrl);
   if (state.featuredB) fd.set("featured_badge", "on");
+  fd.set("main_type", state.mainType);
   return fd;
 }
 
@@ -70,6 +72,7 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
   const [videoUrl, setVideoUrl] = useState(showcase?.video_url ?? "");
   const [images, setImages] = useState<string[]>(showcase?.images ?? []);
   const [featuredB, setFeaturedB] = useState(showcase?.featured_badge ?? false);
+  const [mainType, setMainType] = useState(showcase?.main_type ?? "image");
   const [status, setStatus] = useState(showcase?.status ?? "draft");
 
   const [publishing, setPublishing] = useState(false);
@@ -81,7 +84,7 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
     return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   }
 
-  const formState = { name, slug, link, desc, cat1, cat2, videoUrl, featuredB };
+  const formState = { name, slug, link, desc, cat1, cat2, videoUrl, featuredB, mainType };
 
   async function handlePublish() {
     setPublishing(true);
@@ -91,7 +94,6 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
     if (isNew) {
       const res = await createShowcase(waitlistId, fd);
       if (res.error) { setError(res.error); setPublishing(false); return; }
-      // Publish the newly created showcase
       const pub = await publishShowcase(waitlistId, res.id!, link, fd);
       if (pub.error) { setError(pub.error); setPublishing(false); return; }
       setStatus("published");
@@ -131,7 +133,6 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Optimista: preview local inmediato
     const localUrl = URL.createObjectURL(file);
     setImages((prev) => [...prev, localUrl]);
     setUploading(true);
@@ -144,7 +145,6 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
       setImages((prev) => prev.filter((u) => u !== localUrl));
       setError(res.error);
     } else {
-      // Reemplazar preview local con path real
       const realImages = res.images as string[];
       URL.revokeObjectURL(localUrl);
       setImages(realImages);
@@ -154,7 +154,6 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
 
   async function handleRemoveImage(path: string) {
     if (!showcase) return;
-    // Optimista: quitar de la UI inmediatamente
     const previous = images;
     setImages((prev) => prev.filter((u) => u !== path));
 
@@ -171,6 +170,7 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
   }
 
   const showYTPreview = videoUrl && extractYouTubeId(videoUrl);
+  const hasImages = images.length > 0;
 
   return (
     <div className="space-y-6">
@@ -178,7 +178,6 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>
       )}
 
-      {/* Status bar */}
       {showcase && (
         <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3 text-sm">
           <span className="text-muted-foreground">Status:</span>
@@ -193,7 +192,6 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
         </div>
       )}
 
-      {/* Main form */}
       <Card>
         <CardHeader>
           <CardTitle>{isNew ? "Create showcase" : "Edit showcase"}</CardTitle>
@@ -272,55 +270,91 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="video">YouTube video (optional)</Label>
-            <Input id="video" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." />
-            {showYTPreview && (
-              <div className="aspect-video rounded-lg overflow-hidden bg-muted mt-2">
-                <iframe
-                  width="100%"
-                  height="100%"
-                  src={`https://www.youtube.com/embed/${extractYouTubeId(videoUrl)}`}
-                  allowFullScreen
-                  className="border-0"
+          {/* Main media: image or video */}
+          <div className="space-y-3 pt-2 border-t">
+            <Label>Main media</Label>
+            <div className="flex gap-4">
+              <label className={`flex items-center gap-2 cursor-pointer ${!hasImages ? "opacity-50 cursor-not-allowed" : ""}`}>
+                <input
+                  type="radio"
+                  name="main_type_local"
+                  checked={mainType === "image"}
+                  onChange={() => setMainType("image")}
+                  disabled={!hasImages}
                 />
+                <span className="text-sm">Image</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="main_type_local"
+                  checked={mainType === "video"}
+                  onChange={() => setMainType("video")}
+                />
+                <span className="text-sm">Video</span>
+              </label>
+            </div>
+
+            {mainType === "video" && (
+              <div className="space-y-2">
+                <Label htmlFor="video">YouTube video</Label>
+                <Input id="video" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." />
+                {showYTPreview && (
+                  <div className="aspect-video rounded-lg overflow-hidden bg-muted mt-2">
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      src={`https://www.youtube.com/embed/${extractYouTubeId(videoUrl)}`}
+                      allowFullScreen
+                      className="border-0"
+                    />
+                  </div>
+                )}
+                {!videoUrl && (
+                  <p className="text-xs text-muted-foreground">Add a YouTube video URL above.</p>
+                )}
               </div>
             )}
           </div>
 
           {/* Images */}
-          {showcase && (
-            <div className="space-y-2">
-              <Label>Images ({images.length}/5)</Label>
-              <div className="flex flex-wrap gap-3">
-                {images.map((path) => (
-                  <div key={path} className="relative size-24 rounded-lg border overflow-hidden group">
-                    <img
-                      src={path.startsWith("blob:") ? path : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/showcase-images/${path}`}
-                      alt=""
-                      className="size-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage(path)}
-                      className="absolute top-1 right-1 size-4 rounded-full bg-black/40 text-[10px] text-white/80 hover:bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-                {images.length < 5 && (
-                  <label className="size-24 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
-                    <span className="text-2xl text-muted-foreground">+</span>
-                    <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
-                  </label>
-                )}
-              </div>
-              {uploading && <p className="text-xs text-muted-foreground">Uploading...</p>}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Gallery ({images.length}/5)</Label>
+              {mainType === "image" && images.length === 0 && (
+                <span className="text-xs text-muted-foreground">Upload at least one image as main media</span>
+              )}
             </div>
-          )}
+            <div className="flex flex-wrap gap-3">
+              {images.map((path, idx) => (
+                <div key={path} className="relative size-24 rounded-lg border overflow-hidden group">
+                  <img
+                    src={path.startsWith("blob:") ? path : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/showcase-images/${path}`}
+                    alt=""
+                    className="size-full object-cover"
+                  />
+                  {mainType === "image" && idx === 0 && (
+                    <span className="absolute bottom-1 left-1 text-[9px] px-1 rounded bg-black/60 text-white font-medium">Main</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(path)}
+                    className="absolute top-1 right-1 size-4 rounded-full bg-black/40 text-[10px] text-white/80 hover:bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              {images.length < 5 && (
+                <label className="size-24 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
+                  <span className="text-2xl text-muted-foreground">+</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+                </label>
+              )}
+            </div>
+            {uploading && <p className="text-xs text-muted-foreground">Uploading...</p>}
+          </div>
 
-          {/* Featured badge (gated) */}
           {showcase && (
             <FeatureGate plan={plan} feature="remove_branding" waitlistId={waitlistId}>
               <label className="flex items-center gap-2 text-sm">
@@ -337,7 +371,6 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
         </CardContent>
       </Card>
 
-      {/* Actions: single button per state */}
       <div className="flex items-center gap-3">
         {isNew ? (
           <Button onClick={handlePublish} disabled={publishing}>
