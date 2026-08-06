@@ -25,6 +25,8 @@ interface SubscribeResult {
   referral_code: string;
   referral_link: string;
   leaderboard?: Array<{ position: number; email: string; referral_count: number }>;
+  milestones?: Array<{ count: number; reward: string }>;
+  reward_text?: string | null;
 }
 
 declare global {
@@ -159,6 +161,7 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
 
   // Success state
   if (result) {
+    const showMilestones = result.milestones && result.milestones.length > 0;
     return (
       <div className="space-y-4">
         {(thankYou.message as string) && (
@@ -170,6 +173,10 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
             ? ` Your position: #${result.position}`
             : ""}
         </p>
+
+        {result.reward_text && (
+          <p className="text-sm font-medium text-primary">{result.reward_text}</p>
+        )}
 
         {thankYou.show_referral_link !== false && (
           <div className="space-y-2">
@@ -205,6 +212,17 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {showMilestones && (
+          <div className="rounded-lg border p-4 text-left">
+            <h3 className="mb-2 text-sm font-medium">Rewards</h3>
+            <ul className="space-y-1 text-sm text-muted-foreground">
+              {result.milestones!.map((m, i) => (
+                <li key={i}>🎁 {m.reward} at {m.count} referrals</li>
+              ))}
+            </ul>
           </div>
         )}
       </div>

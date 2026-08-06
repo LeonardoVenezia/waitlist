@@ -284,6 +284,11 @@ export default async function HostedPage(props: {
                 );
             }
           })}
+          {(settings.referral as { reward_text?: string })?.reward_text && (
+            <p className="text-sm text-center text-muted-foreground mt-4">
+              {(settings.referral as { reward_text?: string }).reward_text}
+            </p>
+          )}
           <MilestonesDisplay milestones={(settings.referral as { milestones?: Array<{ count: number; reward: string }> })?.milestones ?? []} />
         </div>
       </div>
@@ -324,6 +329,12 @@ export default async function HostedPage(props: {
           buttonColor={primaryColor}
           buttonTextColor="#ffffff"
         />
+        {(settings.referral as { reward_text?: string })?.reward_text && (
+          <p className="text-sm text-center text-muted-foreground mt-4">
+            {(settings.referral as { reward_text?: string }).reward_text}
+          </p>
+        )}
+        <MilestonesDisplay milestones={(settings.referral as { milestones?: Array<{ count: number; reward: string }> })?.milestones ?? []} />
       </div>
     </div>
   );

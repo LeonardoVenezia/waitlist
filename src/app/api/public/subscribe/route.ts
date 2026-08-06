@@ -10,6 +10,7 @@ import { sendEmail } from "@/lib/email";
 import { renderWelcomeEmail } from "@/emails/welcome";
 import { renderSignupNotificationEmail } from "@/emails/signup-notification";
 import { renderVerificationEmail } from "@/emails/verify";
+import { renderMilestoneReachedEmail } from "@/emails/milestone-reached";
 import { createVerificationToken } from "@/lib/api/verify-token";
 import { sendSlackNotification } from "@/lib/api/slack";
 import { hasFeature } from "@/lib/plans";
@@ -58,6 +59,8 @@ export async function POST(request: Request) {
 
   const settings = waitlist.settings as Record<string, unknown>;
   const referralSettings = settings.referral as Record<string, unknown> || {};
+  const milestones = (referralSettings.milestones as Array<{ count: number; reward: string }>) ?? [];
+  const rewardText = referralSettings.reward_text as string | undefined;
 
   // 2. Validate Turnstile token
   if (turnstileToken) {
@@ -196,14 +199,39 @@ export async function POST(request: Request) {
 
   // 12. If referrer exists, increment their referral_count
   if (referredById) {
+    // Read current count to detect milestone crossings
+    const { data: referrerBefore } = await supabase
+      .from("subscribers")
+      .select("email, referral_count")
+      .eq("id", referredById)
+      .single();
+    const oldCount = (referrerBefore?.referral_count as number) ?? 0;
+    const newCount = oldCount + 1;
+
     await supabase.rpc("increment_referral_count", {
       p_subscriber_id: referredById,
     }).then(({ error }) => {
       if (error) {
-        // Non-fatal — subscriber was created, just log
         console.error("Failed to increment referral count:", error);
       }
     });
+
+    // Check if any milestone was just crossed
+    const crossed = milestones.filter((m) => m.count > oldCount && m.count <= newCount);
+    if (crossed.length > 0 && referrerBefore?.email) {
+      for (const ms of crossed) {
+        sendEmail({
+          to: referrerBefore.email,
+          subject: `🎉 You unlocked a reward on ${waitlist.name}!`,
+          html: renderMilestoneReachedEmail({
+            email: referrerBefore.email,
+            waitlistName: waitlist.name,
+            count: newCount,
+            reward: ms.reward,
+          }),
+        }).catch(() => {});
+      }
+    }
   }
 
   // 13. Get position and leaderboard
@@ -227,6 +255,8 @@ export async function POST(request: Request) {
         waitlistName: waitlist.name,
         referralLink: `${pageUrl}?ref=${referralCode}`,
         position,
+        milestones,
+        rewardText,
       }),
     }).catch(() => {});
   }
@@ -299,5 +329,7 @@ export async function POST(request: Request) {
     referral_code: referralCode,
     referral_link: `${pageUrl}?ref=${referralCode}`,
     leaderboard,
+    milestones,
+    reward_text: rewardText ?? null,
   });
 }
