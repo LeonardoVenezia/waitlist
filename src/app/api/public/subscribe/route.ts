@@ -61,6 +61,16 @@ export async function POST(request: Request) {
   const referralSettings = settings.referral as Record<string, unknown> || {};
   const milestones = (referralSettings.milestones as Array<{ count: number; reward: string }>) ?? [];
   const rewardText = referralSettings.reward_text as string | undefined;
+  const postSignup = settings.post_signup as {
+    enabled?: boolean;
+    title?: string;
+    questions?: Array<{
+      type: "text" | "textarea" | "select";
+      label: string;
+      required?: boolean;
+      options?: string[];
+    }>;
+  } | undefined;
 
   // 2. Validate Turnstile token
   if (turnstileToken) {
@@ -331,5 +341,8 @@ export async function POST(request: Request) {
     leaderboard,
     milestones,
     reward_text: rewardText ?? null,
+    post_signup: postSignup?.enabled && postSignup.questions?.length
+      ? { title: postSignup.title ?? "", questions: postSignup.questions }
+      : null,
   });
 }

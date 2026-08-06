@@ -122,6 +122,7 @@ export async function updateWaitlistSettings(
     blocked_emails: blockedEmails ? blockedEmails.split(",").map((e: string) => e.trim()).filter(Boolean) : [],
     language: (formData.get("language") as string) || "en",
     remove_branding: formData.get("remove_branding") === "on",
+    post_signup: parsePostSignup(formData.get("post_signup") as string),
     widget: existing.widget,
     page_sections: existing.page_sections,
     leaderboard: existing.leaderboard,
@@ -206,5 +207,14 @@ function parseMilestones(raw: string | null): Array<{ count: number; reward: str
     return [];
   } catch {
     return [];
+  }
+}
+
+function parsePostSignup(raw: string | null): Record<string, unknown> | undefined {
+  if (!raw) return undefined;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return undefined;
   }
 }

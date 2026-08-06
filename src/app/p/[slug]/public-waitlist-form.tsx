@@ -27,6 +27,15 @@ interface SubscribeResult {
   leaderboard?: Array<{ position: number; email: string; referral_count: number }>;
   milestones?: Array<{ count: number; reward: string }>;
   reward_text?: string | null;
+  post_signup?: {
+    title: string;
+    questions: Array<{
+      type: "text" | "textarea" | "select";
+      label: string;
+      required?: boolean;
+      options?: string[];
+    }>;
+  } | null;
 }
 
 declare global {
@@ -51,6 +60,9 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(errorParam ?? null);
   const [result, setResult] = useState<SubscribeResult | null>(null);
+  const [step, setStep] = useState<"subscribe" | "questions" | "done">("subscribe");
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [savingAnswers, setSavingAnswers] = useState(false);
   const [copied, setCopied] = useState(false);
   const [turnstileReady, setTurnstileReady] = useState(false);
   const turnstileWidgetId = useRef<string | null>(null);
@@ -145,6 +157,12 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
       }
 
       setResult(data);
+      // If post-signup questions are enabled, go to questions step
+      if (data.post_signup) {
+        setStep("questions");
+      } else {
+        setStep("done");
+      }
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -159,8 +177,87 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
     setTimeout(() => setCopied(false), 2000);
   }
 
+  async function handleAnswersSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!result?.post_signup) return;
+    setSavingAnswers(true);
+    setError(null);
+
+    const res = await fetch("/api/public/subscriber", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subscriber_id: result.id, answers }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error ?? "Something went wrong");
+      setSavingAnswers(false);
+      return;
+    }
+
+    setSavingAnswers(false);
+    setStep("done");
+  }
+
+  // Post-signup questions step
+  if (step === "questions" && result?.post_signup) {
+    const ps = result.post_signup;
+    return (
+      <div className="space-y-4">
+        {ps.title && <p className="text-lg font-medium">{ps.title}</p>}
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleAnswersSubmit} className="space-y-4">
+          {ps.questions.map((q, i) => (
+            <div key={i} className="space-y-1.5 text-left">
+              <Label>
+                {q.label}
+                {q.required && <span className="text-red-500 ml-0.5">*</span>}
+              </Label>
+              {q.type === "select" ? (
+                <select
+                  value={answers[q.label] ?? ""}
+                  onChange={(e) => setAnswers({ ...answers, [q.label]: e.target.value })}
+                  required={q.required}
+                  className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm"
+                >
+                  <option value="" disabled>Select...</option>
+                  {(q.options ?? []).map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              ) : q.type === "textarea" ? (
+                <textarea
+                  value={answers[q.label] ?? ""}
+                  onChange={(e) => setAnswers({ ...answers, [q.label]: e.target.value })}
+                  required={q.required}
+                  className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm"
+                  rows={3}
+                />
+              ) : (
+                <Input
+                  type="text"
+                  value={answers[q.label] ?? ""}
+                  onChange={(e) => setAnswers({ ...answers, [q.label]: e.target.value })}
+                  required={q.required}
+                />
+              )}
+            </div>
+          ))}
+          <Button type="submit" className="w-full" disabled={savingAnswers} style={buttonColor ? { backgroundColor: buttonColor, color: buttonTextColor ?? "#fff", borderColor: buttonColor } : undefined}>
+            {savingAnswers ? "Saving..." : "Continue"}
+          </Button>
+        </form>
+      </div>
+    );
+  }
+
   // Success state
-  if (result) {
+  if (step === "done" && result) {
     const showMilestones = result.milestones && result.milestones.length > 0;
     return (
       <div className="space-y-4">

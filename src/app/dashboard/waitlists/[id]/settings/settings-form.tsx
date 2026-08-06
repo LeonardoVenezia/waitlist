@@ -70,7 +70,7 @@ function UpgradeBadge({ plan }: { plan: string }) {
 
 // ── Tab list ──
 const TABS = [
-  "Branding", "Hero", "Thank You", "Submissions", "Email", "Notifications", "Team", "Block",
+  "Branding", "Hero", "Thank You", "Submissions", "Post-signup", "Email", "Notifications", "Team", "Block",
 ] as const;
 
 // ── Milestones Editor ──
@@ -113,6 +113,94 @@ function MilestonesEditor({ defaultMilestones }: { defaultMilestones: Array<{ co
       <button type="button" onClick={() => setMilestones([...milestones, { count: 5, reward: "" }])} className="text-xs text-primary hover:underline">
         + Add milestone
       </button>
+    </div>
+  );
+}
+
+// ── Post-signup Editor ──
+interface PostSignupQuestion {
+  type: "text" | "textarea" | "select";
+  label: string;
+  required: boolean;
+  options: string[];
+}
+
+function PostSignupEditor({ defaultPostSignup }: { defaultPostSignup: { enabled?: boolean; title?: string; questions?: PostSignupQuestion[] } }) {
+  const [enabled, setEnabled] = useState(defaultPostSignup.enabled ?? false);
+  const [title, setTitle] = useState(defaultPostSignup.title ?? "");
+  const [questions, setQuestions] = useState<PostSignupQuestion[]>(defaultPostSignup.questions ?? []);
+
+  function updateQuestion(idx: number, patch: Partial<PostSignupQuestion>) {
+    setQuestions((prev) => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], ...patch };
+      return next;
+    });
+  }
+
+  const serialized = JSON.stringify({ enabled, title, questions });
+
+  return (
+    <div className="space-y-4">
+      <input type="hidden" name="post_signup" value={serialized} />
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="rounded" />
+        Enable post-signup questions
+      </label>
+      {enabled && (
+        <>
+          <div className="space-y-1">
+            <Label htmlFor="ps_title">Step title</Label>
+            <Input id="ps_title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Tell us a bit more" />
+          </div>
+          <div className="space-y-2">
+            <Label>Questions</Label>
+            {questions.map((q, i) => (
+              <div key={i} className="rounded-lg border p-3 space-y-2">
+                <div className="flex items-start gap-2">
+                  <select
+                    value={q.type}
+                    onChange={(e) => updateQuestion(i, { type: e.target.value as PostSignupQuestion["type"], options: e.target.value === "select" ? q.options : [] })}
+                    className="w-24 rounded-lg border border-input bg-transparent px-2 py-1 text-xs"
+                  >
+                    <option value="text">Text</option>
+                    <option value="textarea">Textarea</option>
+                    <option value="select">Select</option>
+                  </select>
+                  <input
+                    type="text"
+                    value={q.label}
+                    onChange={(e) => updateQuestion(i, { label: e.target.value })}
+                    className="flex-1 rounded-lg border border-input bg-transparent px-2 py-1 text-xs"
+                    placeholder="What's your role?"
+                  />
+                  <label className="flex items-center gap-1 text-xs whitespace-nowrap">
+                    <input type="checkbox" checked={q.required} onChange={(e) => updateQuestion(i, { required: e.target.checked })} className="rounded" />
+                    Required
+                  </label>
+                  <button type="button" onClick={() => setQuestions(questions.filter((_, j) => j !== i))} className="text-xs text-destructive hover:underline shrink-0">✕</button>
+                </div>
+                {q.type === "select" && (
+                  <textarea
+                    value={(q.options ?? []).join("\n")}
+                    onChange={(e) => updateQuestion(i, { options: e.target.value.split("\n").filter(Boolean) })}
+                    className="w-full rounded-lg border border-input bg-transparent px-2 py-1 text-xs"
+                    rows={3}
+                    placeholder="Option 1&#10;Option 2&#10;Option 3"
+                  />
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setQuestions([...questions, { type: "text", label: "", required: false, options: [] }])}
+              className="text-xs text-primary hover:underline"
+            >
+              + Add question
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -345,6 +433,19 @@ export function SettingsForm({ waitlist, members }: { waitlist: Waitlist; member
               <p className="text-xs text-muted-foreground mb-3">Set rewards that unlock at specific referral counts. These appear on the thank-you page.</p>
               <MilestonesEditor defaultMilestones={(referral.milestones as Array<{ count: number; reward: string }>) ?? []} />
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── POST-SIGNUP ── */}
+      {tab === "Post-signup" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">Post-signup questions <UpgradeBadge plan="Launch" /></CardTitle>
+            <CardDescription>Ask follow-up questions after a subscriber joins (e.g. role, interests).</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PostSignupEditor defaultPostSignup={(settings.post_signup as { enabled?: boolean; title?: string; questions?: PostSignupQuestion[] }) ?? {}} />
           </CardContent>
         </Card>
       )}
