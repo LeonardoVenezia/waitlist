@@ -92,7 +92,7 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
 
   const formState = { name, slug, link, desc, cat1, cat2, videoUrl, featuredB, mainType };
 
-  async function handlePublish() {
+  async function handlePublish(target: "published" | "building") {
     setPublishing(true);
     setError(null);
     const fd = buildFormData(formState);
@@ -102,17 +102,17 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
     if (isNew) {
       const res = await createShowcase(waitlistId, fd);
       if (res.error) { setError(res.error); setPublishing(false); return; }
-      const pub = await publishShowcase(waitlistId, res.id!, link, fd, galleryFd, toRemove);
+      const pub = await publishShowcase(waitlistId, res.id!, link, fd, target, galleryFd, toRemove);
       if (pub.error) { setError(pub.error); setPublishing(false); return; }
-      setStatus("published");
+      setStatus(target);
       setPublishing(false);
       window.location.reload();
       return;
     }
 
-    const pub = await publishShowcase(waitlistId, showcase!.id, link, fd, galleryFd, toRemove);
+    const pub = await publishShowcase(waitlistId, showcase!.id, link, fd, target, galleryFd, toRemove);
     if (pub.error) { setError(pub.error); setPublishing(false); return; }
-    setStatus("published");
+    setStatus(target);
     setPublishing(false);
     router.refresh();
   }
@@ -238,10 +238,10 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
       {showcase && (
         <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3 text-sm">
           <span className="text-muted-foreground">Status:</span>
-          <Badge variant={status === "published" ? "default" : status === "rejected" ? "destructive" : "outline"}>
+          <Badge variant={status === "published" ? "default" : status === "rejected" ? "destructive" : status === "building" ? "secondary" : "outline"}>
             {status}
           </Badge>
-          {status === "published" && (
+          {(status === "published" || status === "building") && (
             <a href={`${getAppUrl()}/showcase/${showcase.slug}`} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline ml-auto">
               View live →
             </a>
@@ -475,9 +475,14 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
 
       <div className="flex items-center gap-3">
         {isNew ? (
-          <Button onClick={handlePublish} disabled={publishing}>
-            {publishing ? "Publishing..." : "Publish to showcase"}
-          </Button>
+          <>
+            <Button onClick={() => handlePublish("published")} disabled={publishing}>
+              {publishing ? "Publishing..." : "Full launch"}
+            </Button>
+            <Button onClick={() => handlePublish("building")} disabled={publishing} variant="secondary">
+              {publishing ? "Publishing..." : "In construction"}
+            </Button>
+          </>
         ) : status === "published" ? (
           <>
             <Button onClick={handleUpdate} disabled={updating} variant="outline">
@@ -487,10 +492,27 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
               Unpublish
             </Button>
           </>
+        ) : status === "building" ? (
+          <>
+            <Button onClick={handleUpdate} disabled={updating} variant="outline">
+              {updating ? "Updating..." : "Update"}
+            </Button>
+            <Button onClick={() => handlePublish("published")} disabled={publishing}>
+              {publishing ? "Launching..." : "Launch now"}
+            </Button>
+            <Button onClick={handleUnpublish} variant="ghost">
+              Unpublish
+            </Button>
+          </>
         ) : (
-          <Button onClick={handlePublish} disabled={publishing}>
-            {publishing ? "Publishing..." : "Publish"}
-          </Button>
+          <>
+            <Button onClick={() => handlePublish("published")} disabled={publishing}>
+              {publishing ? "Publishing..." : "Full launch"}
+            </Button>
+            <Button onClick={() => handlePublish("building")} disabled={publishing} variant="secondary">
+              {publishing ? "Publishing..." : "In construction"}
+            </Button>
+          </>
         )}
       </div>
     </div>

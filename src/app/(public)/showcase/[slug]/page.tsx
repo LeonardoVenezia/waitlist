@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { PublicWaitlistForm } from "@/app/p/[slug]/public-waitlist-form";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:54321";
 
@@ -19,6 +20,12 @@ interface ShowcaseDetail {
   main_type: string;
   main_image: string | null;
   status: string;
+  waitlist?: {
+    public_key: string;
+    name: string;
+    status: string;
+    settings: Record<string, unknown>;
+  } | null;
 }
 
 export async function generateMetadata(props: {
@@ -26,11 +33,12 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const { slug } = await props.params;
   const admin = createAdminClient();
+  // metadata: accept both published and building
   const { data: raw } = await admin
     .from("showcases")
-    .select("name, description")
+    .select("name, description, status")
     .eq("slug", slug)
-    .eq("status", "published")
+    .in("status", ["published", "building"])
     .maybeSingle();
 
   if (!raw) return { title: "Not Found" };
@@ -50,14 +58,31 @@ export default async function ShowcaseDetailPage(props: {
 
   const { data: raw } = await admin
     .from("showcases")
-    .select("*")
+    .select("*, waitlists!inner(public_key, name, status, settings)")
     .eq("slug", slug)
-    .eq("status", "published")
+    .in("status", ["published", "building"])
     .maybeSingle();
 
   if (!raw) notFound();
 
-  const showcase = raw as unknown as ShowcaseDetail;
+  const row = raw as unknown as Record<string, unknown>;
+  const showcase: ShowcaseDetail = {
+    id: row.id as string,
+    waitlist_id: row.waitlist_id as string,
+    name: row.name as string,
+    slug: row.slug as string,
+    link: row.link as string,
+    description: row.description as string,
+    category_1: row.category_1 as string,
+    category_2: row.category_2 as string | null,
+    images: row.images as string[],
+    video_url: row.video_url as string | null,
+    featured_badge: row.featured_badge as boolean,
+    main_type: row.main_type as string,
+    main_image: row.main_image as string | null,
+    status: row.status as string,
+    waitlist: (row.waitlists ? (row.waitlists as ShowcaseDetail["waitlist"]) : null),
+  };
   const images = Array.isArray(showcase.images) ? showcase.images : [];
   const isVideo = showcase.main_type === "video" && showcase.video_url;
   const ytId = isVideo ? extractYouTubeId(showcase.video_url) : null;
@@ -102,6 +127,9 @@ export default async function ShowcaseDetailPage(props: {
           {showcase.featured_badge && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">Featured</span>
           )}
+          {showcase.status === "building" && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-medium">In construction</span>
+          )}
         </div>
 
         <div className="mb-8">
@@ -125,23 +153,42 @@ export default async function ShowcaseDetailPage(props: {
           </div>
         )}
 
-        {/* Dofollow link */}
-        <div className="rounded-xl border bg-card p-6 mb-8 text-center">
-          <p className="text-sm text-muted-foreground mb-3">Visit the product</p>
-          <a
-            href={showcase.link}
-            target="_blank"
-            rel="dofollow"
-            className="text-primary font-medium text-lg hover:underline"
-          >
-            {showcase.link}
-          </a>
-        </div>
+        {/* Dofollow link — only for published */}
+        {showcase.status === "published" && (
+          <div className="rounded-xl border bg-card p-6 mb-8 text-center">
+            <p className="text-sm text-muted-foreground mb-3">Visit the product</p>
+            <a
+              href={showcase.link}
+              target="_blank"
+              rel="dofollow"
+              className="text-primary font-medium text-lg hover:underline"
+            >
+              {showcase.link}
+            </a>
+          </div>
+        )}
 
-        {/* Testimonials placeholder */}
-        <div className="rounded-xl border border-dashed bg-muted/30 p-8 text-center">
-          <p className="text-sm text-muted-foreground">Testimonials coming soon</p>
-        </div>
+        {/* Waitlist widget — for building status */}
+        {showcase.status === "building" && showcase.waitlist && showcase.waitlist.status === "active" && (
+          <div className="rounded-xl border bg-card p-6 mb-8">
+            <h2 className="text-sm font-medium mb-3">Get notified when we launch</h2>
+            <PublicWaitlistForm
+              publicKey={showcase.waitlist.public_key}
+              waitlistId={showcase.waitlist_id}
+              settings={showcase.waitlist.settings}
+              slug=""
+              ctaLabel="Notify me"
+              showLeaderboard={false}
+            />
+          </div>
+        )}
+
+        {/* Testimonials placeholder — only for published */}
+        {showcase.status === "published" && (
+          <div className="rounded-xl border border-dashed bg-muted/30 p-8 text-center">
+            <p className="text-sm text-muted-foreground">Testimonials coming soon</p>
+          </div>
+        )}
       </div>
     </div>
   );

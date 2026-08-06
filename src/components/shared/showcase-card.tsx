@@ -13,6 +13,7 @@ interface ShowcaseCardData {
   main_type: string;
   main_image: string | null;
   link: string;
+  status?: string;
 }
 
 function extractYouTubeId(url: string | null) {
@@ -60,6 +61,9 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
           <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{data.name}</h3>
           {data.featured_badge && (
             <Badge variant="default" className="shrink-0 text-[10px] px-1.5 py-0">Featured</Badge>
+          )}
+          {data.status === "building" && !data.featured_badge && (
+            <Badge variant="secondary" className="shrink-0 text-[10px] px-1.5 py-0">In construction</Badge>
           )}
         </div>
         <p className="text-xs text-muted-foreground line-clamp-2">{data.description}</p>

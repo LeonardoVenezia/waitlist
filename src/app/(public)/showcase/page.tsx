@@ -17,6 +17,7 @@ interface ShowcaseRow {
   main_type: string;
   main_image: string | null;
   link: string;
+  status: string;
   waitlist_id: string;
 }
 
@@ -31,8 +32,8 @@ export default async function ShowcasePage(props: {
 
   let query = admin
     .from("showcases")
-    .select("slug, name, description, category_1, category_2, images, video_url, featured_badge, link, waitlist_id, main_type, main_image")
-    .eq("status", "published");
+    .select("slug, name, description, category_1, category_2, images, video_url, featured_badge, link, waitlist_id, main_type, main_image, status")
+    .in("status", ["published", "building"]);
 
   if (search) query = query.ilike("name", `%${search}%`);
   if (category) query = query.or(`category_1.eq.${category},category_2.eq.${category}`);
@@ -56,6 +57,9 @@ export default async function ShowcasePage(props: {
     }
 
     showcases.sort((a, b) => {
+      // Published first, then building
+      const statusOrder = a.status === "published" ? 0 : b.status === "published" ? 1 : 0;
+      if (statusOrder !== 0) return statusOrder;
       return (weightMap.get(b.waitlist_id) ?? 1) - (weightMap.get(a.waitlist_id) ?? 1);
     });
   }

@@ -145,6 +145,7 @@ export async function publishShowcase(
   showcaseId: string,
   link: string,
   formData: FormData,
+  targetStatus: "published" | "building" = "published",
   galleryFiles?: FormData,
   pathsToRemove?: string[],
 ) {
@@ -152,33 +153,32 @@ export async function publishShowcase(
   const saveRes = await updateShowcase(waitlistId, showcaseId, formData, galleryFiles, pathsToRemove);
   if (saveRes.error) return { error: saveRes.error };
 
-  // 2. Domain check
-  let domainOk = false;
-  try {
-    const res = await fetch(link, { method: "HEAD", signal: AbortSignal.timeout(10000) });
-    domainOk = res.ok;
-  } catch { /* ignore */ }
+  const admin = createAdminClient();
 
-  if (!domainOk) {
-    return { error: "Domain not reachable. Make sure your website responds with HTTP 200." };
+  // 2. Domain check — only for full launch
+  if (targetStatus === "published") {
+    let domainOk = false;
+    try {
+      const res = await fetch(link, { method: "HEAD", signal: AbortSignal.timeout(10000) });
+      domainOk = res.ok;
+    } catch { /* ignore */ }
+
+    if (!domainOk) {
+      return { error: "Domain not reachable. Make sure your website responds with HTTP 200." };
+    }
   }
 
   // 3. Anti-spam (puntapié)
   const spamOk = true;
 
-  if (!spamOk) {
-    return { error: "Spam check failed. Your domain has been flagged." };
-  }
-
   // 4. Guardar checks + publicar
-  const admin = createAdminClient();
   const { error } = await admin
     .from("showcases")
     .update({
-      status: "published",
-      domain_check_passed: true,
+      status: targetStatus,
+      domain_check_passed: targetStatus === "published",
       spam_check_passed: true,
-      last_domain_check: new Date().toISOString(),
+      last_domain_check: targetStatus === "published" ? new Date().toISOString() : undefined,
       last_spam_check: new Date().toISOString(),
     })
     .eq("id", showcaseId);
@@ -187,11 +187,11 @@ export async function publishShowcase(
 
   revalidatePath(`/dashboard/showcases/${waitlistId}`);
   revalidatePath("/showcase", "layout");
-  return { success: true };
+  return { success: true, status: targetStatus };
 }
 
 // ── unpublish ──
-export async function updateShowcaseStatus(waitlistId: string, showcaseId: string, status: "draft" | "published" | "rejected") {
+export async function updateShowcaseStatus(waitlistId: string, showcaseId: string, status: "draft" | "published" | "rejected" | "building") {
   const supabase = await createClient();
   const { error } = await supabase
     .from("showcases")
