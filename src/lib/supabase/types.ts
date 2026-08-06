@@ -269,6 +269,7 @@ export interface Database {
           video_url: string | null;
           featured_badge: boolean;
           main_type: "image" | "video";
+          main_image: string | null;
           status: "draft" | "published" | "rejected";
           domain_check_passed: boolean;
           spam_check_passed: boolean;
@@ -290,6 +291,7 @@ export interface Database {
           video_url?: string | null;
           featured_badge?: boolean;
           main_type?: "image" | "video";
+          main_image?: string | null;
           status?: "draft" | "published" | "rejected";
           domain_check_passed?: boolean;
           spam_check_passed?: boolean;
@@ -311,6 +313,7 @@ export interface Database {
           video_url?: string | null;
           featured_badge?: boolean;
           main_type?: "image" | "video";
+          main_image?: string | null;
           status?: "draft" | "published" | "rejected";
           domain_check_passed?: boolean;
           spam_check_passed?: boolean;

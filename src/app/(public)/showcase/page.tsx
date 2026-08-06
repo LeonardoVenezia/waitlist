@@ -15,6 +15,7 @@ interface ShowcaseRow {
   video_url: string | null;
   featured_badge: boolean;
   main_type: string;
+  main_image: string | null;
   link: string;
   waitlist_id: string;
 }
@@ -30,7 +31,7 @@ export default async function ShowcasePage(props: {
 
   let query = admin
     .from("showcases")
-    .select("slug, name, description, category_1, category_2, images, video_url, featured_badge, link, waitlist_id, main_type")
+    .select("slug, name, description, category_1, category_2, images, video_url, featured_badge, link, waitlist_id, main_type, main_image")
     .eq("status", "published");
 
   if (search) query = query.ilike("name", `%${search}%`);

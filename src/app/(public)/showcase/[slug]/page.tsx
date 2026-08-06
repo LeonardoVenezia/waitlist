@@ -17,6 +17,7 @@ interface ShowcaseDetail {
   video_url: string | null;
   featured_badge: boolean;
   main_type: string;
+  main_image: string | null;
   status: string;
 }
 
@@ -60,8 +61,8 @@ export default async function ShowcaseDetailPage(props: {
   const images = Array.isArray(showcase.images) ? showcase.images : [];
   const isVideo = showcase.main_type === "video" && showcase.video_url;
   const ytId = isVideo ? extractYouTubeId(showcase.video_url) : null;
-  const mainImage = images[0];
-  const gallery = images.slice(1);
+  const mainImg = showcase.main_image;
+  const gallery = images;
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,10 +77,10 @@ export default async function ShowcaseDetailPage(props: {
             className="border-0"
           />
         </div>
-      ) : mainImage ? (
+      ) : mainImg ? (
         <div className="w-full max-h-[50vh] overflow-hidden bg-muted">
           <img
-            src={`${SUPABASE_URL}/storage/v1/object/public/showcase-images/${mainImage}`}
+            src={`${SUPABASE_URL}/storage/v1/object/public/showcase-images/${mainImg}`}
             alt={showcase.name}
             className="w-full h-full object-cover max-h-[50vh]"
           />

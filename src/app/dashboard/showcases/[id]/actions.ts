@@ -56,9 +56,56 @@ export async function createShowcase(waitlistId: string, formData: FormData) {
 }
 
 // ── update (guarda cambios sin publicar) ──
-export async function updateShowcase(waitlistId: string, showcaseId: string, formData: FormData) {
+export async function updateShowcase(
+  waitlistId: string,
+  showcaseId: string,
+  formData: FormData,
+  galleryFiles?: FormData,
+  pathsToRemove?: string[],
+) {
   const supabase = await createClient();
+  const admin = createAdminClient();
 
+  // Process gallery: remove + upload
+  let finalImages: string[] = [];
+  if (pathsToRemove && pathsToRemove.length > 0) {
+    // Remove files from storage
+    await admin.storage.from("showcase-images").remove(pathsToRemove);
+
+    // Remove from existing array
+    const { data: sc } = await admin
+      .from("showcases")
+      .select("images")
+      .eq("id", showcaseId)
+      .single();
+    finalImages = ((sc?.images as string[]) ?? []).filter((p) => !pathsToRemove.includes(p));
+  } else {
+    const { data: sc } = await admin
+      .from("showcases")
+      .select("images")
+      .eq("id", showcaseId)
+      .single();
+    finalImages = (sc?.images as string[]) ?? [];
+  }
+
+  // Upload new files
+  if (galleryFiles) {
+    const files = galleryFiles.getAll("file") as File[];
+    for (const file of files) {
+      if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) continue;
+      if (file.size > 2 * 1024 * 1024) continue;
+      if (finalImages.length >= 5) break;
+
+      const extMap: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif" };
+      const ext = extMap[file.type] ?? "jpg";
+      const path = `${showcaseId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { error } = await admin.storage.from("showcase-images").upload(path, file, { upsert: false });
+      if (!error) finalImages.push(path);
+    }
+  }
+
+  // Update text fields
   const updates: Record<string, string | boolean | null> = {};
   for (const key of ["name", "slug", "link", "description", "category_1", "video_url", "main_type"]) {
     const val = formData.get(key) as string;
@@ -75,6 +122,8 @@ export async function updateShowcase(waitlistId: string, showcaseId: string, for
   const featuredBadge = formData.get("featured_badge");
   if (featuredBadge !== null) updates.featured_badge = featuredBadge === "on";
 
+  updates.images = finalImages as any;
+
   const { error } = await supabase
     .from("showcases")
     .update({ ...updates } as any)
@@ -87,13 +136,20 @@ export async function updateShowcase(waitlistId: string, showcaseId: string, for
 
   revalidatePath(`/dashboard/showcases/${waitlistId}`);
   revalidatePath("/showcase", "layout");
-  return { success: true };
+  return { success: true, images: finalImages };
 }
 
 // ── publish (guarda, corre checks, publica) ──
-export async function publishShowcase(waitlistId: string, showcaseId: string, link: string, formData: FormData) {
-  // 1. Guardar cambios
-  const saveRes = await updateShowcase(waitlistId, showcaseId, formData);
+export async function publishShowcase(
+  waitlistId: string,
+  showcaseId: string,
+  link: string,
+  formData: FormData,
+  galleryFiles?: FormData,
+  pathsToRemove?: string[],
+) {
+  // 1. Guardar cambios (incluye gallery)
+  const saveRes = await updateShowcase(waitlistId, showcaseId, formData, galleryFiles, pathsToRemove);
   if (saveRes.error) return { error: saveRes.error };
 
   // 2. Domain check
@@ -220,4 +276,59 @@ export async function removeShowcaseImage(showcaseId: string, path: string) {
 
   if (error) return { error: error.message };
   return { success: true, images };
+}
+
+// ── upload main image ──
+export async function uploadMainImage(showcaseId: string, formData: FormData) {
+  const admin = createAdminClient();
+
+  const file = formData.get("file") as File;
+  if (!file) return { error: "No se recibió archivo." };
+  if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) {
+    return { error: "Solo JPEG, PNG, WebP o AVIF." };
+  }
+  if (file.size > 2 * 1024 * 1024) return { error: "Máximo 2 MB." };
+
+  const extMap: Record<string, string> = {
+    "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif",
+  };
+  const ext = extMap[file.type] ?? "jpg";
+  const path = `${showcaseId}/main.${ext}`;
+
+  const { error } = await admin.storage
+    .from("showcase-images")
+    .upload(path, file, { upsert: true });
+
+  if (error) return { error: error.message };
+
+  const { error: updateErr } = await admin
+    .from("showcases")
+    .update({ main_image: path })
+    .eq("id", showcaseId);
+
+  if (updateErr) return { error: updateErr.message };
+  return { success: true, main_image: path };
+}
+
+// ── remove main image ──
+export async function removeMainImage(showcaseId: string) {
+  const admin = createAdminClient();
+
+  const { data: sc } = await admin
+    .from("showcases")
+    .select("main_image")
+    .eq("id", showcaseId)
+    .single();
+
+  if (sc?.main_image) {
+    await admin.storage.from("showcase-images").remove([sc.main_image as string]);
+  }
+
+  const { error } = await admin
+    .from("showcases")
+    .update({ main_image: null })
+    .eq("id", showcaseId);
+
+  if (error) return { error: error.message };
+  return { success: true };
 }

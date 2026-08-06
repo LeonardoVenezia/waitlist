@@ -17,6 +17,8 @@ import {
   updateShowcaseStatus,
   uploadShowcaseImage,
   removeShowcaseImage,
+  uploadMainImage,
+  removeMainImage,
 } from "./actions";
 
 interface Props {
@@ -37,6 +39,7 @@ interface ShowcaseData {
   video_url: string | null;
   featured_badge: boolean;
   main_type: string;
+  main_image: string | null;
   status: string;
   domain_check_passed: boolean;
   spam_check_passed: boolean;
@@ -73,12 +76,15 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
   const [images, setImages] = useState<string[]>(showcase?.images ?? []);
   const [featuredB, setFeaturedB] = useState(showcase?.featured_badge ?? false);
   const [mainType, setMainType] = useState(showcase?.main_type ?? "image");
+  const [mainImage, setMainImage] = useState<string | null>(showcase?.main_image ?? null);
   const [status, setStatus] = useState(showcase?.status ?? "draft");
 
   const [publishing, setPublishing] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [removedPaths, setRemovedPaths] = useState<Set<string>>(new Set());
+  const [mainUploading, setMainUploading] = useState(false);
 
   function getAppUrl() {
     return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -90,11 +96,13 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
     setPublishing(true);
     setError(null);
     const fd = buildFormData(formState);
+    const galleryFd = buildGalleryFormData();
+    const toRemove = [...removedPaths];
 
     if (isNew) {
       const res = await createShowcase(waitlistId, fd);
       if (res.error) { setError(res.error); setPublishing(false); return; }
-      const pub = await publishShowcase(waitlistId, res.id!, link, fd);
+      const pub = await publishShowcase(waitlistId, res.id!, link, fd, galleryFd, toRemove);
       if (pub.error) { setError(pub.error); setPublishing(false); return; }
       setStatus("published");
       setPublishing(false);
@@ -102,7 +110,7 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
       return;
     }
 
-    const pub = await publishShowcase(waitlistId, showcase!.id, link, fd);
+    const pub = await publishShowcase(waitlistId, showcase!.id, link, fd, galleryFd, toRemove);
     if (pub.error) { setError(pub.error); setPublishing(false); return; }
     setStatus("published");
     setPublishing(false);
@@ -114,10 +122,26 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
     setUpdating(true);
     setError(null);
     const fd = buildFormData(formState);
-    const res = await updateShowcase(waitlistId, showcase.id, fd);
+    const galleryFd = buildGalleryFormData();
+    const toRemove = [...removedPaths];
+
+    const res = await updateShowcase(waitlistId, showcase.id, fd, galleryFd, toRemove);
     if (res.error) { setError(res.error); setUpdating(false); return; }
+    // Update local state with persisted images
+    if (res.images) {
+      setImages(res.images as string[]);
+      setPendingFiles([]);
+      setRemovedPaths(new Set());
+    }
     setUpdating(false);
     router.refresh();
+  }
+
+  function buildGalleryFormData(): FormData | undefined {
+    if (pendingFiles.length === 0) return undefined;
+    const fd = new FormData();
+    for (const f of pendingFiles) fd.append("file", f);
+    return fd;
   }
 
   async function handleUnpublish() {
@@ -128,38 +152,71 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
     router.refresh();
   }
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleGallerySelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    const remaining = 5 - images.length - pendingFiles.length;
+    const toAdd = files.slice(0, remaining).filter((f) => {
+      if (f.size > 2 * 1024 * 1024) {
+        setError(`"${f.name}" supera los 2 MB.`);
+        return false;
+      }
+      if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(f.type)) {
+        setError(`"${f.name}" no es JPEG, PNG, WebP o AVIF.`);
+        return false;
+      }
+      return true;
+    });
+    setPendingFiles((prev) => [...prev, ...toAdd]);
+    // Clear input so same file can be re-selected
+    e.target.value = "";
+  }
+
+  function handleRemovePending(idx: number) {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function handleMarkRemove(path: string) {
+    setRemovedPaths((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
+  }
+
+  async function handleMainUpload(e: React.ChangeEvent<HTMLInputElement>) {
     if (!showcase) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
     const localUrl = URL.createObjectURL(file);
-    setImages((prev) => [...prev, localUrl]);
-    setUploading(true);
+    setMainImage(localUrl);
+    setMainUploading(true);
 
     const fd = new FormData();
     fd.set("file", file);
-    const res = await uploadShowcaseImage(showcase.id, fd);
+    const res = await uploadMainImage(showcase.id, fd);
 
     if (res.error) {
-      setImages((prev) => prev.filter((u) => u !== localUrl));
+      setMainImage(null);
       setError(res.error);
     } else {
-      const realImages = res.images as string[];
       URL.revokeObjectURL(localUrl);
-      setImages(realImages);
+      setMainImage(res.main_image as string);
     }
-    setUploading(false);
+    setMainUploading(false);
   }
 
-  async function handleRemoveImage(path: string) {
+  async function handleRemoveMain() {
     if (!showcase) return;
-    const previous = images;
-    setImages((prev) => prev.filter((u) => u !== path));
-
-    const res = await removeShowcaseImage(showcase.id, path);
+    const previous = mainImage;
+    setMainImage(null);
+    const res = await removeMainImage(showcase.id);
     if (res.error) {
-      setImages(previous);
+      setMainImage(previous);
       setError(res.error);
     }
   }
@@ -274,13 +331,12 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
           <div className="space-y-3 pt-2 border-t">
             <Label>Main media</Label>
             <div className="flex gap-4">
-              <label className={`flex items-center gap-2 cursor-pointer ${!hasImages ? "opacity-50 cursor-not-allowed" : ""}`}>
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
                   name="main_type_local"
                   checked={mainType === "image"}
                   onChange={() => setMainType("image")}
-                  disabled={!hasImages}
                 />
                 <span className="text-sm">Image</span>
               </label>
@@ -294,6 +350,34 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
                 <span className="text-sm">Video</span>
               </label>
             </div>
+
+            {mainType === "image" && (
+              <div className="space-y-2">
+                <Label>Main image</Label>
+                {mainImage ? (
+                  <div className="relative w-48 rounded-lg border overflow-hidden group">
+                    <img
+                      src={mainImage.startsWith("blob:") ? mainImage : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/showcase-images/${mainImage}`}
+                      alt="Main"
+                      className="w-full aspect-video object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveMain}
+                      className="absolute top-1 right-1 size-4 rounded-full bg-black/40 text-[10px] text-white/80 hover:bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center justify-center w-48 aspect-video rounded-lg border-2 border-dashed border-muted-foreground/30 cursor-pointer hover:border-primary/50 transition-colors">
+                    <span className="text-2xl text-muted-foreground">+</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleMainUpload} disabled={mainUploading} />
+                  </label>
+                )}
+                <p className="text-xs text-muted-foreground">Shown large on the directory page and on your product card.</p>
+              </div>
+            )}
 
             {mainType === "video" && (
               <div className="space-y-2">
@@ -317,42 +401,60 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
             )}
           </div>
 
-          {/* Images */}
+          {/* Gallery */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Gallery ({images.length}/5)</Label>
-              {mainType === "image" && images.length === 0 && (
-                <span className="text-xs text-muted-foreground">Upload at least one image as main media</span>
-              )}
-            </div>
+            <Label>Gallery</Label>
+            <p className="text-xs text-muted-foreground">Changes apply when you click Update or Publish.</p>
             <div className="flex flex-wrap gap-3">
-              {images.map((path, idx) => (
-                <div key={path} className="relative size-24 rounded-lg border overflow-hidden group">
+              {/* Existing images */}
+              {images.filter((p) => !p.startsWith("blob:")).map((path) => {
+                const marked = removedPaths.has(path);
+                return (
+                  <div key={path} className="relative size-24 rounded-lg border overflow-hidden group">
+                    <img
+                      src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/showcase-images/${path}`}
+                      alt=""
+                      className={`size-full object-cover ${marked ? "opacity-30" : ""}`}
+                    />
+                    {marked && (
+                      <span className="absolute bottom-1 left-1 text-[9px] px-1 rounded bg-red-600/80 text-white font-medium">Removed</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleMarkRemove(path)}
+                      className="absolute top-1 right-1 size-4 rounded-full bg-black/40 text-[10px] text-white/80 hover:bg-black/60 flex items-center justify-center"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                );
+              })}
+              {/* Pending files (blobs) */}
+              {pendingFiles.map((file, idx) => (
+                <div key={`pending-${idx}`} className="relative size-24 rounded-lg border overflow-hidden group border-primary/30">
                   <img
-                    src={path.startsWith("blob:") ? path : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/showcase-images/${path}`}
+                    src={URL.createObjectURL(file)}
                     alt=""
                     className="size-full object-cover"
                   />
-                  {mainType === "image" && idx === 0 && (
-                    <span className="absolute bottom-1 left-1 text-[9px] px-1 rounded bg-black/60 text-white font-medium">Main</span>
-                  )}
+                  <span className="absolute bottom-1 left-1 text-[9px] px-1 rounded bg-primary/80 text-white font-medium">New</span>
                   <button
                     type="button"
-                    onClick={() => handleRemoveImage(path)}
-                    className="absolute top-1 right-1 size-4 rounded-full bg-black/40 text-[10px] text-white/80 hover:bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => handleRemovePending(idx)}
+                    className="absolute top-1 right-1 size-4 rounded-full bg-black/40 text-[10px] text-white/80 hover:bg-black/60 flex items-center justify-center"
                   >
                     ✕
                   </button>
                 </div>
               ))}
-              {images.length < 5 && (
+              {/* Add more */}
+              {images.filter((p) => !p.startsWith("blob:") && !removedPaths.has(p)).length + pendingFiles.length < 5 && (
                 <label className="size-24 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
                   <span className="text-2xl text-muted-foreground">+</span>
-                  <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple className="hidden" onChange={handleGallerySelect} />
                 </label>
               )}
             </div>
-            {uploading && <p className="text-xs text-muted-foreground">Uploading...</p>}
           </div>
 
           {showcase && (
