@@ -14,8 +14,18 @@ export async function updateWaitlistSettings(
 ) {
   const supabase = await createClient();
 
-  const name = formData.get("name") as string;
-  const slug = formData.get("slug") as string;
+  const nameInput = formData.get("name") as string | null;
+  const slugInput = formData.get("slug") as string | null;
+
+  // Get existing values to preserve them when saving from a tab that doesn't include name/slug
+  const { data: current } = await supabase
+    .from("waitlists")
+    .select("name, slug, settings")
+    .eq("id", waitlistId)
+    .single();
+
+  const name = nameInput ?? current?.name ?? "";
+  const slug = slugInput ?? current?.slug ?? "";
 
   // Thank You Page
   const thankYou = {
@@ -82,12 +92,6 @@ export async function updateWaitlistSettings(
   const blockedEmails = formData.get("blocked_emails") as string || "";
 
   // Build settings preserving existing data
-  const { data: current } = await supabase
-    .from("waitlists")
-    .select("settings")
-    .eq("id", waitlistId)
-    .single();
-
   const existing = (current?.settings as Record<string, unknown>) ?? {};
 
   const settings = {
