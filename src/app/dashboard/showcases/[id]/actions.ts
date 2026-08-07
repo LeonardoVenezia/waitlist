@@ -10,12 +10,12 @@ export async function createShowcase(waitlistId: string, formData: FormData) {
 
   const name = formData.get("name") as string;
   const slug = formData.get("slug") as string;
-  const link = formData.get("link") as string;
+  const link = (formData.get("link") as string) || "";
   const description = formData.get("description") as string;
   const category1 = formData.get("category_1") as string;
   const category2 = (formData.get("category_2") as string) || null;
 
-  if (!name || !slug || !link || !description || !category1) {
+  if (!name || !slug || !description || !category1) {
     return { error: "Todos los campos obligatorios deben completarse." };
   }
 

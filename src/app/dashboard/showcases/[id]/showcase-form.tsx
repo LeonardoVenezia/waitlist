@@ -261,11 +261,11 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Product name</Label>
+              <Label htmlFor="name">Product name <span className="text-red-500">*</span></Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="My SaaS" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="slug">Slug</Label>
+              <Label htmlFor="slug">Slug <span className="text-red-500">*</span></Label>
               <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="my-saas" />
               <p className="text-xs text-muted-foreground">
                 {getAppUrl()}/showcase/{slug || "my-saas"}
@@ -276,12 +276,12 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
           <div className="space-y-2">
             <Label htmlFor="link">Website URL</Label>
             <Input id="link" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://example.com" />
-            <p className="text-xs text-muted-foreground">Este link será dofollow en tu página del directorio.</p>
+            <p className="text-xs text-muted-foreground">Required for full launch. Not needed for in construction.</p>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="desc">Description</Label>
+              <Label htmlFor="desc">Description <span className="text-red-500">*</span></Label>
               <span className={`text-xs ${desc.length >= 200 ? "text-green-600" : "text-muted-foreground"}`}>
                 {desc.length}/200 min
               </span>
@@ -298,7 +298,7 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="cat1">Category 1</Label>
+              <Label htmlFor="cat1">Category 1 <span className="text-red-500">*</span></Label>
               <select
                 id="cat1"
                 value={cat1}

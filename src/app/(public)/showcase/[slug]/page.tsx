@@ -153,8 +153,8 @@ export default async function ShowcaseDetailPage(props: {
           </div>
         )}
 
-        {/* Dofollow link — only for published */}
-        {showcase.status === "published" && (
+        {/* Dofollow link — only for published + has link */}
+        {showcase.status === "published" && showcase.link && (
           <div className="rounded-xl border bg-card p-6 mb-8 text-center">
             <p className="text-sm text-muted-foreground mb-3">Visit the product</p>
             <a
