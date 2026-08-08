@@ -27,9 +27,17 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
   const isVideo = data.main_type === "video" && data.video_url;
   const ytId = isVideo ? extractYouTubeId(data.video_url) : null;
   const mainImg = data.main_image;
+  const isBuilding = data.status === "building";
 
   return (
-    <Link href={`/showcase/${data.slug}`} className="group block rounded-xl border bg-card hover:border-primary/40 transition-colors overflow-hidden">
+    <Link
+      href={`/showcase/${data.slug}`}
+      className={`group block rounded-xl border overflow-hidden transition-all duration-200 ${
+        isBuilding
+          ? "border-building/30 bg-building/[0.03] hover:border-building/50"
+          : "bg-card hover:border-primary/40 hover:shadow-sm"
+      }`}
+    >
       <div className="aspect-video bg-muted flex items-center justify-center text-4xl relative">
         {isVideo && ytId ? (
           <>
@@ -39,8 +47,8 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
               className="size-full object-cover"
             />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="size-12 rounded-full bg-black/60 flex items-center justify-center">
-                <svg className="size-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <div className="size-14 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm">
+                <svg className="size-6 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                 </svg>
               </div>
@@ -53,24 +61,26 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
             className="size-full object-cover"
           />
         ) : (
-          "🖼️"
+          <span className="text-5xl opacity-30">{isBuilding ? "🏗️" : "🖼️"}</span>
+        )}
+        {isBuilding && (
+          <div className="absolute top-3 left-3">
+            <Badge variant="building" className="text-[10px] px-2 py-0">In construction</Badge>
+          </div>
         )}
       </div>
-      <div className="p-4 space-y-2">
+      <div className="p-5 space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{data.name}</h3>
+          <h3 className="font-heading font-semibold text-base truncate group-hover:text-primary transition-colors">{data.name}</h3>
           {data.featured_badge && (
-            <Badge variant="default" className="shrink-0 text-[10px] px-1.5 py-0">Featured</Badge>
-          )}
-          {data.status === "building" && !data.featured_badge && (
-            <Badge variant="secondary" className="shrink-0 text-[10px] px-1.5 py-0">In construction</Badge>
+            <Badge variant="default" className="shrink-0 text-[11px] px-1.5 py-0">Featured</Badge>
           )}
         </div>
-        <p className="text-xs text-muted-foreground line-clamp-2">{data.description}</p>
-        <div className="flex flex-wrap gap-1">
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{data.category_1}</span>
+        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{data.description}</p>
+        <div className="flex flex-wrap gap-1.5">
+          <span className="text-xs px-2 py-0.5 rounded-full border bg-muted/50 text-muted-foreground">{data.category_1}</span>
           {data.category_2 && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{data.category_2}</span>
+            <span className="text-xs px-2 py-0.5 rounded-full border bg-muted/50 text-muted-foreground">{data.category_2}</span>
           )}
         </div>
       </div>

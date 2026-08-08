@@ -15,7 +15,8 @@
       "Shell(npx supabase --version 2 > /dev/null)",
       "Shell(mv:*)",
       "Shell(rmdir:*)",
-      "Shell(rm:*)"
+      "Shell(rm:*)",
+      "Shell(grep:*)"
     ],
     "deny": [],
     "defaultMode": "default"

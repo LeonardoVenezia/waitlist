@@ -238,7 +238,7 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
       {showcase && (
         <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3 text-sm">
           <span className="text-muted-foreground">Status:</span>
-          <Badge variant={status === "published" ? "default" : status === "rejected" ? "destructive" : status === "building" ? "secondary" : "outline"}>
+          <Badge variant={status === "published" ? "default" : status === "rejected" ? "destructive" : status === "building" ? "building" : "outline"}>
             {status}
           </Badge>
           {(status === "published" || status === "building") && (
@@ -251,7 +251,7 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>{isNew ? "Create showcase" : "Edit showcase"}</CardTitle>
+          <CardTitle className="font-heading text-xl">{isNew ? "Create showcase" : "Edit showcase"}</CardTitle>
           <CardDescription>
             {isNew
               ? "Publicá tu producto en el directorio. Aparecerá en /showcase."

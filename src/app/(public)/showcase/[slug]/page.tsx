@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PublicWaitlistForm } from "@/app/p/[slug]/public-waitlist-form";
+import { Badge } from "@/components/ui/badge";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:54321";
 
@@ -89,6 +90,8 @@ export default async function ShowcaseDetailPage(props: {
   const mainImg = showcase.main_image;
   const gallery = images;
 
+  const isBuilding = showcase.status === "building";
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
@@ -112,35 +115,37 @@ export default async function ShowcaseDetailPage(props: {
         </div>
       ) : null}
 
-      <div className="mx-auto max-w-3xl px-6 py-12">
-        <p className="text-sm text-muted-foreground mb-4">
+      <div className="mx-auto max-w-5xl px-6 py-14">
+        <p className="text-sm text-muted-foreground mb-6">
           <a href="/showcase" className="hover:text-foreground transition-colors">← Showcase</a>
         </p>
 
-        <h1 className="text-3xl font-bold mb-3">{showcase.name}</h1>
-
-        <div className="flex flex-wrap gap-2 mb-8">
-          <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{showcase.category_1}</span>
-          {showcase.category_2 && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{showcase.category_2}</span>
-          )}
-          {showcase.featured_badge && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">Featured</span>
-          )}
-          {showcase.status === "building" && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-medium">In construction</span>
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <h1 className="font-heading text-4xl font-bold tracking-tight sm:text-5xl">{showcase.name}</h1>
+          {isBuilding && (
+            <Badge variant="building" className="text-sm px-3 py-0.5 font-heading">In construction</Badge>
           )}
         </div>
 
-        <div className="mb-8">
-          <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{showcase.description}</p>
+        <div className="flex flex-wrap gap-2 mb-10">
+          <span className="text-sm px-3 py-1 rounded-full border bg-muted/50 text-muted-foreground">{showcase.category_1}</span>
+          {showcase.category_2 && (
+            <span className="text-sm px-3 py-1 rounded-full border bg-muted/50 text-muted-foreground">{showcase.category_2}</span>
+          )}
+          {showcase.featured_badge && (
+            <span className="text-sm px-3 py-1 rounded-full bg-primary text-primary-foreground font-medium">Featured</span>
+          )}
+        </div>
+
+        <div className="max-w-prose mb-12">
+          <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">{showcase.description}</p>
         </div>
 
         {/* Gallery */}
         {gallery.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-sm font-medium mb-3">Gallery</h2>
-            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
+          <div className="mb-12">
+            <h2 className="font-heading text-lg font-semibold mb-4">Gallery</h2>
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
               {gallery.map((path: string) => (
                 <img
                   key={path}
@@ -153,25 +158,26 @@ export default async function ShowcaseDetailPage(props: {
           </div>
         )}
 
-        {/* Dofollow link — only for published + has link */}
-        {showcase.status === "published" && showcase.link && (
-          <div className="rounded-xl border bg-card p-6 mb-8 text-center">
+        {/* Dofollow link — only published + has link */}
+        {!isBuilding && showcase.link && (
+          <div className="rounded-xl border bg-card p-6 mb-12 text-center">
             <p className="text-sm text-muted-foreground mb-3">Visit the product</p>
             <a
               href={showcase.link}
               target="_blank"
               rel="dofollow"
-              className="text-primary font-medium text-lg hover:underline"
+              className="text-primary font-heading font-semibold text-lg hover:underline"
             >
               {showcase.link}
             </a>
           </div>
         )}
 
-        {/* Waitlist widget — for building status */}
-        {showcase.status === "building" && showcase.waitlist && showcase.waitlist.status === "active" && (
-          <div className="rounded-xl border bg-card p-6 mb-8">
-            <h2 className="text-sm font-medium mb-3">Get notified when we launch</h2>
+        {/* Waitlist widget — building focus */}
+        {isBuilding && showcase.waitlist && showcase.waitlist.status === "active" && (
+          <div className="rounded-xl border-2 border-building/30 bg-building/[0.03] p-8 mb-12">
+            <h2 className="font-heading text-xl font-semibold mb-2">Get notified when we launch</h2>
+            <p className="text-muted-foreground mb-6">Este producto está en construcción. Dejanos tu email y te avisamos cuando esté listo.</p>
             <PublicWaitlistForm
               publicKey={showcase.waitlist.public_key}
               waitlistId={showcase.waitlist_id}
@@ -183,8 +189,8 @@ export default async function ShowcaseDetailPage(props: {
           </div>
         )}
 
-        {/* Testimonials placeholder — only for published */}
-        {showcase.status === "published" && (
+        {/* Testimonials placeholder — only published */}
+        {!isBuilding && (
           <div className="rounded-xl border border-dashed bg-muted/30 p-8 text-center">
             <p className="text-sm text-muted-foreground">Testimonials coming soon</p>
           </div>

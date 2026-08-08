@@ -66,11 +66,13 @@ export default async function ShowcasePage(props: {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-6xl px-6 py-20">
-        <div className="text-center space-y-4 mb-12">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Showcase</h1>
-          <p className="text-muted-foreground max-w-lg mx-auto">
-            Discover products built by makers and entrepreneurs. Click through to learn more.
+      <div className="mx-auto max-w-6xl px-6 py-24">
+        <div className="mb-14">
+          <h1 className="font-heading text-5xl font-bold tracking-tight sm:text-6xl mb-5">
+            Showcase
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
+            Productos construidos por makers. Cada uno con su historia, su waitlist, y su camino.
           </p>
         </div>
 

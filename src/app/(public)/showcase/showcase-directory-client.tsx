@@ -49,8 +49,8 @@ export default function ShowcaseDirectoryClient({ search: initialSearch, categor
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => updateParams({ category: "" })}
-            className={`text-xs px-3 py-1 rounded-full transition-colors cursor-pointer ${
-              !category ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+            className={`text-xs px-3 py-1 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-ring cursor-pointer ${
+              !category ? "bg-primary text-primary-foreground" : "bg-muted/50 border text-muted-foreground hover:bg-muted"
             }`}
           >
             All
@@ -59,8 +59,8 @@ export default function ShowcaseDirectoryClient({ search: initialSearch, categor
             <button
               key={c}
               onClick={() => updateParams({ category: c })}
-              className={`text-xs px-3 py-1 rounded-full transition-colors cursor-pointer ${
-                category === c ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+              className={`text-xs px-3 py-1 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-ring cursor-pointer ${
+                category === c ? "bg-primary text-primary-foreground" : "bg-muted/50 border text-muted-foreground hover:bg-muted"
               }`}
             >
               {c}

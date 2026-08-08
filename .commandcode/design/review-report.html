@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Showcase - Review Report</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<style>
+		body { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+		.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+		.report-section { border: 1px solid #222226; background: #0a0a0b; position: relative; }
+		.corner-box { position: absolute; width: 20px; height: 20px; border: 1px solid #222226; background: #000; }
+	</style>
+</head>
+<body class="bg-black text-[#fafafa]">
+	<main class="mx-auto w-full max-w-6xl px-5 py-8 md:px-10 md:py-12">
+		<header class="report-section mb-8 p-6 md:p-8">
+			<div class="corner-box left-0 top-0 -translate-x-1/2 -translate-y-1/2"></div>
+			<div class="corner-box right-0 top-0 translate-x-1/2 -translate-y-1/2"></div>
+			<div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+				<div>
+					<div class="mono mb-2 text-xs tracking-widest text-[#666]">// REVIEW</div>
+					<h1 class="text-4xl font-bold tracking-tight md:text-6xl">Showcase</h1>
+				</div>
+				<div class="mono text-left text-xs text-[#666] md:text-right">
+					<div>COMMANDCODE REPORT</div>
+					<div class="text-[#444]">2026-08-03</div>
+				</div>
+			</div>
+		</header>
+
+		<section class="report-section mb-8 p-6 md:p-8">
+			<div class="corner-box left-0 top-0 -translate-x-1/2 -translate-y-1/2"></div>
+			<div class="corner-box right-0 top-0 translate-x-1/2 -translate-y-1/2"></div>
+			<div class="grid gap-8 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+				<div>
+					<div class="mono mb-2 text-xs tracking-widest text-[#666]">// OVERALL</div>
+					<div class="text-6xl font-bold tracking-tight md:text-7xl">17</div>
+					<div class="mt-1 text-lg text-[#666]">/ 50</div>
+					<div class="mt-4 inline-flex border border-[#ef4444]/30 bg-[#ef4444]/10 px-3 py-1 text-sm text-[#ef4444]">NEEDS IDENTITY</div>
+				</div>
+				<div>
+					<div class="mono mb-3 text-xs tracking-widest text-[#666]">// TL;DR</div>
+					<p class="text-sm leading-6 text-[#a0a0a0]">Generic directory template with default shadcn/ui palette. No visual identity, flat hierarchy, compressed typography. The functionality is solid but the design has no memory — swap the text and it fits any other product.</p>
+					<p class="mt-4 text-sm leading-6 text-[#fbbf24]">Start with /design recolor to give it a voice, then /design relayout to give the cards and detail page rhythm. Typeset and interaction fixes are lighter — do them after.</p>
+				</div>
+			</div>
+		</section>
+
+		<section class="report-section mb-8 p-6 md:p-8">
+			<div class="mono mb-6 text-xs tracking-widest text-[#666]">// HEURISTIC SCORES</div>
+			<div class="overflow-x-auto">
+				<table class="w-full min-w-[720px] border-collapse text-sm">
+					<thead>
+						<tr class="border-b border-[#222226] text-left mono text-xs text-[#666]">
+							<th class="py-3 pr-4 font-normal">#</th>
+							<th class="py-3 pr-4 font-normal">HEURISTIC</th>
+							<th class="py-3 pr-4 font-normal">SCORE</th>
+							<th class="py-3 font-normal">KEY FINDING</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="border-b border-[#1a1a1e]">
+							<td class="py-4 pr-4 text-[#555]">1</td>
+							<td class="py-4 pr-4 text-[#fafafa]">First Impression</td>
+							<td class="py-4 pr-4 text-[#ef4444]">4/10</td>
+							<td class="py-4 text-[#a0a0a0]">Generic directory template. No visual identity.</td>
+						</tr>
+						<tr class="border-b border-[#1a1a1e]">
+							<td class="py-4 pr-4 text-[#555]">2</td>
+							<td class="py-4 pr-4 text-[#fafafa]">Hierarchy</td>
+							<td class="py-4 pr-4 text-[#ef4444]">3/10</td>
+							<td class="py-4 text-[#a0a0a0]">Flat card grid. Detail page is undifferentiated vertical blocks.</td>
+						</tr>
+						<tr class="border-b border-[#1a1a1e]">
+							<td class="py-4 pr-4 text-[#555]">3</td>
+							<td class="py-4 pr-4 text-[#fafafa]">Color Voice</td>
+							<td class="py-4 pr-4 text-[#ef4444]">3/10</td>
+							<td class="py-4 text-[#a0a0a0]">Default shadcn palette. No brand color signal.</td>
+						</tr>
+						<tr class="border-b border-[#1a1a1e]">
+							<td class="py-4 pr-4 text-[#555]">4</td>
+							<td class="py-4 pr-4 text-[#fafafa]">Type Voice</td>
+							<td class="py-4 pr-4 text-[#ef4444]">3/10</td>
+							<td class="py-4 text-[#a0a0a0]">Single font, compressed at tiny sizes, no editorial rhythm.</td>
+						</tr>
+						<tr class="border-b border-[#1a1a1e]">
+							<td class="py-4 pr-4 text-[#555]">5</td>
+							<td class="py-4 pr-4 text-[#fafafa]">Interaction</td>
+							<td class="py-4 pr-4 text-[#fbbf24]">4/10</td>
+							<td class="py-4 text-[#a0a0a0]">Skeleton loading ok. Missing focus rings, transitions, change indicators.</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</section>
+
+		<section class="report-section mb-8 p-6 md:p-8">
+			<div class="mono mb-6 text-xs tracking-widest text-[#666]">// COGNITIVE LOAD / RISK</div>
+			<div class="grid gap-6 md:grid-cols-2">
+				<div>
+					<ul class="space-y-3 text-sm text-[#a0a0a0]">
+						<li><span class="mono mr-2 text-[#34d399]">PASS</span>Clean routing & navigation. No context loss.</li>
+						<li><span class="mono mr-2 text-[#34d399]">PASS</span>Deferred gallery with New/Removed badges.</li>
+						<li><span class="mono mr-2 text-[#fbbf24]">WATCH</span>Full launch vs In construction only explained in small text. Risk of confusion.</li>
+						<li><span class="mono mr-2 text-[#fbbf24]">WATCH</span>No micro-copy guidance for slug, category, main image.</li>
+						<li><span class="mono mr-2 text-[#ef4444]">FAIL</span>No visual identity. The product is not memorable.</li>
+					</ul>
+				</div>
+				<div>
+					<div class="mono mb-3 text-xs tracking-widest text-[#666]">// NEXT MODES</div>
+					<div class="flex flex-wrap gap-2">
+						<span class="border border-[#333] px-3 py-1 text-sm text-[#a0a0a0]">/design recolor</span>
+						<span class="border border-[#333] px-3 py-1 text-sm text-[#a0a0a0]">/design relayout</span>
+						<span class="border border-[#333] px-3 py-1 text-sm text-[#a0a0a0]">/design typeset</span>
+						<span class="border border-[#333] px-3 py-1 text-sm text-[#a0a0a0]">/design interaction</span>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section class="report-section mb-8 p-6 md:p-8">
+			<div class="mono mb-6 text-xs tracking-widest text-[#666]">// AI SMELLS</div>
+			<div class="grid gap-4 md:grid-cols-3">
+				<article class="border border-[#1f1f24] p-4">
+					<h2 class="mb-2 text-sm font-semibold">Card grid archetype</h2>
+					<p class="text-sm leading-6 text-[#a0a0a0]">Centered hero + pill filters + 3-column card grid. The safest, most generic directory layout.</p>
+				</article>
+				<article class="border border-[#1f1f24] p-4">
+					<h2 class="mb-2 text-sm font-semibold">Default shadcn palette</h2>
+					<p class="text-sm leading-6 text-[#a0a0a0]">No color override. primary/secondary/muted are whatever shadcn generated. No mood decision.</p>
+				</article>
+				<article class="border border-[#1f1f24] p-4">
+					<h2 class="mb-2 text-sm font-semibold">Template copy</h2>
+					<p class="text-sm leading-6 text-[#a0a0a0]">"Discover products built by makers." Fits any directory. "Testimonials coming soon" is the internet's most common placeholder.</p>
+				</article>
+			</div>
+		</section>
+
+		<section class="report-section mb-8 p-6 md:p-8">
+			<div class="mono mb-6 text-xs tracking-widest text-[#666]">// WHAT'S WORKING</div>
+			<div class="grid gap-4 md:grid-cols-3">
+				<article class="border border-[#1f1f24] p-4">
+					<h2 class="mb-2 text-sm font-semibold">Deferred gallery UX</h2>
+					<p class="text-sm leading-6 text-[#a0a0a0]">New/Removed badges, pending state, batch apply on Update. Best UX moment in the product.</p>
+				</article>
+				<article class="border border-[#1f1f24] p-4">
+					<h2 class="mb-2 text-sm font-semibold">Dual publish buttons</h2>
+					<p class="text-sm leading-6 text-[#a0a0a0]">Full launch vs In construction is a clear decision point for the maker.</p>
+				</article>
+				<article class="border border-[#1f1f24] p-4">
+					<h2 class="mb-2 text-sm font-semibold">Clean data + routing</h2>
+					<p class="text-sm leading-6 text-[#a0a0a0]">No structural bugs. Server actions are clean, revalidation works, status flow is correct.</p>
+				</article>
+			</div>
+		</section>
+
+		<section class="report-section mb-8 p-6 md:p-8">
+			<div class="mono mb-6 text-xs tracking-widest text-[#666]">// PRIORITY ISSUES</div>
+			<div class="space-y-5">
+				<article class="border border-[#2a1d22] bg-[#110b0d] p-5">
+					<div class="mono mb-2 text-xs text-[#f43f5e]">P0</div>
+					<h2 class="mb-2 text-lg font-semibold">No visual identity</h2>
+					<p class="mb-4 text-sm leading-6 text-[#a0a0a0]">The showcase has no voice. Swap the text and it fits any directory. Needs a mood color (amber/burnt for building, polished for published), an anchor element in the first viewport, and a visual distinction between building and published that goes beyond a badge.</p>
+					<div class="border-l border-[#fbbf24] pl-4 text-sm leading-6 text-[#fbbf24]">FIX: /design recolor + /design relayout — pick a color with personality, give the hero a visual statement, and differentiate building cards with distinct treatment.</div>
+				</article>
+
+				<article class="border border-[#2a1d22] bg-[#110b0d] p-5">
+					<div class="mono mb-2 text-xs text-[#f43f5e]">P0</div>
+					<h2 class="mb-2 text-lg font-semibold">Detail page lacks rhythm</h2>
+					<p class="mb-4 text-sm leading-6 text-[#a0a0a0]">Description, gallery, do-follow link, and testimonials are visually identical blocks — same padding, border, background. The eye scrolls without knowing what matters.</p>
+					<div class="border-l border-[#fbbf24] pl-4 text-sm leading-6 text-[#fbbf24]">FIX: /design relayout — two-column on desktop: content left, sidebar right (do-follow, waitlist, badges). For building: waitlist should be the focus, not another block below.</div>
+				</article>
+
+				<article class="border border-[#2a1d22] bg-[#110b0d] p-5">
+					<div class="mono mb-2 text-xs text-[#f43f5e]">P1</div>
+					<h2 class="mb-2 text-lg font-semibold">All directory cards look the same</h2>
+					<p class="mb-4 text-sm leading-6 text-[#a0a0a0]">Same size, structure, visual weight. Featured should break the grid. Building should use different treatment — dashed border, progress indicator, something that reads "this is cooking."</p>
+					<div class="border-l border-[#fbbf24] pl-4 text-sm leading-6 text-[#fbbf24]">FIX: /design relayout — featured cards span 2 columns. Building cards get a distinct container.</div>
+				</article>
+
+				<article class="border border-[#2a1d22] bg-[#110b0d] p-5">
+					<div class="mono mb-2 text-xs text-[#fbbf24]">P1</div>
+					<h2 class="mb-2 text-lg font-semibold">Compressed typography with no scale</h2>
+					<p class="mb-4 text-sm leading-6 text-[#a0a0a0]">Cards use text-sm for titles, text-[10px] for categories. At 320px this may be unreadable. No weight contrast between title and body.</p>
+					<div class="border-l border-[#fbbf24] pl-4 text-sm leading-6 text-[#fbbf24]">FIX: /design typeset — visible scale: titles to text-base, body to text-sm, categories to text-xs. Detail description needs text-base leading-relaxed.</div>
+				</article>
+
+				<article class="border border-[#2a1d22] bg-[#110b0d] p-5">
+					<div class="mono mb-2 text-xs text-[#fbbf24]">P2</div>
+					<h2 class="mb-2 text-lg font-semibold">Missing focus rings and change feedback</h2>
+					<p class="mb-4 text-sm leading-6 text-[#a0a0a0]">Filter buttons have no focus-visible. After Update, no visual confirmation. Featured checkbox label is not clickable.</p>
+					<div class="border-l border-[#fbbf24] pl-4 text-sm leading-6 text-[#fbbf24]">FIX: /design interaction — focus rings on filters, success toast after Update, label htmlFor on featured.</div>
+				</article>
+			</div>
+		</section>
+
+		<footer class="mono py-8 text-center text-xs tracking-widest text-[#444]">
+			Generated with CommandCode - 2026-08-03
+		</footer>
+	</main>
+</body>
+</html>
