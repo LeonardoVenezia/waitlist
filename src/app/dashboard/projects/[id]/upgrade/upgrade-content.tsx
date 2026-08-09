@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { PLANS } from "@/lib/plans";
 
-type Waitlist = Database["public"]["Tables"]["waitlists"]["Row"];
+type Project = Database["public"]["Tables"]["projects"]["Row"];
 
 declare global {
   interface Window {
@@ -24,10 +24,10 @@ declare global {
 }
 
 export function UpgradeContent({
-  waitlist,
+  project,
   priceIds,
 }: {
-  waitlist: Waitlist;
+  project: Project;
   priceIds: { launch: string; grow: string };
 }) {
   const [paddleReady, setPaddleReady] = useState(false);
@@ -65,16 +65,16 @@ export function UpgradeContent({
         items: [{ priceId: plan.priceId, quantity: 1 }],
         customer: { email: userEmail },
         customData: {
-          account_id: waitlist.account_id,
-          waitlist_id: waitlist.id,
+          account_id: project.account_id,
+          waitlist_id: project.id,
           plan: planId,
         },
       });
     },
-    [waitlist.account_id, waitlist.id, userEmail],
+    [project.account_id, project.id, userEmail],
   );
 
-  if (waitlist.plan === "scale") {
+  if (project.plan === "scale") {
     return (
       <div className="flex flex-1 items-center justify-center">
         <p className="text-muted-foreground">You&apos;re already on the highest plan.</p>
@@ -87,13 +87,13 @@ export function UpgradeContent({
       <div>
         <h1 className="text-2xl">Upgrade plan</h1>
         <p className="text-sm text-muted-foreground">
-          Current plan: <span className="font-medium capitalize">{waitlist.plan}</span>
+          Current plan: <span className="font-medium capitalize">{project.plan}</span>
         </p>
       </div>
       <div className="grid gap-6 sm:grid-cols-2">
         {paidPlans.map((plan) => {
-          const isCurrent = waitlist.plan === plan.id;
-          const isDowngrade = waitlist.plan === "grow" && plan.id === "launch";
+          const isCurrent = project.plan === plan.id;
+          const isDowngrade = project.plan === "grow" && plan.id === "launch";
           const canBuy = !isCurrent && !isDowngrade && paddleReady;
 
           return (

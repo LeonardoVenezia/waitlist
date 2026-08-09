@@ -14,7 +14,7 @@ export default async function IntegrationPage(props: {
   if (!user) redirect("/login");
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("id, name, slug, public_key, settings, plan")
     .eq("id", id)
     .maybeSingle();

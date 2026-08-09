@@ -10,7 +10,7 @@ export default async function AnalyticsPage(props: { params: Promise<{ id: strin
   if (!user) redirect("/login");
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("id, name")
     .eq("id", id)
     .maybeSingle();

@@ -14,7 +14,7 @@ export default async function UpgradePage(props: { params: Promise<{ id: string 
   if (!user) redirect("/login");
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("*")
     .eq("id", id)
     .maybeSingle();
@@ -36,7 +36,7 @@ export default async function UpgradePage(props: { params: Promise<{ id: string 
         </>
       )}
       <UpgradeContent
-        waitlist={waitlist}
+        project={waitlist}
         priceIds={{
           launch: launchPriceId,
           grow: growPriceId,

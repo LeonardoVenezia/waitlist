@@ -46,7 +46,7 @@ export async function generateMetadata(props: {
   const { slug } = await props.params;
   const supabase = createAdminClient();
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("name, settings")
     .eq("slug", slug)
     .eq("status", "active")
@@ -76,7 +76,7 @@ export default async function HostedPage(props: {
   const supabase = createAdminClient();
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("id, name, slug, public_key, settings")
     .eq("slug", slug)
     .eq("status", "active")

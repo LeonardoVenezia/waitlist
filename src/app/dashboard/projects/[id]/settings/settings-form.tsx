@@ -2,14 +2,14 @@
 
 import { useActionState, useState } from "react";
 import type { Database } from "@/lib/supabase/types";
-import { updateWaitlistSettings, inviteTeamMember, removeTeamMember } from "./actions";
+import { updateProjectSettings, inviteTeamMember, removeTeamMember } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-type Waitlist = Database["public"]["Tables"]["waitlists"]["Row"];
+type Project = Database["public"]["Tables"]["projects"]["Row"];
 type TeamMember = {
   id: string;
   user_id: string;
@@ -206,8 +206,8 @@ function PostSignupEditor({ defaultPostSignup }: { defaultPostSignup: { enabled?
 }
 
 // ── Main ──
-export function SettingsForm({ waitlist, members }: { waitlist: Waitlist; members: TeamMember[] }) {
-  const settings = waitlist.settings as Record<string, unknown>;
+export function SettingsForm({ project, members }: { project: Project; members: TeamMember[] }) {
+  const settings = project.settings as Record<string, unknown>;
   const branding = (settings.branding ?? {}) as Record<string, unknown>;
   const hero = (settings.hero ?? {}) as Record<string, unknown>;
   const thankYou = (settings.thank_you ?? {}) as Record<string, unknown>;
@@ -219,12 +219,12 @@ export function SettingsForm({ waitlist, members }: { waitlist: Waitlist; member
   const [tab, setTab] = useState<string>("Branding");
 
   const [teamState, teamAction, teamPending] = useActionState<State, FormData>(
-    async (_prev, formData) => inviteTeamMember(waitlist.id, formData),
+    async (_prev, formData) => inviteTeamMember(project.id, formData),
     null,
   );
 
   const [state, formAction, pending] = useActionState<State, FormData>(
-    async (_prev, formData) => updateWaitlistSettings(waitlist.id, null, formData),
+    async (_prev, formData) => updateProjectSettings(project.id, null, formData),
     null,
   );
 
@@ -266,17 +266,17 @@ export function SettingsForm({ waitlist, members }: { waitlist: Waitlist; member
         <Card>
           <CardHeader>
             <CardTitle>Branding</CardTitle>
-            <CardDescription>Customize the look and feel of your waitlist.</CardDescription>
+            <CardDescription>Customize the look and feel of your project.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Waitlist name</Label>
-              <Input id="name" name="name" defaultValue={waitlist.name} required />
+              <Label htmlFor="name">Project name</Label>
+              <Input id="name" name="name" defaultValue={project.name} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="slug">Slug</Label>
-              <Input id="slug" name="slug" defaultValue={waitlist.slug} required />
-              <p className="text-xs text-muted-foreground">Your page is at /p/{waitlist.slug}</p>
+              <Input id="slug" name="slug" defaultValue={project.slug} required />
+              <p className="text-xs text-muted-foreground">Your page is at /p/{project.slug}</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="branding.logo_url">Logo URL</Label>
@@ -397,8 +397,8 @@ export function SettingsForm({ waitlist, members }: { waitlist: Waitlist; member
               <ToggleRow id="thank_you.show_leaderboard" name="thank_you.show_leaderboard" label="Show leaderboard" defaultChecked={(thankYou.show_leaderboard as boolean) ?? true} />
               <ToggleRow id="thank_you.hide_confetti" name="thank_you.hide_confetti" label="Hide confetti" defaultChecked={(thankYou.hide_confetti as boolean) ?? false} />
               <ToggleRow id="thank_you.hide_referral" name="thank_you.hide_referral" label="Hide referral" defaultChecked={(thankYou.hide_referral as boolean) ?? false} />
-              <ToggleRow id="thank_you.hide_branding" name="thank_you.hide_branding" label="Hide powered by" disabled={waitlist.plan !== "grow"} defaultChecked={(thankYou.hide_branding as boolean) ?? false} />
-              {waitlist.plan !== "grow" && <p className="text-xs text-primary">Upgrade to Grow to hide branding</p>}
+              <ToggleRow id="thank_you.hide_branding" name="thank_you.hide_branding" label="Hide powered by" disabled={project.plan !== "grow"} defaultChecked={(thankYou.hide_branding as boolean) ?? false} />
+              {project.plan !== "grow" && <p className="text-xs text-primary">Upgrade to Grow to hide branding</p>}
               <ToggleRow id="thank_you.hide_until_verified" name="thank_you.hide_until_verified" label="Hide success until verified" defaultChecked={(thankYou.hide_until_verified as boolean) ?? false} />
             </CardContent>
           </Card>
@@ -415,11 +415,11 @@ export function SettingsForm({ waitlist, members }: { waitlist: Waitlist; member
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="submissions.initial_position">Initial position <span className="text-xs text-muted-foreground">(inflate ranking)</span></Label>
-              <Input id="submissions.initial_position" name="submissions.initial_position" type="number" defaultValue={(referral.starting_position_offset as number) ?? 0} min={0} disabled={waitlist.plan === "free"} />
+              <Input id="submissions.initial_position" name="submissions.initial_position" type="number" defaultValue={(referral.starting_position_offset as number) ?? 0} min={0} disabled={project.plan === "free"} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="submissions.position_to_move">Positions per referral</Label>
-              <Input id="submissions.position_to_move" name="submissions.position_to_move" type="number" defaultValue={(referral.positions_per_referral as number) ?? 10} min={1} disabled={waitlist.plan === "free"} />
+              <Input id="submissions.position_to_move" name="submissions.position_to_move" type="number" defaultValue={(referral.positions_per_referral as number) ?? 10} min={1} disabled={project.plan === "free"} />
               <p className="text-xs text-muted-foreground">How many spots a subscriber climbs for each referral.</p>
             </div>
             <ToggleRow id="referral.enabled" name="referral.enabled" label="Enable referrals" defaultChecked={(referral.enabled as boolean) ?? true} />
@@ -459,47 +459,47 @@ export function SettingsForm({ waitlist, members }: { waitlist: Waitlist; member
               <CardDescription>How emails are sent to subscribers.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <ToggleRow id="email.welcome_email" name="email.welcome_email" label="Send welcome email" defaultChecked={(email.welcome_email as boolean) ?? false} disabled={waitlist.plan === "free"} />
+              <ToggleRow id="email.welcome_email" name="email.welcome_email" label="Send welcome email" defaultChecked={(email.welcome_email as boolean) ?? false} disabled={project.plan === "free"} />
               <div className="space-y-2">
                 <Label htmlFor="email.welcome_subject">Welcome email subject</Label>
-                <Input id="email.welcome_subject" name="email.welcome_subject" defaultValue={(email.welcome_subject as string) ?? ""} disabled={waitlist.plan === "free"} />
+                <Input id="email.welcome_subject" name="email.welcome_subject" defaultValue={(email.welcome_subject as string) ?? ""} disabled={project.plan === "free"} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email.welcome_message">Welcome email message</Label>
-                <textarea id="email.welcome_message" name="email.welcome_message" rows={3} defaultValue={(email.welcome_message as string) ?? ""} className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm" disabled={waitlist.plan === "free"} />
+                <textarea id="email.welcome_message" name="email.welcome_message" rows={3} defaultValue={(email.welcome_message as string) ?? ""} className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm" disabled={project.plan === "free"} />
               </div>
-              <ToggleRow id="email.hide_welcome_cta" name="email.hide_welcome_cta" label="Hide CTA on welcome mail" defaultChecked={(email.hide_welcome_cta as boolean) ?? false} disabled={waitlist.plan === "free"} />
-              <ToggleRow id="email.customize_welcome_cta" name="email.customize_welcome_cta" label="Customize CTA URL" defaultChecked={(email.customize_welcome_cta as boolean) ?? false} disabled={waitlist.plan === "free"} />
+              <ToggleRow id="email.hide_welcome_cta" name="email.hide_welcome_cta" label="Hide CTA on welcome mail" defaultChecked={(email.hide_welcome_cta as boolean) ?? false} disabled={project.plan === "free"} />
+              <ToggleRow id="email.customize_welcome_cta" name="email.customize_welcome_cta" label="Customize CTA URL" defaultChecked={(email.customize_welcome_cta as boolean) ?? false} disabled={project.plan === "free"} />
               <div className="space-y-2">
                 <Label htmlFor="email.welcome_cta_url">CTA destination URL</Label>
-                <Input id="email.welcome_cta_url" name="email.welcome_cta_url" defaultValue={(email.welcome_cta_url as string) ?? ""} disabled={waitlist.plan === "free"} />
+                <Input id="email.welcome_cta_url" name="email.welcome_cta_url" defaultValue={(email.welcome_cta_url as string) ?? ""} disabled={project.plan === "free"} />
               </div>
-              <ToggleRow id="email.welcome_after_verification" name="email.welcome_after_verification" label="Send welcome after verification" defaultChecked={(email.welcome_after_verification as boolean) ?? false} disabled={waitlist.plan === "free"} />
-              <ToggleRow id="email.verify_email" name="email.verify_email" label="Send verification email" defaultChecked={(email.verify_email as boolean) ?? false} disabled={waitlist.plan === "free"} />
+              <ToggleRow id="email.welcome_after_verification" name="email.welcome_after_verification" label="Send welcome after verification" defaultChecked={(email.welcome_after_verification as boolean) ?? false} disabled={project.plan === "free"} />
+              <ToggleRow id="email.verify_email" name="email.verify_email" label="Send verification email" defaultChecked={(email.verify_email as boolean) ?? false} disabled={project.plan === "free"} />
               <div className="space-y-2">
                 <Label htmlFor="email.verify_message">Verification message</Label>
-                <textarea id="email.verify_message" name="email.verify_message" rows={2} defaultValue={(email.verify_message as string) ?? ""} className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm" disabled={waitlist.plan === "free"} />
+                <textarea id="email.verify_message" name="email.verify_message" rows={2} defaultValue={(email.verify_message as string) ?? ""} className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm" disabled={project.plan === "free"} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email.signature">Email signature</Label>
-                <textarea id="email.signature" name="email.signature" rows={2} defaultValue={(email.signature as string) ?? ""} className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm" disabled={waitlist.plan === "free"} />
+                <textarea id="email.signature" name="email.signature" rows={2} defaultValue={(email.signature as string) ?? ""} className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm" disabled={project.plan === "free"} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email.reply_to_name">Reply-to name</Label>
-                  <Input id="email.reply_to_name" name="email.reply_to_name" defaultValue={(email.reply_to_name as string) ?? ""} disabled={waitlist.plan === "free"} />
+                  <Input id="email.reply_to_name" name="email.reply_to_name" defaultValue={(email.reply_to_name as string) ?? ""} disabled={project.plan === "free"} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email.reply_to_email">Reply-to email</Label>
-                  <Input id="email.reply_to_email" name="email.reply_to_email" type="email" defaultValue={(email.reply_to_email as string) ?? ""} disabled={waitlist.plan === "free"} />
+                  <Input id="email.reply_to_email" name="email.reply_to_email" type="email" defaultValue={(email.reply_to_email as string) ?? ""} disabled={project.plan === "free"} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email.sender_domain">Send from</Label>
-                <select id="email.sender_domain" name="email.sender_domain" defaultValue={(email.sender_domain as string) ?? "default"} disabled={waitlist.plan !== "grow"} className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm">
+                <select id="email.sender_domain" name="email.sender_domain" defaultValue={(email.sender_domain as string) ?? "default"} disabled={project.plan !== "grow"} className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm">
                   <option value="default">LaunchList (hello@getlaunchlist.com)</option>
                 </select>
-                {waitlist.plan !== "grow" && <p className="text-xs text-primary">Upgrade to Grow to send from your domain</p>}
+                {project.plan !== "grow" && <p className="text-xs text-primary">Upgrade to Grow to send from your domain</p>}
               </div>
             </CardContent>
           </Card>
@@ -517,8 +517,8 @@ export function SettingsForm({ waitlist, members }: { waitlist: Waitlist; member
             <ToggleRow id="notifications.email_on_signup" name="notifications.email_on_signup" label="Email on new signup" defaultChecked={(notifications.email_on_signup as boolean) ?? true} />
             <div className="space-y-2">
               <Label htmlFor="notifications.slack_webhook_url">Slack webhook URL</Label>
-              <Input id="notifications.slack_webhook_url" name="notifications.slack_webhook_url" defaultValue={(notifications.slack_webhook_url as string) ?? ""} placeholder="https://hooks.slack.com/services/..." disabled={waitlist.plan === "free"} />
-              {waitlist.plan === "free" && <p className="text-xs text-primary">Upgrade to Launch to enable Slack notifications</p>}
+              <Input id="notifications.slack_webhook_url" name="notifications.slack_webhook_url" defaultValue={(notifications.slack_webhook_url as string) ?? ""} placeholder="https://hooks.slack.com/services/..." disabled={project.plan === "free"} />
+              {project.plan === "free" && <p className="text-xs text-primary">Upgrade to Launch to enable Slack notifications</p>}
             </div>
           </CardContent>
         </Card>
@@ -530,7 +530,7 @@ export function SettingsForm({ waitlist, members }: { waitlist: Waitlist; member
           <Card>
             <CardHeader>
               <CardTitle>Team</CardTitle>
-              <CardDescription>Invite members to manage this waitlist.</CardDescription>
+              <CardDescription>Invite members to manage this project.</CardDescription>
             </CardHeader>
             <CardContent>
               <form action={teamAction} className="flex items-end gap-3">
@@ -565,7 +565,7 @@ export function SettingsForm({ waitlist, members }: { waitlist: Waitlist; member
                       <span className="ml-2 text-xs text-muted-foreground capitalize">{m.role}</span>
                     </div>
                     <form action={async () => {
-                      await removeTeamMember(waitlist.id, m.id);
+                      await removeTeamMember(project.id, m.id);
                     }}>
                       <Button variant="ghost" size="xs" type="submit">Remove</Button>
                     </form>

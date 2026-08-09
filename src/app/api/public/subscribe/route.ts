@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
   // 1. Validate public key → find waitlist
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("id, name, slug, plan, submission_limit, settings, account_id")
     .eq("public_key", publicKey)
     .eq("status", "active")

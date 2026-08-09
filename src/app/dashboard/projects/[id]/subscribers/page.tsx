@@ -34,7 +34,7 @@ export default async function SubscribersPage(props: {
   if (!user) redirect("/login");
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("id, name, submission_limit, plan")
     .eq("id", id)
     .maybeSingle();
@@ -101,10 +101,10 @@ export default async function SubscribersPage(props: {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href={`/dashboard/waitlists/${id}/export${exportQs ? "?" + exportQs : ""}`}>
+          <Link href={`/dashboard/projects/${id}/export${exportQs ? "?" + exportQs : ""}`}>
             <Button variant="outline" size="sm">Export</Button>
           </Link>
-          <Link href={`/dashboard/waitlists/${id}/upgrade`}>
+          <Link href={`/dashboard/projects/${id}/upgrade`}>
             <Button size="sm">Upgrade plan</Button>
           </Link>
         </div>

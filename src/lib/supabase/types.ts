@@ -99,7 +99,7 @@ export interface Database {
           },
         ];
       };
-      waitlists: {
+      projects: {
         Row: {
           id: string;
           account_id: string;
@@ -195,7 +195,7 @@ export interface Database {
           {
             foreignKeyName: "subscribers_waitlist_id_fkey";
             columns: ["waitlist_id"];
-            referencedRelation: "waitlists";
+            referencedRelation: "projects";
             referencedColumns: ["id"];
           },
           {
@@ -250,7 +250,7 @@ export interface Database {
           {
             foreignKeyName: "purchases_waitlist_id_fkey";
             columns: ["waitlist_id"];
-            referencedRelation: "waitlists";
+            referencedRelation: "projects";
             referencedColumns: ["id"];
           },
         ];
@@ -332,7 +332,7 @@ export interface Database {
           {
             foreignKeyName: "showcases_waitlist_id_fkey";
             columns: ["waitlist_id"];
-            referencedRelation: "waitlists";
+            referencedRelation: "projects";
             referencedColumns: ["id"];
           },
         ];
@@ -360,7 +360,7 @@ export interface Database {
           {
             foreignKeyName: "page_events_waitlist_id_fkey";
             columns: ["waitlist_id"];
-            referencedRelation: "waitlists";
+            referencedRelation: "projects";
             referencedColumns: ["id"];
           },
         ];

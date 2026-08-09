@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
   // Find waitlist by public key
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("id")
     .eq("public_key", publicKey)
     .eq("status", "active")

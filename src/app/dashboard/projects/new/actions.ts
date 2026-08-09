@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-export async function createWaitlist(prevState: unknown, formData: FormData) {
+export async function createProject(prevState: unknown, formData: FormData) {
   const supabase = await createClient();
 
   const name = formData.get("name") as string;
@@ -15,7 +15,7 @@ export async function createWaitlist(prevState: unknown, formData: FormData) {
   }
 
   const { data, error } = await supabase
-    .from("waitlists")
+    .from("projects")
     .insert({
       account_id: accountId,
       name,

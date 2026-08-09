@@ -24,7 +24,7 @@ export default async function DashboardPage() {
         <p className="text-sm text-muted-foreground">
           Create your first project to get started with waitlists, coming-soon pages, and more.
         </p>
-        <Link href="/dashboard/waitlists/new">
+        <Link href="/dashboard/projects/new">
           <Button size="lg">Create your first project</Button>
         </Link>
       </div>
@@ -32,7 +32,7 @@ export default async function DashboardPage() {
   }
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("id, name, slug, plan, submission_limit")
     .eq("account_id", accountId)
     .limit(1)
@@ -48,7 +48,7 @@ export default async function DashboardPage() {
         <p className="text-sm text-muted-foreground">
           Create your first project to get started with waitlists, coming-soon pages, and more.
         </p>
-        <Link href="/dashboard/waitlists/new">
+        <Link href="/dashboard/projects/new">
           <Button size="lg">Create your first project</Button>
         </Link>
       </div>

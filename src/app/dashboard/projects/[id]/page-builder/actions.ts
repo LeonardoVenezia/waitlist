@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import type { Database } from "@/lib/supabase/types";
 
-type Json = Database["public"]["Tables"]["waitlists"]["Row"]["settings"];
+type Json = Database["public"]["Tables"]["projects"]["Row"]["settings"];
 
 export async function savePageSections(
   waitlistId: string,
@@ -15,7 +15,7 @@ export async function savePageSections(
   const supabase = createAdminClient();
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("settings")
     .eq("id", waitlistId)
     .single();
@@ -29,13 +29,13 @@ export async function savePageSections(
   } as Json;
 
   const { error } = await supabase
-    .from("waitlists")
+    .from("projects")
     .update({ settings: updated })
     .eq("id", waitlistId);
 
   if (error) return { error: error.message };
 
-  revalidatePath(`/dashboard/waitlists/${waitlistId}/page-builder`);
+  revalidatePath(`/dashboard/projects/${waitlistId}/page-builder`);
   revalidatePath(`/p/${slug}`, "page");
   return { success: true };
 }

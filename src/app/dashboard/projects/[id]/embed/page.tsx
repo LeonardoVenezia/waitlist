@@ -12,7 +12,7 @@ export default async function EmbedPage(props: { params: Promise<{ id: string }>
   if (!user) redirect("/login");
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("id, public_key, slug")
     .eq("id", id)
     .maybeSingle();

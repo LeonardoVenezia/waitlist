@@ -58,7 +58,7 @@ export function SubscribersTable({
 
   const validateOne = async (id: string) => {
     setValidating((prev) => new Set(prev).add(id));
-    await fetch("/api/waitlists/subscribers/validate", {
+    await fetch("/api/projects/subscribers/validate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subscriberId: id }),
@@ -140,7 +140,7 @@ export function SubscribersTable({
       if (merged.emailStatus) params.set("email_status", merged.emailStatus);
       else params.delete("email_status");
       params.delete("page");
-      return `/dashboard/waitlists/${waitlistId}/subscribers?${params.toString()}`;
+      return `/dashboard/projects/${waitlistId}/subscribers?${params.toString()}`;
     },
     [filters, rawParams, waitlistId],
   );
@@ -164,7 +164,7 @@ export function SubscribersTable({
 
   const resetFilters = () => {
     setSearchValue("");
-    router.push(`/dashboard/waitlists/${waitlistId}/subscribers`);
+    router.push(`/dashboard/projects/${waitlistId}/subscribers`);
   };
 
   // Column visibility — from URL or default
@@ -178,7 +178,7 @@ export function SubscribersTable({
     const params = new URLSearchParams(rawParams.toString());
     params.set(`col_${col}`, cols[col] ? "0" : "1");
     router.push(
-      `/dashboard/waitlists/${waitlistId}/subscribers?${params.toString()}`,
+      `/dashboard/projects/${waitlistId}/subscribers?${params.toString()}`,
     );
   };
 
@@ -192,7 +192,7 @@ export function SubscribersTable({
           {hiddenCount} subscriber{hiddenCount === 1 ? " is" : "s are"} hidden
           because you exceeded your plan limit.{" "}
           <Link
-            href={`/dashboard/waitlists/${waitlistId}/upgrade`}
+            href={`/dashboard/projects/${waitlistId}/upgrade`}
             className="font-medium underline"
           >
             Upgrade to see them
@@ -493,7 +493,7 @@ export function SubscribersTable({
                 ? (() => {
                     const p = new URLSearchParams(rawParams.toString());
                     p.set("page", String(page));
-                    return `/dashboard/waitlists/${waitlistId}/subscribers?${p.toString()}`;
+                    return `/dashboard/projects/${waitlistId}/subscribers?${p.toString()}`;
                   })()
                 : "#"
             }
@@ -508,7 +508,7 @@ export function SubscribersTable({
                 ? (() => {
                     const p = new URLSearchParams(rawParams.toString());
                     p.set("page", String(page + 2));
-                    return `/dashboard/waitlists/${waitlistId}/subscribers?${p.toString()}`;
+                    return `/dashboard/projects/${waitlistId}/subscribers?${p.toString()}`;
                   })()
                 : "#"
             }

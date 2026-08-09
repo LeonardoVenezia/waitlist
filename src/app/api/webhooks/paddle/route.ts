@@ -89,7 +89,7 @@ export async function POST(request: Request) {
 
       // Update waitlist plan and limit
       await supabase
-        .from("waitlists")
+        .from("projects")
         .update({
           plan: plan as "launch" | "grow",
           ...(limit !== null && limit !== undefined ? { submission_limit: limit } : {}),

@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         destination: "/product/:slug",
         permanent: true,
       },
+      {
+        source: "/dashboard/waitlists/:path*",
+        destination: "/dashboard/projects/:path*",
+        permanent: true,
+      },
     ];
   },
 };

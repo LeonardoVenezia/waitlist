@@ -2,7 +2,7 @@
 
 import { useState, useActionState } from "react";
 import { useRouter } from "next/navigation";
-import { createWaitlist } from "./actions";
+import { createProject } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +26,7 @@ function toSlug(text: string) {
     .slice(0, 60);
 }
 
-export function CreateWaitlistForm({
+export function CreateProjectForm({
   accountId,
 }: {
   accountId: string;
@@ -40,7 +40,7 @@ export function CreateWaitlistForm({
     async (_prev, formData) => {
       formData.set("account_id", accountId);
       formData.set("slug", slug || toSlug(name));
-      return createWaitlist(null, formData);
+      return createProject(null, formData);
     },
     null,
   );

@@ -12,7 +12,7 @@ export default async function SettingsPage(props: { params: Promise<{ id: string
   if (!user) redirect("/login");
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("*")
     .eq("id", id)
     .maybeSingle();
@@ -26,5 +26,5 @@ export default async function SettingsPage(props: { params: Promise<{ id: string
     .eq("account_id", waitlist.account_id)
     .order("role");
 
-  return <SettingsForm waitlist={waitlist} members={members ?? []} />;
+  return <SettingsForm project={waitlist} members={members ?? []} />;
 }

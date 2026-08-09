@@ -77,10 +77,10 @@ export default async function DashboardLayout({
 
   const accountId = await ensureAccount(user.id);
 
-  const [{ data: profile }, { data: waitlists }] = await Promise.all([
+  const [{ data: profile }, { data: projects }] = await Promise.all([
     supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
     supabase
-      .from("waitlists")
+      .from("projects")
       .select("id, name, slug, plan")
       .eq("account_id", accountId)
       .order("created_at", { ascending: false }),
@@ -88,7 +88,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen">
-      <Sidebar waitlists={waitlists ?? []} />
+      <Sidebar projects={projects ?? []} />
       <div className="flex flex-1 flex-col">
         <header className="flex h-12 items-center justify-end border-b px-8">
           <UserNav

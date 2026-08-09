@@ -59,7 +59,7 @@ export default async function ProductDetailPage(props: {
 
   const { data: raw } = await admin
     .from("showcases")
-    .select("*, waitlists!inner(public_key, name, status, settings)")
+    .select("*, projects!inner(public_key, name, status, settings)")
     .eq("slug", slug)
     .in("status", ["published", "coming_soon"])
     .maybeSingle();
@@ -82,7 +82,7 @@ export default async function ProductDetailPage(props: {
     main_type: row.main_type as string,
     main_image: row.main_image as string | null,
     status: row.status as string,
-    waitlist: (row.waitlists ? (row.waitlists as ProductDetail["waitlist"]) : null),
+    waitlist: (row.projects ? (row.projects as ProductDetail["waitlist"]) : null),
   };
   const images = Array.isArray(product.images) ? product.images : [];
   const isVideo = product.main_type === "video" && product.video_url;

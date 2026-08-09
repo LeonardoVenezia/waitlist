@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export default async function WaitlistDetailPage(props: { params: Promise<{ id: string }> }) {
+export default async function ProjectDetailPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params;
   const supabase = await createClient();
   const {
@@ -13,7 +13,7 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
   if (!user) redirect("/login");
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("*")
     .eq("id", id)
     .maybeSingle();
@@ -51,7 +51,7 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
             /p/{waitlist.slug}
           </p>
         </div>
-        <Link href={`/dashboard/waitlists/${id}/upgrade`}>
+        <Link href={`/dashboard/projects/${id}/upgrade`}>
           <Button size="sm">Upgrade plan</Button>
         </Link>
       </div>
@@ -88,7 +88,7 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
       {totalHidden > 0 && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
           {totalHidden} subscriber{totalHidden === 1 ? "" : "s"} hidden —{" "}
-          <Link href={`/dashboard/waitlists/${id}/upgrade`} className="font-medium underline">
+          <Link href={`/dashboard/projects/${id}/upgrade`} className="font-medium underline">
             upgrade your plan
           </Link>{" "}
           to see them.
@@ -99,7 +99,7 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
       {nearLimit && totalHidden === 0 && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
           You&apos;re approaching your plan limit ({totalActive} of {waitlist.submission_limit}).{" "}
-          <Link href={`/dashboard/waitlists/${id}/upgrade`} className="font-medium underline">
+          <Link href={`/dashboard/projects/${id}/upgrade`} className="font-medium underline">
             Upgrade to keep growing
           </Link>
         </div>
@@ -119,7 +119,7 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
           return (
             <Link
               key={tab.href}
-              href={`/dashboard/waitlists/${id}/${tab.href}`}
+              href={`/dashboard/projects/${id}/${tab.href}`}
               className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               {tab.label}
@@ -136,11 +136,11 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
             <span className="text-[11px] text-muted-foreground/60">Hosted page only</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Link href={`/dashboard/waitlists/${id}/analytics`} className="block p-5 rounded-xl border bg-card hover:bg-accent/30 transition-colors">
+            <Link href={`/dashboard/projects/${id}/analytics`} className="block p-5 rounded-xl border bg-card hover:bg-accent/30 transition-colors">
               <dt className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Page views</dt>
               <dd className="mt-2 text-3xl font-semibold tabular-nums">{pageViews}</dd>
             </Link>
-            <Link href={`/dashboard/waitlists/${id}/analytics`} className="block p-5 rounded-xl border bg-card hover:bg-accent/30 transition-colors">
+            <Link href={`/dashboard/projects/${id}/analytics`} className="block p-5 rounded-xl border bg-card hover:bg-accent/30 transition-colors">
               <dt className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Signups from page</dt>
               <dd className="mt-2 text-3xl font-semibold tabular-nums">{pageSignupCount}</dd>
             </Link>
@@ -182,7 +182,7 @@ export default async function WaitlistDetailPage(props: { params: Promise<{ id: 
           )}
           {recent && recent.length > 0 && (
             <Link
-              href={`/dashboard/waitlists/${id}/subscribers`}
+              href={`/dashboard/projects/${id}/subscribers`}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               View all subscribers →

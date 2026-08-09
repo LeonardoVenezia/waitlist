@@ -7,5 +7,5 @@ export async function deleteSubscriber(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("subscribers").delete().eq("id", id);
   if (error) throw new Error(error.message);
-  revalidatePath("/dashboard/waitlists/[id]/subscribers", "page");
+  revalidatePath("/dashboard/projects/[id]/subscribers", "page");
 }

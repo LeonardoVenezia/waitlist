@@ -5,9 +5,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import type { Database } from "@/lib/supabase/types";
 
-type Settings = Database["public"]["Tables"]["waitlists"]["Row"]["settings"];
+type Settings = Database["public"]["Tables"]["projects"]["Row"]["settings"];
 
-export async function updateWaitlistSettings(
+export async function updateProjectSettings(
   waitlistId: string,
   prevState: unknown,
   formData: FormData,
@@ -19,7 +19,7 @@ export async function updateWaitlistSettings(
 
   // Get existing values to preserve them when saving from a tab that doesn't include name/slug
   const { data: current } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("name, slug, settings")
     .eq("id", waitlistId)
     .single();
@@ -129,7 +129,7 @@ export async function updateWaitlistSettings(
   } as unknown as Settings;
 
   const { error } = await supabase
-    .from("waitlists")
+    .from("projects")
     .update({ name, slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, ""), settings })
     .eq("id", waitlistId);
 
@@ -140,7 +140,7 @@ export async function updateWaitlistSettings(
     return { error: error.message };
   }
 
-  revalidatePath(`/dashboard/waitlists/${waitlistId}/settings`);
+  revalidatePath(`/dashboard/projects/${waitlistId}/settings`);
   return { success: true };
 }
 
@@ -167,7 +167,7 @@ export async function inviteTeamMember(waitlistId: string, formData: FormData) {
 
   // Get account_id for this waitlist
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("account_id")
     .eq("id", waitlistId)
     .single();
@@ -187,7 +187,7 @@ export async function inviteTeamMember(waitlistId: string, formData: FormData) {
     return { error: error.message };
   }
 
-  revalidatePath(`/dashboard/waitlists/${waitlistId}/settings`);
+  revalidatePath(`/dashboard/projects/${waitlistId}/settings`);
   return { success: true };
 }
 
@@ -195,7 +195,7 @@ export async function removeTeamMember(waitlistId: string, memberId: string) {
   const admin = createAdminClient();
   const { error } = await admin.from("account_members").delete().eq("id", memberId);
   if (error) return { error: error.message };
-  revalidatePath(`/dashboard/waitlists/${waitlistId}/settings`);
+  revalidatePath(`/dashboard/projects/${waitlistId}/settings`);
   return { success: true };
 }
 

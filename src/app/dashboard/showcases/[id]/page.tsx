@@ -10,7 +10,7 @@ export default async function ShowcasePage(props: { params: Promise<{ id: string
   if (!user) redirect("/login");
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("id, plan, slug")
     .eq("id", id)
     .maybeSingle();

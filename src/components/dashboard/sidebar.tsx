@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-interface WaitlistSummary {
+interface ProjectSummary {
   id: string;
   name: string;
   slug: string;
@@ -17,13 +17,13 @@ const productSubNav = [
 ];
 
 const waitlistSubNav = [
-  { label: "Overview", href: (id: string) => `/dashboard/waitlists/${id}`, icon: "📊" },
-  { label: "Submissions", href: (id: string) => `/dashboard/waitlists/${id}/subscribers`, icon: "📧" },
-  { label: "Page Builder", href: (id: string) => `/dashboard/waitlists/${id}/page-builder`, icon: "📄" },
-  { label: "Integration", href: (id: string) => `/dashboard/waitlists/${id}/integration`, icon: "🔌" },
-  { label: "Analytics", href: (id: string) => `/dashboard/waitlists/${id}/analytics`, icon: "📈" },
-  { label: "Export", href: (id: string) => `/dashboard/waitlists/${id}/export`, icon: "📦" },
-  { label: "Settings", href: (id: string) => `/dashboard/waitlists/${id}/settings`, icon: "⚙️" },
+  { label: "Overview", href: (id: string) => `/dashboard/projects/${id}`, icon: "📊" },
+  { label: "Submissions", href: (id: string) => `/dashboard/projects/${id}/subscribers`, icon: "📧" },
+  { label: "Page Builder", href: (id: string) => `/dashboard/projects/${id}/page-builder`, icon: "📄" },
+  { label: "Integration", href: (id: string) => `/dashboard/projects/${id}/integration`, icon: "🔌" },
+  { label: "Analytics", href: (id: string) => `/dashboard/projects/${id}/analytics`, icon: "📈" },
+  { label: "Export", href: (id: string) => `/dashboard/projects/${id}/export`, icon: "📦" },
+  { label: "Settings", href: (id: string) => `/dashboard/projects/${id}/settings`, icon: "⚙️" },
 ];
 
 function SubNavSection({
@@ -86,16 +86,15 @@ function SubNavSection({
 }
 
 export function Sidebar({
-  waitlists,
+  projects,
 }: {
-  waitlists: WaitlistSummary[];
+  projects: ProjectSummary[];
 }) {
   const pathname = usePathname();
-  const currentId = pathname.match(/\/(?:waitlists|showcases)\/([^/]+)/)?.[1] ?? null;
+  const currentId = pathname.match(/\/(?:projects|showcases)\/([^/]+)/)?.[1] ?? null;
   const [expandedSection, setExpandedSection] = useState<string | null>(() => {
-    // Auto-expand based on current path
     if (pathname.includes("/showcases/")) return "product";
-    if (pathname.includes("/waitlists/")) return "waitlist";
+    if (pathname.includes("/projects/")) return "waitlist";
     return null;
   });
 
@@ -121,17 +120,17 @@ export function Sidebar({
 
       {/* Project list */}
       <nav className="shrink-0 space-y-0.5 px-3">
-        {waitlists.length === 0 ? (
+        {projects.length === 0 ? (
           <p className="px-2 py-3 text-sm text-muted-foreground">
             No projects yet
           </p>
         ) : (
-          waitlists.map((wl) => {
+          projects.map((wl) => {
             const isActive = wl.id === currentId;
             return (
               <Link
                 key={wl.id}
-                href={`/dashboard/waitlists/${wl.id}`}
+                href={`/dashboard/projects/${wl.id}`}
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                   isActive
@@ -179,7 +178,7 @@ export function Sidebar({
       {/* New project */}
       <div className="px-3 pb-3 shrink-0">
         <Link
-          href="/dashboard/waitlists/new"
+          href="/dashboard/projects/new"
           className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">

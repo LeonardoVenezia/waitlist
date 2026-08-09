@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAccountId } from "@/lib/api/account";
-import { CreateWaitlistForm } from "./create-waitlist-form";
+import { CreateProjectForm } from "./create-project-form";
 
-export default async function NewWaitlistPage() {
+export default async function NewProjectPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -14,5 +14,5 @@ export default async function NewWaitlistPage() {
   const accountId = await getAccountId(user.id);
   if (!accountId) redirect("/login");
 
-  return <CreateWaitlistForm accountId={accountId} />;
+  return <CreateProjectForm accountId={accountId} />;
 }

@@ -46,7 +46,7 @@ export function FeatureGate({
         {children}
       </div>
       <Link
-        href={`/dashboard/waitlists/${waitlistId}/upgrade`}
+        href={`/dashboard/projects/${waitlistId}/upgrade`}
         className="absolute inset-0 z-10 flex items-center justify-center gap-1.5 rounded-md bg-background/60 text-xs font-medium text-muted-foreground transition-colors hover:bg-background/80 hover:text-foreground"
       >
         <LockIcon className="h-3 w-3" />

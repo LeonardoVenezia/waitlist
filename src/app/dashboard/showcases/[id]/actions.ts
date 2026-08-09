@@ -19,7 +19,7 @@ export async function createShowcase(waitlistId: string, formData: FormData) {
   let finalSlug = slug;
   if (!finalSlug) {
     const { data: wl } = await supabase
-      .from("waitlists")
+      .from("projects")
       .select("slug")
       .eq("id", waitlistId)
       .single();
@@ -207,6 +207,7 @@ export async function publishShowcase(
 
     revalidatePath(`/dashboard/showcases/${waitlistId}`);
     revalidatePath("/", "layout");
+    revalidatePath("/products", "layout");
     return { success: true, status: targetStatus };
   } catch (e: any) {
     return { error: e?.message ?? "Error al publicar. ¿Ejecutaste las migraciones en producción?" };

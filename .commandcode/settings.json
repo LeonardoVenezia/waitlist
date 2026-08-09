@@ -16,7 +16,11 @@
       "Shell(mv:*)",
       "Shell(rmdir:*)",
       "Shell(rm:*)",
-      "Shell(grep:*)"
+      "Shell(grep:*)",
+      "Shell(for:*)",
+      "Shell(do:*)",
+      "Shell(done:*)",
+      "Shell(sed:*)"
     ],
     "deny": [],
     "defaultMode": "default"

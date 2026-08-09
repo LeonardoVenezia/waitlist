@@ -14,7 +14,7 @@ export async function GET(
   const supabase = createAdminClient();
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("name, slug, settings")
     .eq("public_key", publicKey)
     .eq("status", "active")

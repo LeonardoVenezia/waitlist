@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import type { Database } from "@/lib/supabase/types";
 
-type Json = Database["public"]["Tables"]["waitlists"]["Row"]["settings"];
+type Json = Database["public"]["Tables"]["projects"]["Row"]["settings"];
 
 export async function updateWidgetSettings(
   waitlistId: string,
@@ -13,7 +13,7 @@ export async function updateWidgetSettings(
   const supabase = createAdminClient();
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("settings")
     .eq("id", waitlistId)
     .single();
@@ -24,13 +24,13 @@ export async function updateWidgetSettings(
   const updatedSettings = { ...currentSettings, widget: widgetSettings } as Json;
 
   const { error } = await supabase
-    .from("waitlists")
+    .from("projects")
     .update({ settings: updatedSettings })
     .eq("id", waitlistId);
 
   if (error) return { error: error.message };
 
-  revalidatePath(`/dashboard/waitlists/${waitlistId}/integration`);
+  revalidatePath(`/dashboard/projects/${waitlistId}/integration`);
   return { success: true };
 }
 
@@ -41,7 +41,7 @@ export async function updateLeaderboardSettings(
   const supabase = createAdminClient();
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("settings")
     .eq("id", waitlistId)
     .single();
@@ -52,12 +52,12 @@ export async function updateLeaderboardSettings(
   const updatedSettings = { ...currentSettings, leaderboard: leaderboardSettings } as Json;
 
   const { error } = await supabase
-    .from("waitlists")
+    .from("projects")
     .update({ settings: updatedSettings })
     .eq("id", waitlistId);
 
   if (error) return { error: error.message };
 
-  revalidatePath(`/dashboard/waitlists/${waitlistId}/integration`);
+  revalidatePath(`/dashboard/projects/${waitlistId}/integration`);
   return { success: true };
 }

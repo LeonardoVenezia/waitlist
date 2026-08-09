@@ -11,7 +11,7 @@ export default async function PageBuilderPage(props: {
   if (!user) redirect("/login");
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("id, name, slug, public_key, settings")
     .eq("id", id)
     .maybeSingle();

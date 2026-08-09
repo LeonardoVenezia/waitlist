@@ -15,7 +15,7 @@ export default async function ExportPage(props: {
   if (!user) redirect("/login");
 
   const { data: waitlist } = await supabase
-    .from("waitlists")
+    .from("projects")
     .select("id, name, plan")
     .eq("id", id)
     .maybeSingle();
@@ -34,7 +34,7 @@ export default async function ExportPage(props: {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl">Export</h1>
-        <a href={`/dashboard/waitlists/${id}/subscribers${filterQs ? "?" + filterQs : ""}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <a href={`/dashboard/projects/${id}/subscribers${filterQs ? "?" + filterQs : ""}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
           ← Back to subscribers
         </a>
       </div>
@@ -43,7 +43,7 @@ export default async function ExportPage(props: {
       {filterQs && (
         <div className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
           Exporting with current filters.{" "}
-          <a href={`/dashboard/waitlists/${id}/export`} className="text-primary hover:underline">
+          <a href={`/dashboard/projects/${id}/export`} className="text-primary hover:underline">
             Clear filters → export all
           </a>
         </div>
@@ -56,7 +56,7 @@ export default async function ExportPage(props: {
             <CardDescription>Export your subscribers as a CSV file.</CardDescription>
           </CardHeader>
           <CardContent>
-            <a href={`/api/waitlists/${id}/export?format=csv${filterQs ? "&" + filterQs : ""}`}>
+            <a href={`/api/projects/${id}/export?format=csv${filterQs ? "&" + filterQs : ""}`}>
               <Button>Export CSV</Button>
             </a>
           </CardContent>
@@ -67,7 +67,7 @@ export default async function ExportPage(props: {
             <CardDescription>Export your subscribers as an Excel file.</CardDescription>
           </CardHeader>
           <CardContent>
-            <a href={`/api/waitlists/${id}/export?format=xlsx${filterQs ? "&" + filterQs : ""}`}>
+            <a href={`/api/projects/${id}/export?format=xlsx${filterQs ? "&" + filterQs : ""}`}>
               <Button variant="outline">Export XLSX</Button>
             </a>
           </CardContent>
