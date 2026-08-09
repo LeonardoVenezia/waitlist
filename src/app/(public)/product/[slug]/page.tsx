@@ -28,6 +28,7 @@ interface ProductDetail {
   waitlist?: {
     public_key: string;
     name: string;
+    slug: string;
     status: string;
     settings: Record<string, unknown>;
   } | null;
@@ -62,7 +63,7 @@ export default async function ProductDetailPage(props: {
 
   const { data: raw } = await admin
     .from("showcases")
-    .select("*, projects!inner(public_key, name, status, settings)")
+    .select("*, projects!inner(public_key, name, slug, status, settings)")
     .eq("slug", slug)
     .in("status", ["published", "coming_soon"])
     .maybeSingle();
@@ -99,7 +100,7 @@ export default async function ProductDetailPage(props: {
     <div className="min-h-screen bg-background">
       <PublicHeader />
       {/* Hero */}
-      {!isComingSoon && isVideo && ytId ? (
+      {isVideo && ytId ? (
         <div className="aspect-video w-full bg-black max-h-[60vh]">
           <iframe
             width="100%"
@@ -109,7 +110,7 @@ export default async function ProductDetailPage(props: {
             className="border-0"
           />
         </div>
-      ) : !isComingSoon && mainImg ? (
+      ) : mainImg ? (
         <div className="w-full max-h-[50vh] overflow-hidden bg-muted">
           <img
             src={`${SUPABASE_URL}/storage/v1/object/public/showcase-images/${mainImg}`}
@@ -146,25 +147,19 @@ export default async function ProductDetailPage(props: {
         </div>
 
         {isComingSoon ? (
-          /* Coming soon: waitlist form as the main content */
-          product.waitlist && product.waitlist.status === "active" ? (
-            <div className="rounded-xl border-2 border-coming-soon/30 bg-coming-soon/[0.03] p-8 mb-12">
-              <h2 className="font-heading text-xl font-semibold mb-2">Get notified when we launch</h2>
-              <p className="text-muted-foreground mb-6">Este producto está en construcción. Dejanos tu email y te avisamos cuando esté listo.</p>
-              <PublicWaitlistForm
-                publicKey={product.waitlist.public_key}
-                waitlistId={product.waitlist_id}
-                settings={product.waitlist.settings}
-                slug=""
-                ctaLabel="Notify me"
-                showLeaderboard={false}
-              />
-            </div>
-          ) : (
-            <div className="rounded-xl border bg-muted/30 p-8 text-center mb-12">
-              <p className="text-lg text-muted-foreground">Coming soon. Stay tuned.</p>
-            </div>
-          )
+          /* Coming soon: link to waitlist landing */
+          <div className="rounded-xl border-2 border-coming-soon/30 bg-coming-soon/[0.03] p-8 mb-12 text-center">
+            <h2 className="font-heading text-xl font-semibold mb-2">Coming soon</h2>
+            <p className="text-muted-foreground mb-6">Este producto está en construcción.</p>
+            {product.waitlist && (
+              <a
+                href={`/p/${product.waitlist.slug}`}
+                className="inline-flex items-center justify-center rounded-lg bg-primary text-primary-foreground font-medium px-6 py-3 hover:opacity-90 transition-opacity"
+              >
+                Join the waitlist →
+              </a>
+            )}
+          </div>
         ) : (
           <>
             {/* Gallery */}
