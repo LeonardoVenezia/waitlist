@@ -19,6 +19,8 @@ import {
   removeShowcaseImage,
   uploadMainImage,
   removeMainImage,
+  uploadCardImage,
+  removeCardImage,
 } from "./actions";
 
 interface Props {
@@ -40,6 +42,7 @@ interface ShowcaseData {
   featured_badge: boolean;
   main_type: string;
   main_image: string | null;
+  card_image: string | null;
   status: string;
   domain_check_passed: boolean;
   spam_check_passed: boolean;
@@ -77,6 +80,7 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
   const [featuredB, setFeaturedB] = useState(showcase?.featured_badge ?? false);
   const [mainType, setMainType] = useState(showcase?.main_type ?? "image");
   const [mainImage, setMainImage] = useState<string | null>(showcase?.main_image ?? null);
+  const [cardImage, setCardImage] = useState<string | null>(showcase?.card_image ?? null);
   const [status, setStatus] = useState(showcase?.status ?? "draft");
 
   const [publishing, setPublishing] = useState(false);
@@ -85,6 +89,10 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [removedPaths, setRemovedPaths] = useState<Set<string>>(new Set());
   const [mainUploading, setMainUploading] = useState(false);
+  const [pendingMainFile, setPendingMainFile] = useState<File | null>(null);
+  const [pendingMainPreview, setPendingMainPreview] = useState<string | null>(null);
+  const [pendingCardFile, setPendingCardFile] = useState<File | null>(null);
+  const [pendingCardPreview, setPendingCardPreview] = useState<string | null>(null);
 
   function getAppUrl() {
     return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -102,17 +110,67 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
     if (isNew) {
       const res = await createShowcase(waitlistId, fd);
       if (res.error) { setError(res.error); setPublishing(false); return; }
-      const pub = await publishShowcase(waitlistId, res.id!, link, fd, target, galleryFd, toRemove);
+      const createdId = res.id!;
+      
+      // Upload pending main image
+      let mainPath: string | undefined;
+      if (pendingMainFile) {
+        const mfd = new FormData();
+        mfd.set("file", pendingMainFile);
+        const up = await uploadMainImage(createdId, mfd);
+        if (up.error) { setError(up.error); setPublishing(false); return; }
+        mainPath = up.main_image as string;
+      }
+
+      // Upload pending card image
+      let cardPath: string | undefined;
+      if (pendingCardFile) {
+        const cfd = new FormData();
+        cfd.set("file", pendingCardFile);
+        const up = await uploadCardImage(createdId, cfd);
+        if (up.error) { setError(up.error); setPublishing(false); return; }
+        cardPath = up.card_image as string;
+      }
+
+      const pub = await publishShowcase(waitlistId, createdId, link, fd, target, galleryFd, toRemove, mainPath, cardPath);
       if (pub.error) { setError(pub.error); setPublishing(false); return; }
       setStatus(target);
       setPublishing(false);
-      window.location.reload();
+      window.location.href = `/dashboard/showcases/${createdId}`;
       return;
     }
 
-    const pub = await publishShowcase(waitlistId, showcase!.id, link, fd, target, galleryFd, toRemove);
+    // Upload pending main image if existing
+    let mainPath: string | undefined;
+    if (pendingMainFile) {
+      const mfd = new FormData();
+      mfd.set("file", pendingMainFile);
+      const up = await uploadMainImage(showcase!.id, mfd);
+      if (up.error) { setError(up.error); setPublishing(false); return; }
+      mainPath = up.main_image as string;
+    }
+
+    // Upload pending card image if existing
+    let cardPath: string | undefined;
+    if (pendingCardFile) {
+      const cfd = new FormData();
+      cfd.set("file", pendingCardFile);
+      const up = await uploadCardImage(showcase!.id, cfd);
+      if (up.error) { setError(up.error); setPublishing(false); return; }
+      cardPath = up.card_image as string;
+    }
+
+    const pub = await publishShowcase(waitlistId, showcase!.id, link, fd, target, galleryFd, toRemove, mainPath, cardPath);
     if (pub.error) { setError(pub.error); setPublishing(false); return; }
     setStatus(target);
+    if (mainPath) setMainImage(mainPath);
+    if (cardPath) setCardImage(cardPath);
+    setPendingMainFile(null);
+    if (pendingMainPreview) URL.revokeObjectURL(pendingMainPreview);
+    setPendingMainPreview(null);
+    setPendingCardFile(null);
+    if (pendingCardPreview) URL.revokeObjectURL(pendingCardPreview);
+    setPendingCardPreview(null);
     setPublishing(false);
     router.refresh();
   }
@@ -188,35 +246,79 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
   }
 
   async function handleMainUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    if (!showcase) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const localUrl = URL.createObjectURL(file);
-    setMainImage(localUrl);
-    setMainUploading(true);
-
-    const fd = new FormData();
-    fd.set("file", file);
-    const res = await uploadMainImage(showcase.id, fd);
-
-    if (res.error) {
-      setMainImage(null);
-      setError(res.error);
-    } else {
-      URL.revokeObjectURL(localUrl);
-      setMainImage(res.main_image as string);
+    if (file.size > 2 * 1024 * 1024) {
+      setError(`"${file.name}" supera los 2 MB.`);
+      return;
     }
-    setMainUploading(false);
+    if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) {
+      setError(`"${file.name}" no es JPEG, PNG, WebP o AVIF.`);
+      return;
+    }
+
+    const localUrl = URL.createObjectURL(file);
+    setPendingMainFile(file);
+    setPendingMainPreview(localUrl);
+    e.target.value = "";
+  }
+
+  function handleRemoveMainPending() {
+    if (pendingMainPreview) URL.revokeObjectURL(pendingMainPreview);
+    setPendingMainFile(null);
+    setPendingMainPreview(null);
   }
 
   async function handleRemoveMain() {
-    if (!showcase) return;
+    if (!showcase) {
+      handleRemoveMainPending();
+      return;
+    }
     const previous = mainImage;
     setMainImage(null);
     const res = await removeMainImage(showcase.id);
     if (res.error) {
       setMainImage(previous);
+      setError(res.error);
+    }
+  }
+
+  async function handleCardUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      setError(`"${file.name}" supera los 2 MB.`);
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) {
+      setError(`"${file.name}" no es JPEG, PNG, WebP o AVIF.`);
+      return;
+    }
+
+    const localUrl = URL.createObjectURL(file);
+    setPendingCardFile(file);
+    setPendingCardPreview(localUrl);
+    e.target.value = "";
+  }
+
+  function handleRemoveCardPending() {
+    if (pendingCardPreview) URL.revokeObjectURL(pendingCardPreview);
+    setPendingCardFile(null);
+    setPendingCardPreview(null);
+  }
+
+  async function handleRemoveCard() {
+    if (!showcase) {
+      handleRemoveCardPending();
+      return;
+    }
+    const previous = cardImage;
+    setCardImage(null);
+    const res = await removeCardImage(showcase.id);
+    if (res.error) {
+      setCardImage(previous);
       setError(res.error);
     }
   }
@@ -354,16 +456,19 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
             {mainType === "image" && (
               <div className="space-y-2">
                 <Label>Main image</Label>
-                {mainImage ? (
+                {(pendingMainPreview || mainImage) ? (
                   <div className="relative w-48 rounded-lg border overflow-hidden group">
                     <img
-                      src={mainImage.startsWith("blob:") ? mainImage : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/showcase-images/${mainImage}`}
+                      src={
+                        pendingMainPreview ||
+                        (mainImage?.startsWith("blob:") ? mainImage : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/showcase-images/${mainImage}`)
+                      }
                       alt="Main"
                       className="w-full aspect-video object-cover"
                     />
                     <button
                       type="button"
-                      onClick={handleRemoveMain}
+                      onClick={pendingMainPreview ? handleRemoveMainPending : handleRemoveMain}
                       className="absolute top-1 right-1 size-4 rounded-full bg-black/40 text-[10px] text-white/80 hover:bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       ✕
@@ -398,6 +503,36 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
                   <p className="text-xs text-muted-foreground">Add a YouTube video URL above.</p>
                 )}
               </div>
+            )}
+          </div>
+
+          {/* Card image */}
+          <div className="space-y-2 pt-2 border-t">
+            <Label>Card image</Label>
+            <p className="text-xs text-muted-foreground">Shown on the product card in directory and home page.</p>
+            {(pendingCardPreview || cardImage) ? (
+              <div className="relative w-40 rounded-lg border overflow-hidden group">
+                <img
+                  src={
+                    pendingCardPreview ||
+                    (cardImage?.startsWith("blob:") ? cardImage : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/showcase-images/${cardImage}`)
+                  }
+                  alt="Card"
+                  className="w-full aspect-[4/3] object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={pendingCardPreview ? handleRemoveCardPending : handleRemoveCard}
+                  className="absolute top-1 right-1 size-4 rounded-full bg-black/40 text-[10px] text-white/80 hover:bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <label className="flex items-center justify-center w-40 aspect-[4/3] rounded-lg border-2 border-dashed border-muted-foreground/30 cursor-pointer hover:border-primary/50 transition-colors">
+                <span className="text-2xl text-muted-foreground">+</span>
+                <input type="file" accept="image/*" className="hidden" onChange={handleCardUpload} />
+              </label>
             )}
           </div>
 

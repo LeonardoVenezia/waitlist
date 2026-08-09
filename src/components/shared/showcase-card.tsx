@@ -12,6 +12,7 @@ interface ShowcaseCardData {
   featured_badge: boolean;
   main_type: string;
   main_image: string | null;
+  card_image: string | null;
   link: string;
   status?: string;
 }
@@ -26,7 +27,7 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const isVideo = data.main_type === "video" && data.video_url;
   const ytId = isVideo ? extractYouTubeId(data.video_url) : null;
-  const mainImg = data.main_image;
+  const cardImg = data.card_image || data.main_image;
   const isComingSoon = data.status === "coming_soon";
 
   return (
@@ -54,9 +55,9 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
               </div>
             </div>
           </>
-        ) : mainImg ? (
+        ) : cardImg ? (
           <img
-            src={`${supabaseUrl}/storage/v1/object/public/showcase-images/${mainImg}`}
+            src={`${supabaseUrl}/storage/v1/object/public/showcase-images/${cardImg}`}
             alt={data.name}
             className="size-full object-cover"
           />

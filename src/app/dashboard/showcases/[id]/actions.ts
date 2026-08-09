@@ -148,6 +148,8 @@ export async function publishShowcase(
   targetStatus: "published" | "coming_soon" = "published",
   galleryFiles?: FormData,
   pathsToRemove?: string[],
+  mainImagePath?: string,
+  cardImagePath?: string,
 ) {
   // 1. Guardar cambios (incluye gallery)
   const saveRes = await updateShowcase(waitlistId, showcaseId, formData, galleryFiles, pathsToRemove);
@@ -172,16 +174,20 @@ export async function publishShowcase(
   const spamOk = true;
 
   // 4. Guardar checks + publicar
+  const updateData: Record<string, unknown> = {
+    status: targetStatus,
+    domain_check_passed: targetStatus === "published",
+    spam_check_passed: true,
+    published_at: targetStatus === "published" ? new Date().toISOString() : undefined,
+    last_domain_check: targetStatus === "published" ? new Date().toISOString() : undefined,
+    last_spam_check: new Date().toISOString(),
+  };
+  if (mainImagePath) updateData.main_image = mainImagePath;
+  if (cardImagePath) updateData.card_image = cardImagePath;
+
   const { error } = await admin
     .from("showcases")
-    .update({
-      status: targetStatus,
-      domain_check_passed: targetStatus === "published",
-      spam_check_passed: true,
-      published_at: targetStatus === "published" ? new Date().toISOString() : undefined,
-      last_domain_check: targetStatus === "published" ? new Date().toISOString() : undefined,
-      last_spam_check: new Date().toISOString(),
-    })
+    .update(updateData as any)
     .eq("id", showcaseId);
 
   if (error) return { error: error.message };
@@ -328,6 +334,61 @@ export async function removeMainImage(showcaseId: string) {
   const { error } = await admin
     .from("showcases")
     .update({ main_image: null })
+    .eq("id", showcaseId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+// ── card image ──
+export async function uploadCardImage(showcaseId: string, formData: FormData) {
+  const admin = createAdminClient();
+  const file = formData.get("file") as File;
+  if (!file) return { error: "No file provided." };
+
+  const buf = await file.arrayBuffer();
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `card-${showcaseId}-${Date.now()}.${ext}`;
+
+  // Remove old card image
+  const { data: sc } = await admin
+    .from("showcases")
+    .select("card_image")
+    .eq("id", showcaseId)
+    .single();
+
+  if (sc?.card_image) {
+    await admin.storage.from("showcase-images").remove([sc.card_image as string]);
+  }
+
+  const { error: upErr } = await admin.storage.from("showcase-images").upload(path, buf, { upsert: true });
+  if (upErr) return { error: upErr.message };
+
+  const { error } = await admin
+    .from("showcases")
+    .update({ card_image: path })
+    .eq("id", showcaseId);
+
+  if (error) return { error: error.message };
+  return { success: true, card_image: path };
+}
+
+export async function removeCardImage(showcaseId: string) {
+  const admin = createAdminClient();
+
+  const { data: sc } = await admin
+    .from("showcases")
+    .select("card_image")
+    .eq("id", showcaseId)
+    .single();
+
+  if (sc?.card_image) {
+    await admin.storage.from("showcase-images").remove([sc.card_image as string]);
+  }
+
+  const { error } = await admin
+    .from("showcases")
+    .update({ card_image: null })
     .eq("id", showcaseId);
 
   if (error) return { error: error.message };
