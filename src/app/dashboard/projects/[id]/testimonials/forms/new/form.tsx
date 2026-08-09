@@ -53,7 +53,7 @@ export function NewForm({ projectId }: { projectId: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label className="text-sm font-medium">Name *</label>
         <input
@@ -87,37 +87,45 @@ export function NewForm({ projectId }: { projectId: string }) {
       </div>
 
       <div>
-        <label className="text-sm font-medium mb-2 block">Fields</label>
+        <label className="text-sm font-medium mb-3 block">Fields to include</label>
         <div className="flex flex-wrap gap-2">
-          {availableFields.map((f) => (
-            <button
-              key={f.key}
-              type="button"
-              onClick={() => toggleField(f.key)}
-              className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${
-                fields.includes(f.key)
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "hover:bg-accent"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+          {availableFields.map((f) => {
+            const active = fields.includes(f.key);
+            return (
+              <label
+                key={f.key}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm cursor-pointer transition-colors select-none ${
+                  active
+                    ? "border-primary bg-primary/5 text-primary font-medium"
+                    : "hover:bg-accent"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={active}
+                  onChange={() => toggleField(f.key)}
+                  className="sr-only"
+                />
+                {f.label}
+              </label>
+            );
+          })}
         </div>
       </div>
 
-      <div className="flex gap-3 pt-2">
+      <div className="flex items-center gap-3 pt-4 border-t">
         <Button type="submit" disabled={saving}>
           {saving ? "Creating..." : "Create form"}
         </Button>
-        <Button
+        <button
           type="button"
-          variant="outline"
           onClick={() => router.push(`/dashboard/projects/${projectId}/testimonials/forms`)}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           Cancel
-        </Button>
+        </button>
       </div>
     </form>
   );
 }
+

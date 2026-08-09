@@ -8,3 +8,4 @@
 - Reviews work incrementally and gives feedback one issue at a time rather than in a single large batch; signals upcoming rounds explicitly ("te voy a ir diciendo los detalles que me voy encontrando"). Confidence: 0.60
 - Values industry-standard, professional architectural patterns over "it works" workarounds; wants to know how established platforms do it and aligns with those approaches (e.g., presigned URLs over sequential file uploads through the server). Confidence: 0.70
 - Disable action buttons (publish, update, unpublish) during async operations like uploads to prevent double-submission and signal that work is in progress. Confidence: 0.75
+- For database schema changes, prefers raw SQL statements to paste into the Supabase SQL Editor over CLI migration commands (`supabase db push`); explicitly asks for copy-pasteable SQL. Confidence: 0.80

@@ -9,3 +9,6 @@
 - Prefers keeping distinct product features as separate, independent pages/routes (e.g., product detail page vs. waitlist landing) rather than merging them into a unified page; values giving end-users multiple, composable options instead of a single monolithic experience. Confidence: 0.65
 # feature-design
 - When cloning or referencing a competitor product, expects the agent to apply project-specific judgment to filter which features to include — not blindly replicate everything. The project has its own aesthetic/design criteria; balance simplicity with completeness ("no exagerar la simpleza"). Confidence: 0.70
+# form-ux
+- Cancel/secondary actions should be plain text links, not styled buttons — styled cancel buttons blend in with primary actions and create bad UX ("se camufla"). Confidence: 0.70
+- Interactive form controls (field toggles, checkboxes, selectors) must be visually distinct from action buttons (submit, cancel); when they look the same, the form becomes confusing and users can't tell what's a control vs what's an action. Confidence: 0.65

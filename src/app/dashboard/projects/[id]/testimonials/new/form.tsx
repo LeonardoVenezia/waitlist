@@ -113,17 +113,17 @@ export function NewTestimonialForm({
         </div>
       )}
 
-      <div className="flex gap-3 pt-2">
+      <div className="flex items-center gap-3 pt-4 border-t">
         <Button type="submit" disabled={saving}>
           {saving ? "Saving..." : "Save testimonial"}
         </Button>
-        <Button
+        <button
           type="button"
-          variant="outline"
           onClick={() => router.push(`/dashboard/projects/${projectId}/testimonials`)}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           Cancel
-        </Button>
+        </button>
       </div>
     </form>
   );
