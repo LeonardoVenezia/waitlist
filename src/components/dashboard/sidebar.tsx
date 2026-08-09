@@ -26,6 +26,11 @@ const waitlistSubNav = [
   { label: "Settings", href: (id: string) => `/dashboard/projects/${id}/settings`, icon: "⚙️" },
 ];
 
+const testimonialSubNav = [
+  { label: "Testimonials", href: (id: string) => `/dashboard/projects/${id}/testimonials`, icon: "💬" },
+  { label: "Forms", href: (id: string) => `/dashboard/projects/${id}/testimonials/forms`, icon: "📝" },
+];
+
 function SubNavSection({
   label,
   items,
@@ -94,6 +99,7 @@ export function Sidebar({
   const currentId = pathname.match(/\/(?:projects|showcases)\/([^/]+)/)?.[1] ?? null;
   const [expandedSection, setExpandedSection] = useState<string | null>(() => {
     if (pathname.includes("/showcases/")) return "product";
+    if (pathname.includes("/testimonials/")) return "testimonials";
     if (pathname.includes("/projects/")) return "waitlist";
     return null;
   });
@@ -151,7 +157,7 @@ export function Sidebar({
         )}
       </nav>
 
-      {/* Product and Waitlist sections */}
+      {/* Product, Testimonials and Waitlist sections */}
       {currentId && (
         <>
           <SubNavSection
@@ -161,6 +167,14 @@ export function Sidebar({
             pathname={pathname}
             isExpanded={expandedSection === "product"}
             onToggle={() => toggleSection("product")}
+          />
+          <SubNavSection
+            label="Testimonials"
+            items={testimonialSubNav}
+            currentId={currentId}
+            pathname={pathname}
+            isExpanded={expandedSection === "testimonials"}
+            onToggle={() => toggleSection("testimonials")}
           />
           <SubNavSection
             label="Waitlist"

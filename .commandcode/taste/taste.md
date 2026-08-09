@@ -1,5 +1,6 @@
 # communication
 - Communicate in Spanish (user's native language). Confidence: 0.85
+- Agent should proactively ask for needed information (reference material, clarifications) rather than making assumptions or proceeding with incomplete context. Confidence: 0.75
 # user-expertise
 - User is stronger at frontend than database/backend; provide detailed, step-by-step explanations for database and infrastructure tasks. Confidence: 0.70
 # debugging

@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { PublicWaitlistForm } from "@/app/p/[slug]/public-waitlist-form";
 import { Badge } from "@/components/ui/badge";
 import { PublicHeader } from "@/components/shared/public-header";
 import { BackButton } from "@/components/shared/back-button";
+import { ProductTestimonials } from "./product-testimonials";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +25,7 @@ interface ProductDetail {
   main_type: string;
   main_image: string | null;
   status: string;
+  plan: string;
   waitlist?: {
     public_key: string;
     name: string;
@@ -63,7 +64,7 @@ export default async function ProductDetailPage(props: {
 
   const { data: raw } = await admin
     .from("showcases")
-    .select("*, projects!inner(public_key, name, slug, status, settings)")
+    .select("*, projects!inner(public_key, name, slug, status, settings, plan)")
     .eq("slug", slug)
     .in("status", ["published", "coming_soon"])
     .maybeSingle();
@@ -71,6 +72,7 @@ export default async function ProductDetailPage(props: {
   if (!raw) notFound();
 
   const row = raw as unknown as Record<string, unknown>;
+  const projectsData = row.projects as Record<string, unknown> | undefined;
   const product: ProductDetail = {
     id: row.id as string,
     waitlist_id: row.waitlist_id as string,
@@ -86,7 +88,8 @@ export default async function ProductDetailPage(props: {
     main_type: row.main_type as string,
     main_image: row.main_image as string | null,
     status: row.status as string,
-    waitlist: (row.projects ? (row.projects as ProductDetail["waitlist"]) : null),
+    plan: (projectsData?.plan as string) ?? "free",
+    waitlist: (projectsData ? projectsData as ProductDetail["waitlist"] : null),
   };
   const images = Array.isArray(product.images) ? product.images : [];
   const isVideo = product.main_type === "video" && product.video_url;
@@ -194,10 +197,8 @@ export default async function ProductDetailPage(props: {
               </div>
             )}
 
-            {/* Testimonials placeholder */}
-            <div className="rounded-xl border border-dashed bg-muted/30 p-8 text-center">
-              <p className="text-sm text-muted-foreground">Testimonials coming soon</p>
-            </div>
+            {/* Testimonials */}
+            <ProductTestimonials projectId={product.waitlist_id} plan={product.plan} />
           </>
         )}
       </div>

@@ -365,6 +365,134 @@ export interface Database {
           },
         ];
       };
+      testimonial_forms: {
+        Row: {
+          id: string;
+          project_id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          questions: Json;
+          fields: Json;
+          redirect_url: string | null;
+          design: Json;
+          status: "draft" | "published" | "archived";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          name: string;
+          slug: string;
+          description?: string | null;
+          questions?: Json;
+          fields?: Json;
+          redirect_url?: string | null;
+          design?: Json;
+          status?: "draft" | "published" | "archived";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          name?: string;
+          slug?: string;
+          description?: string | null;
+          questions?: Json;
+          fields?: Json;
+          redirect_url?: string | null;
+          design?: Json;
+          status?: "draft" | "published" | "archived";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "testimonial_forms_project_id_fkey";
+            columns: ["project_id"];
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      testimonials: {
+        Row: {
+          id: string;
+          project_id: string;
+          form_id: string | null;
+          name: string;
+          email: string | null;
+          company: string | null;
+          role: string | null;
+          message: string;
+          rating: number;
+          avatar_url: string | null;
+          media_url: string | null;
+          media_type: "none" | "image" | "video";
+          source: "form" | "manual" | "import";
+          tags: string[] | null;
+          is_featured: boolean;
+          status: "pending" | "approved" | "rejected";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          form_id?: string | null;
+          name: string;
+          email?: string | null;
+          company?: string | null;
+          role?: string | null;
+          message: string;
+          rating?: number;
+          avatar_url?: string | null;
+          media_url?: string | null;
+          media_type?: "none" | "image" | "video";
+          source?: "form" | "manual" | "import";
+          tags?: string[] | null;
+          is_featured?: boolean;
+          status?: "pending" | "approved" | "rejected";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          form_id?: string | null;
+          name?: string;
+          email?: string | null;
+          company?: string | null;
+          role?: string | null;
+          message?: string;
+          rating?: number;
+          avatar_url?: string | null;
+          media_url?: string | null;
+          media_type?: "none" | "image" | "video";
+          source?: "form" | "manual" | "import";
+          tags?: string[] | null;
+          is_featured?: boolean;
+          status?: "pending" | "approved" | "rejected";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "testimonials_project_id_fkey";
+            columns: ["project_id"];
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "testimonials_form_id_fkey";
+            columns: ["form_id"];
+            referencedRelation: "testimonial_forms";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {

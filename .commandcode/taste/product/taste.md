@@ -7,3 +7,5 @@
 - Back buttons should use browser history (`router.back()`) with a fallback to home (`/`) for users arriving from external sites with no history. Confidence: 0.80
 # architecture
 - Prefers keeping distinct product features as separate, independent pages/routes (e.g., product detail page vs. waitlist landing) rather than merging them into a unified page; values giving end-users multiple, composable options instead of a single monolithic experience. Confidence: 0.65
+# feature-design
+- When cloning or referencing a competitor product, expects the agent to apply project-specific judgment to filter which features to include — not blindly replicate everything. The project has its own aesthetic/design criteria; balance simplicity with completeness ("no exagerar la simpleza"). Confidence: 0.70
