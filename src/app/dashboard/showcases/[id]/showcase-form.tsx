@@ -83,6 +83,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
 
   const [publishing, setPublishing] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [removedPaths, setRemovedPaths] = useState<Set<string>>(new Set());
@@ -119,6 +120,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
 
   async function handlePublish(target: "published" | "coming_soon") {
     setPublishing(true);
+    setUploadStatus("");
     setError(null);
 
     if (!pendingMainFile && !mainImage) {
@@ -143,22 +145,29 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
     }
 
     try {
-      // Upload pending gallery images
       const newPaths: string[] = [];
-      for (const file of pendingFiles) {
-        newPaths.push(await presignedUpload(sid!, file));
+      if (pendingFiles.length > 0) {
+        for (let i = 0; i < pendingFiles.length; i++) {
+          setUploadStatus(`Uploading gallery (${i + 1}/${pendingFiles.length})...`);
+          newPaths.push(await presignedUpload(sid!, pendingFiles[i]));
+        }
       }
 
-      // Upload main image
       let mainPath: string | undefined;
-      if (pendingMainFile) mainPath = await presignedUpload(sid!, pendingMainFile);
+      if (pendingMainFile) {
+        setUploadStatus("Uploading main image...");
+        mainPath = await presignedUpload(sid!, pendingMainFile);
+      }
 
-      // Upload card image
       let cardPath: string | undefined;
-      if (pendingCardFile) cardPath = await presignedUpload(sid!, pendingCardFile);
+      if (pendingCardFile) {
+        setUploadStatus("Uploading card image...");
+        cardPath = await presignedUpload(sid!, pendingCardFile);
+      }
 
+      setUploadStatus("Saving...");
       const pub = await publishShowcase(waitlistId, sid!, link, fd, target, toRemove, newPaths, mainPath, cardPath);
-      if (pub.error) { setError(pub.error); setPublishing(false); return; }
+      if (pub.error) { setError(pub.error); setPublishing(false); setUploadStatus(""); return; }
       setStatus(target);
       setPendingFiles([]);
       setRemovedPaths(new Set());
@@ -171,6 +180,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
       setPendingCardFile(null);
       setPendingCardPreview(null);
       setPublishing(false);
+      setUploadStatus("");
       if (isNew) {
         window.location.href = `/dashboard/showcases/${waitlistId}`;
       } else {
@@ -179,34 +189,62 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
     } catch (e: any) {
       setError(e.message ?? "Upload failed");
       setPublishing(false);
+      setUploadStatus("");
     }
   }
 
   async function handleUpdate() {
     if (!showcase) return;
     setUpdating(true);
+    setUploadStatus("");
     setError(null);
     const fd = buildFormData(formState);
     const toRemove = [...removedPaths];
 
     try {
       const newPaths: string[] = [];
-      for (const file of pendingFiles) {
-        newPaths.push(await presignedUpload(showcase.id, file));
+      if (pendingFiles.length > 0) {
+        for (let i = 0; i < pendingFiles.length; i++) {
+          setUploadStatus(`Uploading gallery (${i + 1}/${pendingFiles.length})...`);
+          newPaths.push(await presignedUpload(showcase.id, pendingFiles[i]));
+        }
       }
 
-      const res = await updateShowcase(waitlistId, showcase.id, fd, toRemove, newPaths);
-      if (res.error) { setError(res.error); setUpdating(false); return; }
+      let mainPath: string | undefined;
+      if (pendingMainFile) {
+        setUploadStatus("Uploading main image...");
+        mainPath = await presignedUpload(showcase.id, pendingMainFile);
+      }
+
+      let cardPath: string | undefined;
+      if (pendingCardFile) {
+        setUploadStatus("Uploading card image...");
+        cardPath = await presignedUpload(showcase.id, pendingCardFile);
+      }
+
+      setUploadStatus("Saving...");
+      const res = await updateShowcase(waitlistId, showcase.id, fd, toRemove, newPaths, mainPath, cardPath);
+      if (res.error) { setError(res.error); setUpdating(false); setUploadStatus(""); return; }
       if (res.images) {
         setImages(res.images as string[]);
         setPendingFiles([]);
         setRemovedPaths(new Set());
       }
+      if (mainPath) setMainImage(mainPath);
+      if (cardPath) setCardImage(cardPath);
+      if (pendingMainPreview) URL.revokeObjectURL(pendingMainPreview);
+      if (pendingCardPreview) URL.revokeObjectURL(pendingCardPreview);
+      setPendingMainFile(null);
+      setPendingMainPreview(null);
+      setPendingCardFile(null);
+      setPendingCardPreview(null);
       setUpdating(false);
+      setUploadStatus("");
       router.refresh();
     } catch (e: any) {
       setError(e.message ?? "Upload failed");
       setUpdating(false);
+      setUploadStatus("");
     }
   }
 
@@ -620,40 +658,40 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
         {isNew ? (
           <>
             <Button onClick={() => handlePublish("published")} disabled={publishing}>
-              {publishing ? "Publishing..." : "Full launch"}
+              {publishing ? (uploadStatus || "Publishing...") : "Full launch"}
             </Button>
             <Button onClick={() => handlePublish("coming_soon")} disabled={publishing} variant="secondary">
-              {publishing ? "Publishing..." : "Coming soon"}
+              {publishing ? (uploadStatus || "Publishing...") : "Coming soon"}
             </Button>
           </>
         ) : status === "published" ? (
           <>
             <Button onClick={handleUpdate} disabled={updating} variant="outline">
-              {updating ? "Updating..." : "Update"}
+              {updating ? (uploadStatus || "Updating...") : "Update"}
             </Button>
-            <Button onClick={handleUnpublish} variant="ghost">
+            <Button onClick={handleUnpublish} disabled={updating} variant="ghost">
               Unpublish
             </Button>
           </>
         ) : status === "coming_soon" ? (
           <>
             <Button onClick={handleUpdate} disabled={updating} variant="outline">
-              {updating ? "Updating..." : "Update"}
+              {updating ? (uploadStatus || "Updating...") : "Update"}
             </Button>
             <Button onClick={() => handlePublish("published")} disabled={publishing}>
-              {publishing ? "Launching..." : "Launch now"}
+              {publishing ? (uploadStatus || "Launching...") : "Launch now"}
             </Button>
-            <Button onClick={handleUnpublish} variant="ghost">
+            <Button onClick={handleUnpublish} disabled={updating || publishing} variant="ghost">
               Unpublish
             </Button>
           </>
         ) : (
           <>
             <Button onClick={() => handlePublish("published")} disabled={publishing}>
-              {publishing ? "Publishing..." : "Full launch"}
+              {publishing ? (uploadStatus || "Publishing...") : "Full launch"}
             </Button>
             <Button onClick={() => handlePublish("coming_soon")} disabled={publishing} variant="secondary">
-              {publishing ? "Publishing..." : "Coming soon"}
+              {publishing ? (uploadStatus || "Publishing...") : "Coming soon"}
             </Button>
           </>
         )}

@@ -73,6 +73,8 @@ export async function updateShowcase(
   formData: FormData,
   pathsToRemove?: string[],
   newImagePaths?: string[],
+  mainImagePath?: string,
+  cardImagePath?: string,
 ) {
   const supabase = await createClient();
   const admin = createAdminClient();
@@ -119,6 +121,8 @@ export async function updateShowcase(
   if (featuredBadge !== null) updates.featured_badge = featuredBadge === "on";
 
   updates.images = finalImages as any;
+  if (mainImagePath) (updates as any).main_image = mainImagePath;
+  if (cardImagePath) (updates as any).card_image = cardImagePath;
 
   const { error } = await supabase
     .from("showcases")

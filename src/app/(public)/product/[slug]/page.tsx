@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { PublicWaitlistForm } from "@/app/p/[slug]/public-waitlist-form";
 import { Badge } from "@/components/ui/badge";
 import { PublicHeader } from "@/components/shared/public-header";
+import { BackButton } from "@/components/shared/back-button";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:54321";
 
@@ -118,7 +119,7 @@ export default async function ProductDetailPage(props: {
 
       <div className="mx-auto max-w-5xl px-6 py-14">
         <p className="text-sm text-muted-foreground mb-6">
-          <a href="/" className="hover:text-foreground transition-colors">← Back</a>
+          <BackButton />
         </p>
 
         <div className="flex flex-wrap items-center gap-3 mb-4">
