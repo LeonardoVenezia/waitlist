@@ -12,6 +12,7 @@ export default function HostedLayout({
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
         async
         defer
+        strategy="afterInteractive"
       />
     </>
   );

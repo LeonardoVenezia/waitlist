@@ -3,6 +3,8 @@ import { ShowcaseCard } from "@/components/shared/showcase-card";
 import { PublicHeader } from "@/components/shared/public-header";
 import ProductsDirectoryClient from "./products-directory-client";
 
+export const dynamic = "force-dynamic";
+
 const CATEGORIES = [
   "SaaS", "Mobile App", "Web App", "AI Tool", "Productivity", "Design",
   "Developer Tools", "Marketing", "E-commerce", "Fintech", "Health",

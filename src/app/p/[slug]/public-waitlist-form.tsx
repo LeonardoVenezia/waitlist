@@ -64,50 +64,24 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [savingAnswers, setSavingAnswers] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [turnstileReady, setTurnstileReady] = useState(false);
-  const turnstileWidgetId = useRef<string | null>(null);
+  const [turnstileReady, setTurnstileReady] = useState(true);
   const turnstileToken = useRef<string>("");
-  const containerRef = useRef<HTMLDivElement>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
 
-  // Load Turnstile script and render invisible widget
+  // Expose callback globally for implicit turnstile
   useEffect(() => {
-    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-    if (!siteKey) {
-      setTurnstileReady(true);
-      return;
-    }
-
-    const onLoad = () => {
-      if (!window.turnstile || !containerRef.current) return;
-      const id = window.turnstile.render(containerRef.current, {
-        sitekey: siteKey,
-        size: "invisible",
-        callback: (token: string) => {
-          turnstileToken.current = token;
-        },
-      });
-      turnstileWidgetId.current = id;
-      setTurnstileReady(true);
-    };
-
-    if (window.turnstile) {
-      onLoad();
-    } else {
-      const script = document.createElement("script");
-      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__cfTLOnLoad";
-      script.async = true;
-      script.defer = true;
-      window.__cfTurnstileCallback = onLoad;
-      (window as unknown as Record<string, unknown>).__cfTLOnLoad = onLoad;
-      document.head.appendChild(script);
-    }
-
-    return () => {
-      if (turnstileWidgetId.current && window.turnstile) {
-        window.turnstile.reset(turnstileWidgetId.current);
-      }
+    (window as unknown as Record<string, (token: string) => void>).handleTurnstileCallback = (token: string) => {
+      turnstileToken.current = token;
     };
   }, []);
+
+  // Reset turnstile after use so each submit triggers a new challenge
+  function resetTurnstile() {
+    const el = turnstileRef.current?.querySelector<HTMLIFrameElement>("iframe")?.parentElement;
+    if (el && window.turnstile) {
+      try { window.turnstile.reset(el); } catch {}
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -115,23 +89,26 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
     setError(null);
 
     const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-
-    // If no siteKey configured, skip captcha
     if (!siteKey) {
       await doSubmit("");
       return;
     }
 
-    // Execute invisible challenge, then submit when token is ready
-    const originalCallback = (window as unknown as Record<string, (token: string) => void>).__cfTurnstileCallback;
-    (window as unknown as Record<string, (token: string) => void>).__cfTurnstileCallback = async (token: string) => {
-      if (originalCallback) originalCallback(token);
-      await doSubmit(token);
-    };
-
-    if (window.turnstile && turnstileWidgetId.current) {
-      window.turnstile.execute(turnstileWidgetId.current);
+    // Trigger implicit turnstile challenge
+    if (window.turnstile) {
+      const el = turnstileRef.current?.querySelector<HTMLIFrameElement>("iframe")?.parentElement;
+      if (el) {
+        (window as unknown as Record<string, (token: string) => void>).__cfTurnstileCb = async (token: string) => {
+          delete (window as unknown as Record<string, unknown>).__cfTurnstileCb;
+          await doSubmit(token);
+        };
+        try { window.turnstile.execute(el, { callback: "__cfTurnstileCb" }); } catch {
+          await doSubmit("");
+        }
+        return;
+      }
     }
+    await doSubmit("");
   }
 
   async function doSubmit(token: string) {
@@ -350,8 +327,10 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
           />
         </div>
 
-        {/* Invisible Turnstile container — nothing visible */}
-        <div ref={containerRef} className="hidden" />
+        {/* Turnstile implicit widget */}
+        {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+          <div ref={turnstileRef} className="cf-turnstile hidden" data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} data-size="invisible" data-callback="handleTurnstileCallback" />
+        )}
 
         <Button type="submit" className="w-full" disabled={loading} style={buttonColor ? { backgroundColor: buttonColor, color: buttonTextColor ?? "#fff", borderColor: buttonColor } : undefined}>
           {loading ? "Joining..." : ctaLabel || hero.cta_label as string || "Join the waitlist"}

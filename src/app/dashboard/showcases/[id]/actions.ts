@@ -135,7 +135,11 @@ export async function updateShowcase(
   }
 
   revalidatePath(`/dashboard/showcases/${waitlistId}`);
-  revalidatePath("/showcase", "layout");
+  revalidatePath("/", "layout");
+  revalidatePath("/products", "layout");
+  revalidatePath("/coming-soon", "layout");
+  const slug = formData.get("slug") as string;
+  if (slug) revalidatePath(`/product/${slug}`, "layout");
   return { success: true, images: finalImages };
 }
 

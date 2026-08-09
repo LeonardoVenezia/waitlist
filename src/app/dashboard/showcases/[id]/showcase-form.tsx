@@ -184,7 +184,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
       if (isNew) {
         window.location.href = `/dashboard/showcases/${waitlistId}`;
       } else {
-        router.refresh();
+        window.location.reload();
       }
     } catch (e: any) {
       setError(e.message ?? "Upload failed");
@@ -240,7 +240,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
       setPendingCardPreview(null);
       setUpdating(false);
       setUploadStatus("");
-      router.refresh();
+      window.location.reload();
     } catch (e: any) {
       setError(e.message ?? "Upload failed");
       setUpdating(false);

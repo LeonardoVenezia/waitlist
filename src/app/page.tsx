@@ -3,6 +3,8 @@ import { ShowcaseCard } from "@/components/shared/showcase-card";
 import { LaunchesList } from "@/components/shared/launches-list";
 import { PublicHeader } from "@/components/shared/public-header";
 
+export const dynamic = "force-dynamic";
+
 interface ShowcaseRow {
   slug: string;
   name: string;

@@ -2,6 +2,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ShowcaseCard } from "@/components/shared/showcase-card";
 import { PublicHeader } from "@/components/shared/public-header";
 
+export const dynamic = "force-dynamic";
+
 interface ShowcaseRow {
   slug: string;
   name: string;
