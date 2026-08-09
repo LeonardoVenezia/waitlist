@@ -151,50 +151,55 @@ export async function publishShowcase(
   mainImagePath?: string,
   cardImagePath?: string,
 ) {
-  // 1. Guardar cambios (incluye gallery)
-  const saveRes = await updateShowcase(waitlistId, showcaseId, formData, galleryFiles, pathsToRemove);
-  if (saveRes.error) return { error: saveRes.error };
+  try {
+    // 1. Guardar cambios (incluye gallery)
+    const saveRes = await updateShowcase(waitlistId, showcaseId, formData, galleryFiles, pathsToRemove);
+    if (saveRes.error) return { error: saveRes.error };
 
-  const admin = createAdminClient();
+    const admin = createAdminClient();
 
-  // 2. Domain check — only for full launch
-  if (targetStatus === "published") {
-    let domainOk = false;
-    try {
-      const res = await fetch(link, { method: "HEAD", signal: AbortSignal.timeout(10000) });
-      domainOk = res.ok;
-    } catch { /* ignore */ }
+    // 2. Domain check — only for full launch
+    if (targetStatus === "published") {
+      let domainOk = false;
+      try {
+        const res = await fetch(link, { method: "HEAD", signal: AbortSignal.timeout(10000) });
+        domainOk = res.ok;
+      } catch { /* ignore */ }
 
-    if (!domainOk) {
-      return { error: "Domain not reachable. Make sure your website responds with HTTP 200." };
+      if (!domainOk) {
+        return { error: "Domain not reachable. Make sure your website responds with HTTP 200." };
+      }
     }
+
+    // 3. Anti-spam (puntapié)
+
+    // 4. Guardar checks + publicar
+    const updateFields: Record<string, unknown> = {
+      status: targetStatus,
+      domain_check_passed: targetStatus === "published",
+      spam_check_passed: true,
+      last_spam_check: new Date().toISOString(),
+    };
+    if (targetStatus === "published") {
+      updateFields.published_at = new Date().toISOString();
+      updateFields.last_domain_check = new Date().toISOString();
+    }
+    if (mainImagePath) updateFields.main_image = mainImagePath;
+    if (cardImagePath) updateFields.card_image = cardImagePath;
+
+    const { error } = await admin
+      .from("showcases")
+      .update(updateFields as any)
+      .eq("id", showcaseId);
+
+    if (error) return { error: error.message };
+
+    revalidatePath(`/dashboard/showcases/${waitlistId}`);
+    revalidatePath("/", "layout");
+    return { success: true, status: targetStatus };
+  } catch (e: any) {
+    return { error: e?.message ?? "Error al publicar. ¿Ejecutaste las migraciones en producción?" };
   }
-
-  // 3. Anti-spam (puntapié)
-  const spamOk = true;
-
-  // 4. Guardar checks + publicar
-  const updateData: Record<string, unknown> = {
-    status: targetStatus,
-    domain_check_passed: targetStatus === "published",
-    spam_check_passed: true,
-    published_at: targetStatus === "published" ? new Date().toISOString() : undefined,
-    last_domain_check: targetStatus === "published" ? new Date().toISOString() : undefined,
-    last_spam_check: new Date().toISOString(),
-  };
-  if (mainImagePath) updateData.main_image = mainImagePath;
-  if (cardImagePath) updateData.card_image = cardImagePath;
-
-  const { error } = await admin
-    .from("showcases")
-    .update(updateData as any)
-    .eq("id", showcaseId);
-
-  if (error) return { error: error.message };
-
-  revalidatePath(`/dashboard/showcases/${waitlistId}`);
-  revalidatePath("/showcase", "layout");
-  return { success: true, status: targetStatus };
 }
 
 // ── unpublish ──
