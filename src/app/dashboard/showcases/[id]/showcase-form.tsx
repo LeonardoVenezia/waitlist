@@ -25,6 +25,7 @@ import {
 
 interface Props {
   waitlistId: string;
+  projectSlug: string;
   plan: Plan;
   showcase: ShowcaseData | null;
 }
@@ -65,12 +66,12 @@ function buildFormData(state: {
   return fd;
 }
 
-export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
+export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props) {
   const router = useRouter();
   const isNew = !showcase;
 
   const [name, setName] = useState(showcase?.name ?? "");
-  const [slug, setSlug] = useState(showcase?.slug ?? "");
+  const [slug] = useState(showcase?.slug ?? projectSlug ?? "");
   const [link, setLink] = useState(showcase?.link ?? "");
   const [desc, setDesc] = useState(showcase?.description ?? "");
   const [cat1, setCat1] = useState(showcase?.category_1 ?? "");
@@ -353,11 +354,11 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-heading text-xl">{isNew ? "Create showcase" : "Edit showcase"}</CardTitle>
+          <CardTitle className="font-heading text-xl">{isNew ? "Create product" : "Edit product"}</CardTitle>
           <CardDescription>
             {isNew
-              ? "Publicá tu producto en el directorio. Aparecerá en /showcase."
-              : "Editá los detalles de tu entrada en el directorio."}
+              ? "Publicá tu producto en el directorio. Aparecerá en /product."
+              : "Editá los detalles de tu producto."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -367,11 +368,11 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="My SaaS" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="slug">Slug <span className="text-red-500">*</span></Label>
-              <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="my-saas" />
-              <p className="text-xs text-muted-foreground">
-                {getAppUrl()}/showcase/{slug || "my-saas"}
+              <Label>URL</Label>
+              <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg border px-3 py-2">
+                {getAppUrl()}/product/{slug}
               </p>
+              <p className="text-xs text-muted-foreground">El slug se define al crear el proyecto.</p>
             </div>
           </div>
 

@@ -55,5 +55,5 @@ export default async function DashboardPage() {
     );
   }
 
-  redirect(`/dashboard/waitlists/${waitlist.id}`);
+  redirect(`/dashboard/showcases/${waitlist.id}`);
 }

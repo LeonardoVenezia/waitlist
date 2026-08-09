@@ -11,7 +11,7 @@ export default async function ShowcasePage(props: { params: Promise<{ id: string
 
   const { data: waitlist } = await supabase
     .from("waitlists")
-    .select("id, plan")
+    .select("id, plan, slug")
     .eq("id", id)
     .maybeSingle();
   if (!waitlist) notFound();
@@ -24,9 +24,10 @@ export default async function ShowcasePage(props: { params: Promise<{ id: string
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl">Showcase</h1>
+      <h1 className="text-2xl font-heading">Product</h1>
       <ShowcaseForm
         waitlistId={id}
+        projectSlug={waitlist.slug}
         plan={waitlist.plan as Plan}
         showcase={showcase ? { ...showcase, images: (Array.isArray(showcase.images) ? showcase.images : []) as string[] } : null}
       />

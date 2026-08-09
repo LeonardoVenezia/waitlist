@@ -9,13 +9,24 @@ export async function createShowcase(waitlistId: string, formData: FormData) {
   const supabase = await createClient();
 
   const name = formData.get("name") as string;
-  const slug = formData.get("slug") as string;
+  const slug = (formData.get("slug") as string) || undefined;
   const link = (formData.get("link") as string) || "";
   const description = formData.get("description") as string;
   const category1 = formData.get("category_1") as string;
   const category2 = (formData.get("category_2") as string) || null;
 
-  if (!name || !slug || !description || !category1) {
+  // If no slug provided, derive from waitlist
+  let finalSlug = slug;
+  if (!finalSlug) {
+    const { data: wl } = await supabase
+      .from("waitlists")
+      .select("slug")
+      .eq("id", waitlistId)
+      .single();
+    finalSlug = wl?.slug ?? "";
+  }
+
+  if (!name || !finalSlug || !description || !category1) {
     return { error: "Todos los campos obligatorios deben completarse." };
   }
 
@@ -36,7 +47,7 @@ export async function createShowcase(waitlistId: string, formData: FormData) {
     .insert({
       waitlist_id: waitlistId,
       name,
-      slug,
+      slug: finalSlug,
       link,
       description,
       category_1: category1,
