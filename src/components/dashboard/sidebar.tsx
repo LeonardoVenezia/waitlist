@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface WaitlistSummary {
@@ -10,6 +11,10 @@ interface WaitlistSummary {
   slug: string;
   plan: string;
 }
+
+const productSubNav = [
+  { label: "Overview", href: (id: string) => `/dashboard/showcases/${id}`, icon: "📦" },
+];
 
 const waitlistSubNav = [
   { label: "Overview", href: (id: string) => `/dashboard/waitlists/${id}`, icon: "📊" },
@@ -21,47 +26,61 @@ const waitlistSubNav = [
   { label: "Settings", href: (id: string) => `/dashboard/waitlists/${id}/settings`, icon: "⚙️" },
 ];
 
-const showcaseSubNav = [
-  { label: "Overview", href: (id: string) => `/dashboard/showcases/${id}`, icon: "🏪" },
-];
-
 function SubNavSection({
   label,
   items,
   currentId,
   pathname,
+  isExpanded,
+  onToggle,
 }: {
   label: string;
   items: Array<{ label: string; href: (id: string) => string; icon: string }>;
   currentId: string;
   pathname: string;
+  isExpanded: boolean;
+  onToggle: () => void;
 }) {
   return (
     <div className="px-3 pb-2 shrink-0">
-      <p className="px-2 pt-3 pb-2 text-xs font-medium tracking-widest uppercase text-muted-foreground">
-        {label}
-      </p>
-      <nav className="space-y-0.5">
-        {items.map((item) => {
-          const href = item.href(currentId);
-          const isActive = pathname === href || (item.label === "Overview" && pathname.startsWith(href));
-          return (
-            <Link
-              key={item.label}
-              href={href}
-              className={cn(
-                "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
-                isActive
-                  ? "bg-accent text-accent-foreground font-medium"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-              )}
-            >
-              <span className="text-sm shrink-0">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      <button
+        onClick={onToggle}
+        className="flex w-full items-center justify-between px-2 pt-3 pb-2 text-xs font-medium tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+      >
+        <span>{label}</span>
+        <svg
+          className={cn("size-3 transition-transform", isExpanded ? "rotate-90" : "")}
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="2"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+      {isExpanded && (
+        <nav className="space-y-0.5">
+          {items.map((item) => {
+            const href = item.href(currentId);
+            const isActive = pathname === href || (item.label === "Overview" && pathname.startsWith(href));
+            return (
+              <Link
+                key={item.label}
+                href={href}
+                className={cn(
+                  "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
+                  isActive
+                    ? "bg-accent text-accent-foreground font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                )}
+              >
+                <span className="text-sm shrink-0">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }
@@ -73,6 +92,16 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const currentId = pathname.match(/\/(?:waitlists|showcases)\/([^/]+)/)?.[1] ?? null;
+  const [expandedSection, setExpandedSection] = useState<string | null>(() => {
+    // Auto-expand based on current path
+    if (pathname.includes("/showcases/")) return "product";
+    if (pathname.includes("/waitlists/")) return "waitlist";
+    return null;
+  });
+
+  function toggleSection(name: string) {
+    setExpandedSection((prev) => (prev === name ? null : name));
+  }
 
   return (
     <aside className="flex w-60 flex-col border-r bg-card overflow-y-auto">
@@ -123,11 +152,25 @@ export function Sidebar({
         )}
       </nav>
 
-      {/* Products — separated by section */}
+      {/* Product and Waitlist sections */}
       {currentId && (
         <>
-          <SubNavSection label="Waitlist" items={waitlistSubNav} currentId={currentId} pathname={pathname} />
-          <SubNavSection label="Showcase" items={showcaseSubNav} currentId={currentId} pathname={pathname} />
+          <SubNavSection
+            label="Product"
+            items={productSubNav}
+            currentId={currentId}
+            pathname={pathname}
+            isExpanded={expandedSection === "product"}
+            onToggle={() => toggleSection("product")}
+          />
+          <SubNavSection
+            label="Waitlist"
+            items={waitlistSubNav}
+            currentId={currentId}
+            pathname={pathname}
+            isExpanded={expandedSection === "waitlist"}
+            onToggle={() => toggleSection("waitlist")}
+          />
         </>
       )}
 

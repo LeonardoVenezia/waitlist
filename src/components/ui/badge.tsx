@@ -7,7 +7,7 @@ const variantClasses = {
   outline: "border-border text-foreground",
   ghost: "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
   link: "text-primary underline-offset-4 hover:underline",
-  building: "bg-building text-building-foreground",
+  building: "bg-coming-soon text-coming-soon-foreground",
 } as const
 
 function Badge({

@@ -1,91 +1,109 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { ShowcaseCard } from "@/components/shared/showcase-card";
+import { LaunchesList } from "@/components/shared/launches-list";
+import { PublicHeader } from "@/components/shared/public-header";
+
+interface ShowcaseRow {
+  slug: string;
+  name: string;
+  description: string;
+  category_1: string;
+  category_2: string | null;
+  images: string[];
+  video_url: string | null;
+  featured_badge: boolean;
+  main_type: string;
+  main_image: string | null;
+  link: string;
+  status: string;
+  published_at: string | null;
+  waitlist_id: string;
+}
 
 export default async function HomePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const admin = createAdminClient();
 
-  if (user) {
-    redirect("/dashboard");
+  // This week's launches
+  const { data: launches } = await admin
+    .from("showcases")
+    .select("slug, name, description, main_image, published_at")
+    .eq("status", "published")
+    .not("published_at", "is", null)
+    .gte("published_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+    .order("published_at", { ascending: false })
+    .limit(15);
+
+  // All products
+  const { data: rows } = await admin
+    .from("showcases")
+    .select("slug, name, description, category_1, category_2, images, video_url, featured_badge, link, waitlist_id, main_type, main_image, status")
+    .in("status", ["published", "coming_soon"]);
+
+  const showcases = (rows ?? []) as ShowcaseRow[];
+
+  // Sort: published random-ish, coming_soon at end
+  if (showcases.length > 0) {
+    const published = showcases.filter((s) => s.status === "published");
+    const comingSoon = showcases.filter((s) => s.status === "coming_soon");
+
+    // Simple shuffle for published — stable per day via sort on slug hash
+    const daySeed = new Date().toISOString().slice(0, 10);
+    const seed = daySeed.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    published.sort((a, b) => {
+      const ha = (a.slug.split("").reduce((s, c) => s + c.charCodeAt(0), 0) + seed) % 1000;
+      const hb = (b.slug.split("").reduce((s, c) => s + c.charCodeAt(0), 0) + seed) % 1000;
+      return ha - hb;
+    });
+
+    showcases.length = 0;
+    showcases.push(...published, ...comingSoon);
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 border-b bg-background/90 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-          <Link href="/" className="font-heading text-xl">
-            [PACK]
-          </Link>
-          <nav className="flex items-center gap-6">
-            <Link
-              href="/pricing"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Pricing
-            </Link>
-            <Link href="/login">
-              <Button variant="outline" size="sm">Sign in</Button>
-            </Link>
-            <Link href="/signup">
-              <Button size="sm">Get started</Button>
-            </Link>
-          </nav>
-        </div>
-      </header>
-      <main className="flex-1">
-        <div className="flex flex-col items-center px-6 py-32 text-center">
-          <div className="max-w-3xl space-y-8">
-            <h1 className="text-5xl leading-tight sm:text-6xl lg:text-7xl">
-              Build hype before you launch
-            </h1>
-            <p className="mx-auto max-w-xl text-base text-muted-foreground leading-relaxed">
-              Create a viral waitlist with unique referral links. Watch your list
-              grow as people share and climb the ranks.
-            </p>
-            <div className="flex items-center justify-center gap-4">
-              <Link href="/signup">
-                <Button size="lg" className="h-10 px-6">Create your waitlist</Button>
-              </Link>
-              <Link href="/pricing">
-                <Button variant="outline" size="lg" className="h-10 px-6">
-                  See pricing
-                </Button>
-              </Link>
+    <div className="min-h-screen bg-background">
+      <PublicHeader currentTab="products" />
+      <div className="mx-auto max-w-5xl px-6 py-16">
+        {/* This week's launches */}
+        <section className="mb-20">
+          <div className="flex items-baseline gap-3 mb-8">
+            <h2 className="font-heading text-2xl font-bold tracking-tight">This week&apos;s launches</h2>
+            {launches && launches.length > 0 && (
+              <span className="text-sm text-muted-foreground">{launches.length} new</span>
+            )}
+          </div>
+          {launches && launches.length > 0 ? (
+            <LaunchesList
+              items={launches.map((l) => ({
+                slug: l.slug,
+                name: l.name,
+                description: l.description,
+                main_image: l.main_image,
+                published_at: l.published_at,
+              }))}
+            />
+          ) : (
+            <div className="rounded-xl border bg-muted/30 p-12 text-center">
+              <p className="text-lg text-muted-foreground">No launches this week. Be the first.</p>
             </div>
+          )}
+        </section>
+
+        {/* All products */}
+        <section>
+          <h2 className="font-heading text-2xl font-bold tracking-tight mb-8">All products</h2>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {showcases.map((s) => (
+              <ShowcaseCard key={s.slug} data={s} />
+            ))}
           </div>
 
-          <div className="mt-32 grid max-w-4xl gap-8 sm:grid-cols-3">
-            <div className="space-y-3 rounded-2xl border bg-card p-6 text-left">
-              <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-xl">🔄</div>
-              <h3 className="text-base font-semibold">Referral loop</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Every signup gets a unique referral link. Subscribers climb the
-                leaderboard by bringing friends.
-              </p>
+          {showcases.length === 0 && (
+            <div className="text-center py-20 text-muted-foreground">
+              No products published yet. Be the first!
             </div>
-            <div className="space-y-3 rounded-2xl border bg-card p-6 text-left">
-              <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-xl">📦</div>
-              <h3 className="text-base font-semibold">Embed anywhere</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Add our widget to your site with a single script tag, or use our
-                hosted page.
-              </p>
-            </div>
-            <div className="space-y-3 rounded-2xl border bg-card p-6 text-left">
-              <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-xl">💸</div>
-              <h3 className="text-base font-semibold">One-time payment</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Pay once, use forever. No subscriptions. Free up to 150
-                subscribers.
-              </p>
-            </div>
-          </div>
-        </div>
-      </main>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

@@ -92,7 +92,7 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
 
   const formState = { name, slug, link, desc, cat1, cat2, videoUrl, featuredB, mainType };
 
-  async function handlePublish(target: "published" | "building") {
+  async function handlePublish(target: "published" | "coming_soon") {
     setPublishing(true);
     setError(null);
     const fd = buildFormData(formState);
@@ -238,11 +238,11 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
       {showcase && (
         <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3 text-sm">
           <span className="text-muted-foreground">Status:</span>
-          <Badge variant={status === "published" ? "default" : status === "rejected" ? "destructive" : status === "building" ? "building" : "outline"}>
+          <Badge variant={status === "published" ? "default" : status === "rejected" ? "destructive" : status === "coming_soon" ? "building" : "outline"}>
             {status}
           </Badge>
-          {(status === "published" || status === "building") && (
-            <a href={`${getAppUrl()}/showcase/${showcase.slug}`} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline ml-auto">
+          {(status === "published" || status === "coming_soon") && (
+            <a href={`${getAppUrl()}/product/${showcase.slug}`} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline ml-auto">
               View live →
             </a>
           )}
@@ -479,8 +479,8 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
             <Button onClick={() => handlePublish("published")} disabled={publishing}>
               {publishing ? "Publishing..." : "Full launch"}
             </Button>
-            <Button onClick={() => handlePublish("building")} disabled={publishing} variant="secondary">
-              {publishing ? "Publishing..." : "In construction"}
+            <Button onClick={() => handlePublish("coming_soon")} disabled={publishing} variant="secondary">
+              {publishing ? "Publishing..." : "Coming soon"}
             </Button>
           </>
         ) : status === "published" ? (
@@ -492,7 +492,7 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
               Unpublish
             </Button>
           </>
-        ) : status === "building" ? (
+        ) : status === "coming_soon" ? (
           <>
             <Button onClick={handleUpdate} disabled={updating} variant="outline">
               {updating ? "Updating..." : "Update"}
@@ -509,8 +509,8 @@ export function ShowcaseForm({ waitlistId, plan, showcase }: Props) {
             <Button onClick={() => handlePublish("published")} disabled={publishing}>
               {publishing ? "Publishing..." : "Full launch"}
             </Button>
-            <Button onClick={() => handlePublish("building")} disabled={publishing} variant="secondary">
-              {publishing ? "Publishing..." : "In construction"}
+            <Button onClick={() => handlePublish("coming_soon")} disabled={publishing} variant="secondary">
+              {publishing ? "Publishing..." : "Coming soon"}
             </Button>
           </>
         )}

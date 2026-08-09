@@ -27,14 +27,14 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
   const isVideo = data.main_type === "video" && data.video_url;
   const ytId = isVideo ? extractYouTubeId(data.video_url) : null;
   const mainImg = data.main_image;
-  const isBuilding = data.status === "building";
+  const isComingSoon = data.status === "coming_soon";
 
   return (
     <Link
-      href={`/showcase/${data.slug}`}
+      href={`/product/${data.slug}`}
       className={`group block rounded-xl border overflow-hidden transition-all duration-200 ${
-        isBuilding
-          ? "border-building/30 bg-building/[0.03] hover:border-building/50"
+        isComingSoon
+          ? "border-coming-soon/30 bg-coming-soon/[0.03] hover:border-coming-soon/50"
           : "bg-card hover:border-primary/40 hover:shadow-sm"
       }`}
     >
@@ -61,9 +61,9 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
             className="size-full object-cover"
           />
         ) : (
-          <span className="text-5xl opacity-30">{isBuilding ? "🏗️" : "🖼️"}</span>
+          <span className="text-5xl opacity-30">{isComingSoon ? "🏗️" : "🖼️"}</span>
         )}
-        {isBuilding && (
+        {isComingSoon && (
           <div className="absolute top-3 left-3">
             <Badge variant="building" className="text-[10px] px-2 py-0">In construction</Badge>
           </div>

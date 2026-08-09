@@ -145,7 +145,7 @@ export async function publishShowcase(
   showcaseId: string,
   link: string,
   formData: FormData,
-  targetStatus: "published" | "building" = "published",
+  targetStatus: "published" | "coming_soon" = "published",
   galleryFiles?: FormData,
   pathsToRemove?: string[],
 ) {
@@ -178,6 +178,7 @@ export async function publishShowcase(
       status: targetStatus,
       domain_check_passed: targetStatus === "published",
       spam_check_passed: true,
+      published_at: targetStatus === "published" ? new Date().toISOString() : undefined,
       last_domain_check: targetStatus === "published" ? new Date().toISOString() : undefined,
       last_spam_check: new Date().toISOString(),
     })
@@ -191,7 +192,7 @@ export async function publishShowcase(
 }
 
 // ── unpublish ──
-export async function updateShowcaseStatus(waitlistId: string, showcaseId: string, status: "draft" | "published" | "rejected" | "building") {
+export async function updateShowcaseStatus(waitlistId: string, showcaseId: string, status: "draft" | "published" | "rejected" | "coming_soon") {
   const supabase = await createClient();
   const { error } = await supabase
     .from("showcases")
