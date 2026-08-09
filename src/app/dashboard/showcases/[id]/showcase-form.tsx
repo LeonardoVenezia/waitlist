@@ -104,6 +104,19 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
   async function handlePublish(target: "published" | "coming_soon") {
     setPublishing(true);
     setError(null);
+
+    // Validate required images
+    if (!pendingMainFile && !mainImage) {
+      setError("Main image is required.");
+      setPublishing(false);
+      return;
+    }
+    if (target === "coming_soon" && !pendingCardFile && !cardImage) {
+      setError("Card image is required for Coming soon.");
+      setPublishing(false);
+      return;
+    }
+
     const fd = buildFormData(formState);
     const galleryFd = buildGalleryFormData();
     const toRemove = [...removedPaths];
@@ -137,7 +150,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
       if (pub.error) { setError(pub.error); setPublishing(false); return; }
       setStatus(target);
       setPublishing(false);
-      window.location.href = `/dashboard/showcases/${createdId}`;
+      window.location.href = `/dashboard/showcases/${waitlistId}`;
       return;
     }
 

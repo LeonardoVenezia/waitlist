@@ -66,7 +66,7 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
         )}
         {isComingSoon && (
           <div className="absolute top-3 left-3">
-            <Badge variant="building" className="text-[10px] px-2 py-0">In construction</Badge>
+            <Badge variant="building" className="text-[10px] px-2 py-0">Coming soon</Badge>
           </div>
         )}
       </div>

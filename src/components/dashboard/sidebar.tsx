@@ -62,7 +62,7 @@ function SubNavSection({
         <nav className="space-y-0.5">
           {items.map((item) => {
             const href = item.href(currentId);
-            const isActive = pathname === href || (item.label === "Overview" && pathname.startsWith(href));
+            const isActive = item.label === "Overview" ? pathname === href : pathname.startsWith(href);
             return (
               <Link
                 key={item.label}
@@ -130,7 +130,7 @@ export function Sidebar({
             return (
               <Link
                 key={wl.id}
-                href={`/dashboard/projects/${wl.id}`}
+                href={`/dashboard/showcases/${wl.id}`}
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                   isActive

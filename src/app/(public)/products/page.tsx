@@ -38,7 +38,7 @@ export default async function ProductsPage(props: {
   let query = admin
     .from("showcases")
     .select("slug, name, description, category_1, category_2, images, video_url, featured_badge, link, waitlist_id, main_type, main_image, card_image, status")
-    .in("status", ["published", "coming_soon"]);
+    .eq("status", "published");
 
   if (search) query = query.ilike("name", `%${search}%`);
   if (category) query = query.or(`category_1.eq.${category},category_2.eq.${category}`);
@@ -46,21 +46,15 @@ export default async function ProductsPage(props: {
   const { data: rows } = await query;
   const showcases = (rows ?? []) as ShowcaseRow[];
 
-  // Sort: published first, then coming_soon; random-ish within published
+  // Sort: random-ish shuffle per day
   if (showcases.length > 0) {
-    const published = showcases.filter((s) => s.status === "published");
-    const comingSoon = showcases.filter((s) => s.status === "coming_soon");
-
     const daySeed = new Date().toISOString().slice(0, 10);
     const seed = daySeed.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-    published.sort((a, b) => {
+    showcases.sort((a, b) => {
       const ha = (a.slug.split("").reduce((s, c) => s + c.charCodeAt(0), 0) + seed) % 1000;
       const hb = (b.slug.split("").reduce((s, c) => s + c.charCodeAt(0), 0) + seed) % 1000;
       return ha - hb;
     });
-
-    showcases.length = 0;
-    showcases.push(...published, ...comingSoon);
   }
 
   return (

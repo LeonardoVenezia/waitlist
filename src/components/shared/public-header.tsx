@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 interface Props {
-  currentTab?: "launches" | "products";
+  currentTab?: "launches" | "products" | "coming-soon";
 }
 
 export function PublicHeader({ currentTab }: Props) {
@@ -31,6 +31,16 @@ export function PublicHeader({ currentTab }: Props) {
             }`}
           >
             All products
+          </Link>
+          <Link
+            href="/coming-soon"
+            className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+              currentTab === "coming-soon"
+                ? "bg-accent text-accent-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Coming soon
           </Link>
         </nav>
       </div>
