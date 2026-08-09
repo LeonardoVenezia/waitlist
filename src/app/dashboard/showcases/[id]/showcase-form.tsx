@@ -15,11 +15,8 @@ import {
   updateShowcase,
   publishShowcase,
   updateShowcaseStatus,
-  uploadShowcaseImage,
   removeShowcaseImage,
-  uploadMainImage,
   removeMainImage,
-  uploadCardImage,
   removeCardImage,
 } from "./actions";
 
@@ -89,11 +86,30 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
   const [error, setError] = useState<string | null>(null);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [removedPaths, setRemovedPaths] = useState<Set<string>>(new Set());
-  const [mainUploading, setMainUploading] = useState(false);
   const [pendingMainFile, setPendingMainFile] = useState<File | null>(null);
   const [pendingMainPreview, setPendingMainPreview] = useState<string | null>(null);
   const [pendingCardFile, setPendingCardFile] = useState<File | null>(null);
   const [pendingCardPreview, setPendingCardPreview] = useState<string | null>(null);
+
+  async function presignedUpload(showcaseId: string, file: File): Promise<string> {
+    // 1. Get signed URL
+    const res = await fetch("/api/showcase/upload-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ showcaseId, fileName: file.name, fileType: file.type }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: "Upload URL failed" }));
+      throw new Error(err.error);
+    }
+    const { path, signedUrl, token } = await res.json();
+
+    // 2. Upload directly to Supabase
+    const up = await fetch(signedUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+    if (!up.ok) throw new Error("Upload failed");
+
+    return path;
+  }
 
   function getAppUrl() {
     return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -105,7 +121,6 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
     setPublishing(true);
     setError(null);
 
-    // Validate required images
     if (!pendingMainFile && !mainImage) {
       setError("Main image is required.");
       setPublishing(false);
@@ -118,75 +133,53 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
     }
 
     const fd = buildFormData(formState);
-    const galleryFd = buildGalleryFormData();
     const toRemove = [...removedPaths];
 
+    let sid = isNew ? null : showcase!.id;
     if (isNew) {
       const res = await createShowcase(waitlistId, fd);
       if (res.error) { setError(res.error); setPublishing(false); return; }
-      const createdId = res.id!;
-      
-      // Upload pending main image
+      sid = res.id!;
+    }
+
+    try {
+      // Upload pending gallery images
+      const newPaths: string[] = [];
+      for (const file of pendingFiles) {
+        newPaths.push(await presignedUpload(sid!, file));
+      }
+
+      // Upload main image
       let mainPath: string | undefined;
-      if (pendingMainFile) {
-        const mfd = new FormData();
-        mfd.set("file", pendingMainFile);
-        const up = await uploadMainImage(createdId, mfd);
-        if (up.error) { setError(up.error); setPublishing(false); return; }
-        mainPath = up.main_image as string;
-      }
+      if (pendingMainFile) mainPath = await presignedUpload(sid!, pendingMainFile);
 
-      // Upload pending card image
+      // Upload card image
       let cardPath: string | undefined;
-      if (pendingCardFile) {
-        const cfd = new FormData();
-        cfd.set("file", pendingCardFile);
-        const up = await uploadCardImage(createdId, cfd);
-        if (up.error) { setError(up.error); setPublishing(false); return; }
-        cardPath = up.card_image as string;
-      }
+      if (pendingCardFile) cardPath = await presignedUpload(sid!, pendingCardFile);
 
-      const pub = await publishShowcase(waitlistId, createdId, link, fd, target, galleryFd, toRemove, mainPath, cardPath);
+      const pub = await publishShowcase(waitlistId, sid!, link, fd, target, toRemove, newPaths, mainPath, cardPath);
       if (pub.error) { setError(pub.error); setPublishing(false); return; }
       setStatus(target);
+      setPendingFiles([]);
+      setRemovedPaths(new Set());
+      if (mainPath) setMainImage(mainPath);
+      if (cardPath) setCardImage(cardPath);
+      if (pendingMainPreview) URL.revokeObjectURL(pendingMainPreview);
+      if (pendingCardPreview) URL.revokeObjectURL(pendingCardPreview);
+      setPendingMainFile(null);
+      setPendingMainPreview(null);
+      setPendingCardFile(null);
+      setPendingCardPreview(null);
       setPublishing(false);
-      window.location.href = `/dashboard/showcases/${waitlistId}`;
-      return;
+      if (isNew) {
+        window.location.href = `/dashboard/showcases/${waitlistId}`;
+      } else {
+        router.refresh();
+      }
+    } catch (e: any) {
+      setError(e.message ?? "Upload failed");
+      setPublishing(false);
     }
-
-    // Upload pending main image if existing
-    let mainPath: string | undefined;
-    if (pendingMainFile) {
-      const mfd = new FormData();
-      mfd.set("file", pendingMainFile);
-      const up = await uploadMainImage(showcase!.id, mfd);
-      if (up.error) { setError(up.error); setPublishing(false); return; }
-      mainPath = up.main_image as string;
-    }
-
-    // Upload pending card image if existing
-    let cardPath: string | undefined;
-    if (pendingCardFile) {
-      const cfd = new FormData();
-      cfd.set("file", pendingCardFile);
-      const up = await uploadCardImage(showcase!.id, cfd);
-      if (up.error) { setError(up.error); setPublishing(false); return; }
-      cardPath = up.card_image as string;
-    }
-
-    const pub = await publishShowcase(waitlistId, showcase!.id, link, fd, target, galleryFd, toRemove, mainPath, cardPath);
-    if (pub.error) { setError(pub.error); setPublishing(false); return; }
-    setStatus(target);
-    if (mainPath) setMainImage(mainPath);
-    if (cardPath) setCardImage(cardPath);
-    setPendingMainFile(null);
-    if (pendingMainPreview) URL.revokeObjectURL(pendingMainPreview);
-    setPendingMainPreview(null);
-    setPendingCardFile(null);
-    if (pendingCardPreview) URL.revokeObjectURL(pendingCardPreview);
-    setPendingCardPreview(null);
-    setPublishing(false);
-    router.refresh();
   }
 
   async function handleUpdate() {
@@ -194,26 +187,27 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
     setUpdating(true);
     setError(null);
     const fd = buildFormData(formState);
-    const galleryFd = buildGalleryFormData();
     const toRemove = [...removedPaths];
 
-    const res = await updateShowcase(waitlistId, showcase.id, fd, galleryFd, toRemove);
-    if (res.error) { setError(res.error); setUpdating(false); return; }
-    // Update local state with persisted images
-    if (res.images) {
-      setImages(res.images as string[]);
-      setPendingFiles([]);
-      setRemovedPaths(new Set());
-    }
-    setUpdating(false);
-    router.refresh();
-  }
+    try {
+      const newPaths: string[] = [];
+      for (const file of pendingFiles) {
+        newPaths.push(await presignedUpload(showcase.id, file));
+      }
 
-  function buildGalleryFormData(): FormData | undefined {
-    if (pendingFiles.length === 0) return undefined;
-    const fd = new FormData();
-    for (const f of pendingFiles) fd.append("file", f);
-    return fd;
+      const res = await updateShowcase(waitlistId, showcase.id, fd, toRemove, newPaths);
+      if (res.error) { setError(res.error); setUpdating(false); return; }
+      if (res.images) {
+        setImages(res.images as string[]);
+        setPendingFiles([]);
+        setRemovedPaths(new Set());
+      }
+      setUpdating(false);
+      router.refresh();
+    } catch (e: any) {
+      setError(e.message ?? "Upload failed");
+      setUpdating(false);
+    }
   }
 
   async function handleUnpublish() {
@@ -491,7 +485,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
                 ) : (
                   <label className="flex items-center justify-center w-48 aspect-video rounded-lg border-2 border-dashed border-muted-foreground/30 cursor-pointer hover:border-primary/50 transition-colors">
                     <span className="text-2xl text-muted-foreground">+</span>
-                    <input type="file" accept="image/*" className="hidden" onChange={handleMainUpload} disabled={mainUploading} />
+                    <input type="file" accept="image/*" className="hidden" onChange={handleMainUpload} />
                   </label>
                 )}
                 <p className="text-xs text-muted-foreground">Shown large on the directory page and on your product card.</p>

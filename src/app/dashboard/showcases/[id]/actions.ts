@@ -71,48 +71,33 @@ export async function updateShowcase(
   waitlistId: string,
   showcaseId: string,
   formData: FormData,
-  galleryFiles?: FormData,
   pathsToRemove?: string[],
+  newImagePaths?: string[],
 ) {
   const supabase = await createClient();
   const admin = createAdminClient();
 
-  // Process gallery: remove + upload
+  // Process gallery: remove + merge new paths
   let finalImages: string[] = [];
-  if (pathsToRemove && pathsToRemove.length > 0) {
-    // Remove files from storage
-    await admin.storage.from("showcase-images").remove(pathsToRemove);
+  
+  const { data: sc } = await admin
+    .from("showcases")
+    .select("images")
+    .eq("id", showcaseId)
+    .single();
+  finalImages = (sc?.images as string[]) ?? [];
 
-    // Remove from existing array
-    const { data: sc } = await admin
-      .from("showcases")
-      .select("images")
-      .eq("id", showcaseId)
-      .single();
-    finalImages = ((sc?.images as string[]) ?? []).filter((p) => !pathsToRemove.includes(p));
-  } else {
-    const { data: sc } = await admin
-      .from("showcases")
-      .select("images")
-      .eq("id", showcaseId)
-      .single();
-    finalImages = (sc?.images as string[]) ?? [];
+  // Apply removals
+  if (pathsToRemove && pathsToRemove.length > 0) {
+    await admin.storage.from("showcase-images").remove(pathsToRemove);
+    finalImages = finalImages.filter((p) => !pathsToRemove.includes(p));
   }
 
-  // Upload new files
-  if (galleryFiles) {
-    const files = galleryFiles.getAll("file") as File[];
-    for (const file of files) {
-      if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) continue;
-      if (file.size > 2 * 1024 * 1024) continue;
+  // Add new paths
+  if (newImagePaths && newImagePaths.length > 0) {
+    for (const p of newImagePaths) {
       if (finalImages.length >= 5) break;
-
-      const extMap: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif" };
-      const ext = extMap[file.type] ?? "jpg";
-      const path = `${showcaseId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-      const { error } = await admin.storage.from("showcase-images").upload(path, file, { upsert: false });
-      if (!error) finalImages.push(path);
+      finalImages.push(p);
     }
   }
 
@@ -157,14 +142,14 @@ export async function publishShowcase(
   link: string,
   formData: FormData,
   targetStatus: "published" | "coming_soon" = "published",
-  galleryFiles?: FormData,
   pathsToRemove?: string[],
+  newImagePaths?: string[],
   mainImagePath?: string,
   cardImagePath?: string,
 ) {
   try {
     // 1. Guardar cambios (incluye gallery)
-    const saveRes = await updateShowcase(waitlistId, showcaseId, formData, galleryFiles, pathsToRemove);
+    const saveRes = await updateShowcase(waitlistId, showcaseId, formData, pathsToRemove, newImagePaths);
     if (saveRes.error) return { error: saveRes.error };
 
     const admin = createAdminClient();
@@ -274,7 +259,7 @@ export async function uploadShowcaseImage(showcaseId: string, formData: FormData
 
   if (updateErr) return { error: updateErr.message };
 
-  return { success: true, images };
+  return { success: true, images, path };
 }
 
 // ── remove image ──
