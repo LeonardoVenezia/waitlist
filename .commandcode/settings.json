@@ -20,7 +20,8 @@
       "Shell(for:*)",
       "Shell(do:*)",
       "Shell(done:*)",
-      "Shell(sed:*)"
+      "Shell(sed:*)",
+      "Shell(echo 'import { headers } from \"next/headers\"; headers();' > /tmp/test_headers.ts && echo \"headers work\")"
     ],
     "deny": [],
     "defaultMode": "default"

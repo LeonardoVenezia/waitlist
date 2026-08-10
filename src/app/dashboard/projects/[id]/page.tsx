@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/shared/copy-button";
@@ -53,7 +53,10 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
   const nearLimit = waitlist.submission_limit && totalActive >= waitlist.submission_limit * 0.8;
   const isNewProject = totalActive === 0 && totalHidden === 0 && pageViews === 0;
 
-  const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/p/${waitlist.slug}`;
+  const headersList = await headers();
+  const host = headersList.get("host") ?? process.env.NEXT_PUBLIC_APP_URL?.replace("https://", "") ?? "localhost:3000";
+  const protocol = host.includes("localhost") ? "http" : "https";
+  const publicUrl = `${protocol}://${host}/p/${waitlist.slug}`;
 
   return (
     <div className="space-y-8">
@@ -164,9 +167,9 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
         </div>
         <div className="h-4 w-px bg-border" />
         <div>
-          <span className="text-muted-foreground">Referral link</span>
+          <span className="text-muted-foreground">Waitlist URL</span>
           <code className="ml-2 text-xs text-muted-foreground">
-            {process.env.NEXT_PUBLIC_APP_URL}/p/{waitlist.slug}
+            {publicUrl}
           </code>
         </div>
       </div>
@@ -290,9 +293,9 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
               <p className="text-xl mt-0.5">{waitlist.submission_limit ?? "Unlimited"}</p>
             </div>
             <div className="rounded-lg bg-card px-4 py-3">
-              <p className="text-xs text-muted-foreground">Referral link</p>
+              <p className="text-xs text-muted-foreground">Waitlist URL</p>
               <p className="text-xs font-mono mt-1 text-muted-foreground break-all">
-                {process.env.NEXT_PUBLIC_APP_URL}/p/{waitlist.slug}
+                {publicUrl}
               </p>
             </div>
           </div>
