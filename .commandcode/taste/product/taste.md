@@ -12,3 +12,4 @@
 # form-ux
 - Cancel/secondary actions should be plain text links, not styled buttons — styled cancel buttons blend in with primary actions and create bad UX ("se camufla"). Confidence: 0.70
 - Interactive form controls (field toggles, checkboxes, selectors) must be visually distinct from action buttons (submit, cancel); when they look the same, the form becomes confusing and users can't tell what's a control vs what's an action. Confidence: 0.65
+- Slug fields should auto-generate from the name on every keystroke, not just when the slug is empty. The only exception: when editing an already-published resource, the slug should be locked/frozen. Confidence: 0.80

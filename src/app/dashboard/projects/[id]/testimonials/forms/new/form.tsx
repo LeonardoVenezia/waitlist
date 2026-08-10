@@ -59,7 +59,7 @@ export function NewForm({ projectId }: { projectId: string }) {
         <input
           name="name"
           required
-          onChange={(e) => { if (!slug) setSlug(generateSlug(e.target.value)); }}
+          onChange={(e) => setSlug(generateSlug(e.target.value))}
           className="mt-1.5 block w-full rounded-md border bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
         />
       </div>
