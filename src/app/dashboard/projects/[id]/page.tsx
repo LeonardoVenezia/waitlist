@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/shared/copy-button";
 
 export default async function ProjectDetailPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params;
@@ -19,6 +21,15 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
     .maybeSingle();
 
   if (!waitlist) notFound();
+
+  const cookieStore = await cookies();
+  const dismissedOnboarding = cookieStore.get("onboarding-dismissed")?.value === "true";
+
+  const { data: showcase } = await supabase
+    .from("showcases")
+    .select("id, status")
+    .eq("waitlist_id", id)
+    .maybeSingle();
 
   const [
     { count: activeCount },
@@ -40,10 +51,13 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
   const pageSignupCount = pageSignups ?? 0;
   const conversionRate = pageViews > 0 ? Math.round((pageSignupCount / pageViews) * 1000) / 10 : null;
   const nearLimit = waitlist.submission_limit && totalActive >= waitlist.submission_limit * 0.8;
+  const isNewProject = totalActive === 0 && totalHidden === 0 && pageViews === 0;
+
+  const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/p/${waitlist.slug}`;
 
   return (
     <div className="space-y-8">
-      {/* Header: title + slug + upgrade action */}
+      {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-2xl truncate">{waitlist.name}</h1>
@@ -55,6 +69,79 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
           <Button size="sm">Upgrade plan</Button>
         </Link>
       </div>
+
+      {/* Onboarding card — only for new projects, dismissable */}
+      {isNewProject && !dismissedOnboarding && (
+        <div className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/[0.02] p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-3 max-w-prose">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🚀</span>
+                <h2 className="font-heading text-lg font-semibold">Your project is ready</h2>
+              </div>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <div className="flex gap-3">
+                  <span className="shrink-0 mt-0.5 text-base">1.</span>
+                  <div>
+                    <p className="font-medium text-foreground">Share your waitlist</p>
+                    <p>Send people to your landing page. They can subscribe and get a referral link.</p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <code className="text-xs bg-muted px-2 py-1 rounded truncate max-w-[200px] sm:max-w-xs">{publicUrl}</code>
+                      <CopyButton text={publicUrl} />
+                      <a
+                        href={publicUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline shrink-0"
+                      >
+                        Open ↗
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <span className="shrink-0 mt-0.5 text-base">2.</span>
+                  <div>
+                    <p className="font-medium text-foreground">Add your product to the directory</p>
+                    <p>Create your showcase page to get featured in our directory and attract more users.</p>
+                    <Link
+                      href={`/dashboard/showcases/${id}`}
+                      className="inline-flex items-center gap-1 mt-2 text-sm text-primary hover:underline font-medium"
+                    >
+                      {showcase?.status === "published" ? "Edit your listing →" : "Set up your listing →"}
+                    </Link>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <span className="shrink-0 mt-0.5 text-base">3.</span>
+                  <div>
+                    <p className="font-medium text-foreground">Collect testimonials</p>
+                    <p>Create a form and start gathering social proof from your users.</p>
+                    <Link
+                      href={`/dashboard/projects/${id}/testimonials`}
+                      className="inline-flex items-center gap-1 mt-2 text-sm text-primary hover:underline font-medium"
+                    >
+                      Set up testimonials →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <form action="/api/dismiss-onboarding" method="POST">
+              <input type="hidden" name="path" value={`/dashboard/projects/${id}`} />
+              <button
+                type="submit"
+                className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                title="Dismiss"
+              >
+                <svg className="size-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Compact stat bar */}
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg bg-card px-5 py-3 text-sm">
