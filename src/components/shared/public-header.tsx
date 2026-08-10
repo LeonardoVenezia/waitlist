@@ -1,10 +1,14 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
 interface Props {
   currentTab?: "launches" | "products" | "coming-soon";
 }
 
-export function PublicHeader({ currentTab }: Props) {
+export async function PublicHeader({ currentTab }: Props) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <header className="sticky top-0 z-50 border-b bg-background/90 backdrop-blur-sm">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
@@ -43,6 +47,31 @@ export function PublicHeader({ currentTab }: Props) {
             Coming soon
           </Link>
         </nav>
+        <div className="flex items-center gap-2">
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="rounded-md px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/80 transition-colors"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-md px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/80 transition-colors"
+              >
+                Sign up
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
