@@ -24,5 +24,5 @@
 - Interactive form controls (field toggles, checkboxes, selectors) must be visually distinct from action buttons (submit, cancel); when they look the same, the form becomes confusing and users can't tell what's a control vs what's an action. Confidence: 0.65
 - Slug fields should auto-generate from the name on every keystroke, not just when the slug is empty. The only exception: when editing an already-published resource, the slug should be locked/frozen. Confidence: 0.80
 # editor-design
-- Form/editor sections should expose all relevant customizable fields directly (title, subtitle, button text, placeholder) rather than burying some settings in other tabs or inheriting them from a separate configuration. Users expect to edit everything about a section in one place. Confidence: 0.70
+- Form/editor sections should expose all relevant customizable fields directly (title, subtitle, button text, placeholder) rather than burying some settings in other tabs or inheriting them from a separate configuration. Users expect to edit everything about a section in one place. Confidence: 0.80
 - Media/image fields should support direct file upload (drag-and-drop or file picker), not just URL pasting. Users expect to upload images from their device rather than finding and pasting external URLs. Confidence: 0.85

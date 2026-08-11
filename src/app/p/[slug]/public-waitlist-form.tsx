@@ -236,17 +236,25 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
   // Success state
   if (step === "done" && result) {
     const showMilestones = result.milestones && result.milestones.length > 0;
+    const positionText = (thankYou.position_text as string) || "Your position: #{POSITION}";
+    const referralPrompt = (thankYou.description as string) || "Share your referral link to climb the ranks:";
     return (
       <div className="space-y-4">
-        {(thankYou.message as string) && (
-          <p className="text-lg">{thankYou.message as string}</p>
+        {(thankYou.title as string) && (
+          <p className="text-lg font-semibold">{thankYou.title as string}</p>
         )}
-
-        <p className="text-sm text-muted-foreground">
-          You&apos;re on the list!{thankYou.show_position !== false && result.position
-            ? ` Your position: #${result.position}`
-            : ""}
-        </p>
+        {(thankYou.subtitle as string) && (
+          <p className="text-sm text-muted-foreground">{thankYou.subtitle as string}</p>
+        )}
+        {(thankYou.message as string) ? (
+          <p className="text-sm text-muted-foreground">{thankYou.message as string}</p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            You&apos;re on the list!{thankYou.show_position !== false && result.position
+              ? positionText.replace("{POSITION}", String(result.position))
+              : ""}
+          </p>
+        )}
 
         {result.reward_text && (
           <p className="text-sm font-medium text-primary">{result.reward_text}</p>
@@ -254,9 +262,7 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
 
         {thankYou.show_referral_link !== false && (
           <div className="space-y-2">
-            <p className="text-sm font-medium">
-              Share your referral link to climb the ranks:
-            </p>
+            <p className="text-sm font-medium">{referralPrompt}</p>
             <div className="flex gap-2">
               <Input
                 value={result.referral_link}
