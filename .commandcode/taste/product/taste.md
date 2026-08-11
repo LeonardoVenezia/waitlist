@@ -15,7 +15,13 @@
 - Empty states and first-time user experiences must be informative and guide the user — show URLs, actionable steps, and clear next actions rather than leaving new users confused. When the user identifies a UX problem but isn't sure of the best solution, the agent should analyze it deeply and propose a complete UX solution. Confidence: 0.70
 # ux-copy
 - Prefers plain, self-explanatory labels over marketing or technical jargon. If a label doesn't sound intuitive to a new user, it should be renamed — even common terms like "Referral link" can be confusing when a simpler alternative like "Waitlist URL" or "Your link" exists. Confidence: 0.80
+# ui-patterns
+- Prefers accordion/collapsible patterns for long pages or lists of editable sections: only one section open at a time to keep the interface compact and avoid excessive scrolling. Confidence: 0.75
+- Sibling/adjacent sections on the same page should maintain consistent max-width and layout; visual misalignment between sections (e.g., FAQ narrower than How It Works) is noticeable and should be fixed. Confidence: 0.65
+
 # form-ux
 - Cancel/secondary actions should be plain text links, not styled buttons — styled cancel buttons blend in with primary actions and create bad UX ("se camufla"). Confidence: 0.70
 - Interactive form controls (field toggles, checkboxes, selectors) must be visually distinct from action buttons (submit, cancel); when they look the same, the form becomes confusing and users can't tell what's a control vs what's an action. Confidence: 0.65
 - Slug fields should auto-generate from the name on every keystroke, not just when the slug is empty. The only exception: when editing an already-published resource, the slug should be locked/frozen. Confidence: 0.80
+# editor-design
+- Form/editor sections should expose all relevant customizable fields directly (title, subtitle, button text, placeholder) rather than burying some settings in other tabs or inheriting them from a separate configuration. Users expect to edit everything about a section in one place. Confidence: 0.70

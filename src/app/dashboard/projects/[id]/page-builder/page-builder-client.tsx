@@ -14,6 +14,7 @@ const SECTION_META: Record<string, { emoji: string; label: string }> = {
   how_it_works: { emoji: "📋", label: "How It Works" },
   faq: { emoji: "❓", label: "FAQ" },
   form: { emoji: "📝", label: "Waitlist Form" },
+  media_text: { emoji: "🖼️", label: "Media + Text" },
 };
 
 function makeSection(type: Section["type"], order: number): Section {
@@ -39,7 +40,10 @@ function makeSection(type: Section["type"], order: number): Section {
       base.settings = { title: "FAQ", questions: [{ question: "", answer: "" }] };
       break;
     case "form":
-      base.settings = { title: "", subtitle: "" };
+      base.settings = { title: "", subtitle: "", button_text: "Join the waitlist", placeholder: "you@example.com" };
+      break;
+    case "media_text":
+      base.settings = { title: "", text: "", image: "", image_side: "left" };
       break;
   }
   return base;
@@ -195,6 +199,49 @@ function SectionEditor({ section, onChange }: { section: Section; onChange: (s: 
         <Button variant="outline" size="sm" onClick={() => {
           onChange({ ...section, settings: { ...s, questions: [...questions, { question: "", answer: "" }] } });
         }}>Add question</Button>
+    </div>
+  );
+  }
+
+  if (section.type === "media_text") {
+    return (
+      <div className="space-y-3">
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Title <span className="text-muted-foreground/60 font-normal">(optional)</span></label>
+          <Input value={(s.title as string) ?? ""} onChange={(e) => onChange({ ...section, settings: { ...s, title: e.target.value } })} />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Text</label>
+          <textarea
+            value={(s.text as string) ?? ""}
+            onChange={(e) => onChange({ ...section, settings: { ...s, text: e.target.value } })}
+            rows={3}
+            className="w-full px-3 py-2 text-sm rounded-lg border bg-background resize-y focus:border-primary focus:ring-1 focus:ring-primary"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Image URL</label>
+          <Input value={(s.image as string) ?? ""} onChange={(e) => onChange({ ...section, settings: { ...s, image: e.target.value } })} placeholder="https://..." />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Image position</label>
+          <div className="flex gap-2">
+            {(["left", "right"] as const).map((side) => (
+              <button
+                key={side}
+                type="button"
+                onClick={() => onChange({ ...section, settings: { ...s, image_side: side } })}
+                className={`px-3 py-1.5 rounded-md text-sm border transition-colors capitalize ${
+                  (s.image_side ?? "left") === side
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "hover:bg-accent"
+                }`}
+              >
+                {side}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -203,7 +250,7 @@ function SectionEditor({ section, onChange }: { section: Section; onChange: (s: 
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
-        The form inherits your widget settings (fields, styles, button text). Edit those in the{" "}
+        The form inherits your widget settings (fields, styles). Edit those in the{" "}
         <span className="text-primary underline cursor-pointer">Widget Settings</span> tab.
       </p>
       <div>
@@ -213,6 +260,14 @@ function SectionEditor({ section, onChange }: { section: Section; onChange: (s: 
       <div>
         <label className="block text-xs font-medium text-muted-foreground mb-1">Form Subtitle <span className="text-muted-foreground/60 font-normal">(optional)</span></label>
         <Input value={(s.subtitle as string) ?? ""} onChange={(e) => onChange({ ...section, settings: { ...s, subtitle: e.target.value } })} placeholder="Join 500+ founders on the waitlist" />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Button Text</label>
+        <Input value={(s.button_text as string) ?? "Join the waitlist"} onChange={(e) => onChange({ ...section, settings: { ...s, button_text: e.target.value } })} />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Email Placeholder</label>
+        <Input value={(s.placeholder as string) ?? "you@example.com"} onChange={(e) => onChange({ ...section, settings: { ...s, placeholder: e.target.value } })} />
       </div>
     </div>
   );
@@ -224,6 +279,8 @@ function SectionListItem({
   section,
   idx,
   total,
+  open,
+  onToggleOpen,
   onRemove,
   onToggle,
   onMove,
@@ -232,17 +289,18 @@ function SectionListItem({
   section: Section;
   idx: number;
   total: number;
+  open: boolean;
+  onToggleOpen: () => void;
   onRemove: (id: string) => void;
   onToggle: (id: string) => void;
   onMove: (id: string, dir: -1 | 1) => void;
   onUpdate: (s: Section) => void;
 }) {
-  const [open, setOpen] = useState(false);
   const meta = SECTION_META[section.type] ?? { emoji: "📄", label: section.type };
 
   return (
     <div className={`border rounded-xl overflow-hidden ${!section.visible ? "opacity-60" : ""}`}>
-      <div className="flex items-center gap-2 px-3 py-2.5 bg-card hover:bg-muted/50 cursor-pointer select-none" onClick={() => setOpen(!open)}>
+      <div className="flex items-center gap-2 px-3 py-2.5 bg-card hover:bg-muted/50 cursor-pointer select-none" onClick={onToggleOpen}>
         <span className="text-base flex-shrink-0">{meta.emoji}</span>
         <span className="flex-1 text-sm font-medium truncate">{meta.label}</span>
         <div className="flex items-center gap-0.5 ml-auto" onClick={(e) => e.stopPropagation()}>
@@ -328,13 +386,45 @@ function renderPreviewSection(section: Section, s: Record<string, unknown>, glob
     return (
       <div key={section.id} className="py-8 space-y-4 max-w-xl mx-auto">
         {(s.title as string) && <h2 className="text-2xl font-bold text-center">{(s.title as string)}</h2>}
-        <div className="space-y-3">
-          {questions.map((q, i) => (
-            <div key={i} className="rounded-xl bg-card border p-4">
-              <p className="font-medium">{q.question || "Question"}</p>
-              {q.answer && <p className="text-sm text-muted-foreground mt-1">{q.answer}</p>}
+        <div className="space-y-2">
+          {questions.map((q, i) => {
+            const title = q.question || "Question";
+            const body = q.answer || "";
+            return (
+              <details key={i} className="group rounded-xl bg-card border">
+                <summary className="flex items-center justify-between p-4 cursor-pointer select-none font-medium list-none">
+                  {title}
+                  <svg className="size-4 text-muted-foreground transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                </summary>
+                {body && <p className="px-4 pb-4 text-sm text-muted-foreground">{body}</p>}
+              </details>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  if (section.type === "media_text") {
+    const imageUrl = (s.image as string) || "";
+    const imageSide = (s.image_side as string) || "left";
+    const isLeft = imageSide === "left";
+    return (
+      <div key={section.id} className="py-8 max-w-3xl mx-auto">
+        <div className={`flex flex-col ${isLeft ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8`}>
+          {imageUrl ? (
+            <div className="w-full md:w-1/2">
+              <img src={imageUrl} alt="" className="w-full rounded-xl object-cover aspect-video bg-muted" />
             </div>
-          ))}
+          ) : (
+            <div className="w-full md:w-1/2 bg-muted rounded-xl aspect-video flex items-center justify-center">
+              <span className="text-sm text-muted-foreground">Image</span>
+            </div>
+          )}
+          <div className="w-full md:w-1/2 space-y-3">
+            {(s.title as string) && <h2 className="text-2xl font-bold">{(s.title as string)}</h2>}
+            {(s.text as string) && <p className="text-sm text-muted-foreground whitespace-pre-line">{(s.text as string)}</p>}
+          </div>
         </div>
       </div>
     );
@@ -345,9 +435,9 @@ function renderPreviewSection(section: Section, s: Record<string, unknown>, glob
       {(s.title as string) && <h2 className="text-xl font-bold">{(s.title as string)}</h2>}
       {(s.subtitle as string) && <p className="text-sm text-muted-foreground">{(s.subtitle as string)}</p>}
       <form className="flex flex-col gap-3" onSubmit={(e) => e.preventDefault()}>
-        <input type="email" placeholder="you@example.com" className="w-full px-3 py-2 rounded-lg border bg-card text-sm" disabled />
+        <input type="email" placeholder={(s.placeholder as string) || "you@example.com"} className="w-full px-3 py-2 rounded-lg border bg-card text-sm" disabled />
         <button type="button" className="w-full px-4 py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: global.button_color, color: global.button_text_color }} disabled>
-          Join the waitlist
+          {(s.button_text as string) || "Join the waitlist"}
         </button>
       </form>
       {global.show_count && <p className="text-xs text-muted-foreground">0 signups</p>}
@@ -365,6 +455,7 @@ export function PageBuilderClient({ waitlistId, slug, initialSections, initialGl
   const [addSectionOpen, setAddSectionOpen] = useState(false);
   const [globalOpen, setGlobalOpen] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [openSectionId, setOpenSectionId] = useState<string | null>(null);
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const pageUrl = `${appUrl}/p/${slug}`;
@@ -488,6 +579,8 @@ export function PageBuilderClient({ waitlistId, slug, initialSections, initialGl
                 section={section}
                 idx={idx}
                 total={sections.length}
+                open={openSectionId === section.id}
+                onToggleOpen={() => setOpenSectionId(openSectionId === section.id ? null : section.id)}
                 onRemove={removeSection}
                 onToggle={toggleSection}
                 onMove={moveSection}

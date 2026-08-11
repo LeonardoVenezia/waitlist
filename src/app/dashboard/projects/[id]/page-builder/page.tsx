@@ -33,7 +33,7 @@ export default async function PageBuilderPage(props: {
 
 export interface Section {
   id: string;
-  type: "hero" | "features" | "how_it_works" | "faq" | "form";
+  type: "hero" | "features" | "how_it_works" | "faq" | "form" | "media_text";
   visible: boolean;
   order: number;
   settings: Record<string, unknown>;
