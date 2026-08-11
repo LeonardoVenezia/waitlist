@@ -20,7 +20,7 @@ function MilestonesDisplay({ milestones }: { milestones: Array<{ count: number; 
 
 interface PageSection {
   id: string;
-  type: "hero" | "features" | "how_it_works" | "faq" | "form";
+  type: "hero" | "features" | "how_it_works" | "faq" | "form" | "media_text";
   visible: boolean;
   order: number;
   settings: Record<string, unknown>;
@@ -232,21 +232,15 @@ export default async function HostedPage(props: {
                         {s.title as string}
                       </h2>
                     )}
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {questions.map((q, i) => (
-                        <div
-                          key={i}
-                          className="rounded-xl bg-card border p-4"
-                        >
-                          <p className="font-medium">
+                        <details key={i} className="group rounded-xl bg-card border">
+                          <summary className="flex items-center justify-between p-4 cursor-pointer select-none font-medium list-none">
                             {q.question || "Question"}
-                          </p>
-                          {q.answer && (
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {q.answer}
-                            </p>
-                          )}
-                        </div>
+                            <svg className="size-4 text-muted-foreground transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                          </summary>
+                          {q.answer && <p className="px-4 pb-4 text-sm text-muted-foreground">{q.answer}</p>}
+                        </details>
                       ))}
                     </div>
                   </section>
@@ -282,6 +276,29 @@ export default async function HostedPage(props: {
                     />
                   </section>
                 );
+
+              case "media_text": {
+                const imageUrl = (s.image as string) || "";
+                const imageSide = (s.image_side as string) || "left";
+                const isLeft = imageSide === "left";
+                return (
+                  <section key={section.id} className="py-8 max-w-3xl mx-auto">
+                    <div className={`flex flex-col ${isLeft ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8`}>
+                      {imageUrl ? (
+                        <div className="w-full md:w-1/2">
+                          <img src={imageUrl} alt="" className="w-full rounded-xl object-cover aspect-video bg-muted" />
+                        </div>
+                      ) : (
+                        <div className="w-full md:w-1/2 bg-muted rounded-xl aspect-video" />
+                      )}
+                      <div className="w-full md:w-1/2 space-y-3">
+                        {(s.title as string) && <h2 className="text-2xl font-bold">{(s.title as string)}</h2>}
+                        {(s.text as string) && <p className="text-sm text-muted-foreground whitespace-pre-line">{(s.text as string)}</p>}
+                      </div>
+                    </div>
+                  </section>
+                );
+              }
             }
           })}
           {(settings.referral as { reward_text?: string })?.reward_text && (
