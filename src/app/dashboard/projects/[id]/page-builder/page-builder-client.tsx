@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ImageUpload } from "@/components/shared/image-upload";
 import type { Section, GlobalSettings } from "./page";
 import { savePageSections } from "./actions";
 
@@ -220,8 +221,12 @@ function SectionEditor({ section, onChange }: { section: Section; onChange: (s: 
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Image URL</label>
-          <Input value={(s.image as string) ?? ""} onChange={(e) => onChange({ ...section, settings: { ...s, image: e.target.value } })} placeholder="https://..." />
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Image</label>
+          <ImageUpload
+            value={(s.image as string) ?? ""}
+            onChange={(v) => onChange({ ...section, settings: { ...s, image: v } })}
+            onRemove={() => onChange({ ...section, settings: { ...s, image: "" } })}
+          />
         </div>
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">Image position</label>
@@ -406,9 +411,13 @@ function renderPreviewSection(section: Section, s: Record<string, unknown>, glob
   }
 
   if (section.type === "media_text") {
-    const imageUrl = (s.image as string) || "";
+    const imagePath = (s.image as string) || "";
     const imageSide = (s.image_side as string) || "left";
     const isLeft = imageSide === "left";
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:54321";
+    const imageUrl = imagePath
+      ? imagePath.startsWith("http") ? imagePath : `${supabaseUrl}/storage/v1/object/public/showcase-images/${imagePath}`
+      : "";
     return (
       <div key={section.id} className="py-8 max-w-3xl mx-auto">
         <div className={`flex flex-col ${isLeft ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8`}>

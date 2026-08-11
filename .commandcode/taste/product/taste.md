@@ -25,3 +25,4 @@
 - Slug fields should auto-generate from the name on every keystroke, not just when the slug is empty. The only exception: when editing an already-published resource, the slug should be locked/frozen. Confidence: 0.80
 # editor-design
 - Form/editor sections should expose all relevant customizable fields directly (title, subtitle, button text, placeholder) rather than burying some settings in other tabs or inheriting them from a separate configuration. Users expect to edit everything about a section in one place. Confidence: 0.70
+- Media/image fields should support direct file upload (drag-and-drop or file picker), not just URL pasting. Users expect to upload images from their device rather than finding and pasting external URLs. Confidence: 0.85
