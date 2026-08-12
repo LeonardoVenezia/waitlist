@@ -4,6 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { SubscribersTable } from "./subscribers-table";
 
+export const dynamic = "force-dynamic";
+
 const PAGE_SIZE = 25;
 
 export default async function SubscribersPage(props: {

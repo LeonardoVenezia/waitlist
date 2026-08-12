@@ -55,10 +55,18 @@ export default async function ExportPage(props: {
             <CardTitle>CSV</CardTitle>
             <CardDescription>Export your subscribers as a CSV file.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <a href={`/api/projects/${id}/export?format=csv${filterQs ? "&" + filterQs : ""}`}>
-              <Button>Export CSV</Button>
-            </a>
+          <CardContent className="space-y-2">
+            <div className="flex flex-col gap-2">
+              <a href={`/api/projects/${id}/export?format=csv${filterQs ? "&" + filterQs : ""}`}>
+                <Button className="w-full">All subscribers</Button>
+              </a>
+              <a href={`/api/projects/${id}/export?format=csv&verified=verified${filterQs ? "&" + filterQs : ""}`}>
+                <Button variant="outline" className="w-full">Verified only</Button>
+              </a>
+              <a href={`/api/projects/${id}/export?format=csv&verified=unverified${filterQs ? "&" + filterQs : ""}`}>
+                <Button variant="outline" className="w-full">Unverified only</Button>
+              </a>
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -66,10 +74,18 @@ export default async function ExportPage(props: {
             <CardTitle>XLSX</CardTitle>
             <CardDescription>Export your subscribers as an Excel file.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <a href={`/api/projects/${id}/export?format=xlsx${filterQs ? "&" + filterQs : ""}`}>
-              <Button variant="outline">Export XLSX</Button>
-            </a>
+          <CardContent className="space-y-2">
+            <div className="flex flex-col gap-2">
+              <a href={`/api/projects/${id}/export?format=xlsx${filterQs ? "&" + filterQs : ""}`}>
+                <Button className="w-full">All subscribers</Button>
+              </a>
+              <a href={`/api/projects/${id}/export?format=xlsx&verified=verified${filterQs ? "&" + filterQs : ""}`}>
+                <Button variant="outline" className="w-full">Verified only</Button>
+              </a>
+              <a href={`/api/projects/${id}/export?format=xlsx&verified=unverified${filterQs ? "&" + filterQs : ""}`}>
+                <Button variant="outline" className="w-full">Unverified only</Button>
+              </a>
+            </div>
           </CardContent>
         </Card>
       </div>

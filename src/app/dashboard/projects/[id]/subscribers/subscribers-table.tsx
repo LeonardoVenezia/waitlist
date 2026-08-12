@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { deleteSubscriber } from "./actions";
+import { deleteSubscriber, verifyAllSubscribers } from "./actions";
 
 type Subscriber = Database["public"]["Tables"]["subscribers"]["Row"];
 
@@ -82,8 +82,17 @@ export function SubscribersTable({
   };
 
   const unvalidatedCount = subscribers.filter((s) => !s.email_status).length;
+  const unverifiedCount = subscribers.filter((s) => !s.verified).length;
   const allSelected =
     subscribers.length > 0 && subscribers.every((s) => selected.has(s.id));
+
+  const verifyAll = async () => {
+    if (!confirm(`Mark all ${unverifiedCount} subscriber(s) as verified?`)) return;
+    startTransition(async () => {
+      await verifyAllSubscribers(waitlistId);
+      router.refresh();
+    });
+  };
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -165,20 +174,6 @@ export function SubscribersTable({
   const resetFilters = () => {
     setSearchValue("");
     router.push(`/dashboard/projects/${waitlistId}/subscribers`);
-  };
-
-  // Column visibility — from URL or default
-  const cols = {
-    name: rawParams.get("col_name") !== "0",
-    country: rawParams.get("col_country") !== "0",
-  };
-
-  const toggleCol = (col: "name" | "country") => {
-    const params = new URLSearchParams(rawParams.toString());
-    params.set(`col_${col}`, cols[col] ? "0" : "1");
-    router.push(
-      `/dashboard/projects/${waitlistId}/subscribers?${params.toString()}`,
-    );
   };
 
   const start = page * pageSize + 1;
@@ -300,26 +295,16 @@ export function SubscribersTable({
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => toggleCol("name")}
-            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
-              cols.name
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            Name
-          </button>
-          <button
-            onClick={() => toggleCol("country")}
-            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
-              cols.country
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            Country
-          </button>
+          {unvalidatedCount > 0 && (
+            <Button variant="ghost" size="xs" onClick={validateAll}>
+              Validate {unvalidatedCount} emails
+            </Button>
+          )}
+          {unverifiedCount > 0 && (
+            <Button variant="ghost" size="xs" onClick={verifyAll} disabled={isPending}>
+              Verify all
+            </Button>
+          )}
         </div>
       </div>
 
@@ -341,10 +326,8 @@ export function SubscribersTable({
               <TableHead className="w-24">Status</TableHead>
               <TableHead className="w-20 text-center">Verif.</TableHead>
               <TableHead className="w-24 text-center">Referrals</TableHead>
-              {cols.name && <TableHead className="w-32">Name</TableHead>}
-              {cols.country && (
-                <TableHead className="w-20">Country</TableHead>
-              )}
+              <TableHead className="w-32">Name</TableHead>
+              <TableHead className="w-20">Country</TableHead>
               <TableHead className="w-28">Date</TableHead>
               <TableHead className="w-16"></TableHead>
             </TableRow>
@@ -427,16 +410,12 @@ export function SubscribersTable({
                     <TableCell className="text-center">
                       {sub.referral_count}
                     </TableCell>
-                    {cols.name && (
-                      <TableCell className="text-xs text-muted-foreground">
-                        {sub.name ?? "—"}
-                      </TableCell>
-                    )}
-                    {cols.country && (
-                      <TableCell className="text-xs text-muted-foreground">
-                        {sub.country ?? "—"}
-                      </TableCell>
-                    )}
+                    <TableCell className="text-xs text-muted-foreground">
+                      {sub.name ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {sub.country ?? "—"}
+                    </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {new Date(sub.created_at).toLocaleDateString()}
                     </TableCell>
