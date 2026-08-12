@@ -171,10 +171,9 @@ export function SubscribersTable({
   const cols = {
     name: rawParams.get("col_name") !== "0",
     country: rawParams.get("col_country") !== "0",
-    extras: rawParams.get("col_extras") !== "0",
   };
 
-  const toggleCol = (col: "name" | "country" | "extras") => {
+  const toggleCol = (col: "name" | "country") => {
     const params = new URLSearchParams(rawParams.toString());
     params.set(`col_${col}`, cols[col] ? "0" : "1");
     router.push(
@@ -321,16 +320,6 @@ export function SubscribersTable({
           >
             Country
           </button>
-          <button
-            onClick={() => toggleCol("extras")}
-            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
-              cols.extras
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            Extras
-          </button>
         </div>
       </div>
 
@@ -356,9 +345,6 @@ export function SubscribersTable({
               {cols.country && (
                 <TableHead className="w-20">Country</TableHead>
               )}
-              {cols.extras && (
-                <TableHead className="w-20">Extras</TableHead>
-              )}
               <TableHead className="w-28">Date</TableHead>
               <TableHead className="w-16"></TableHead>
             </TableRow>
@@ -378,7 +364,6 @@ export function SubscribersTable({
             ) : (
               subscribers.map((sub, i) => {
                 const isSel = selected.has(sub.id);
-                const meta = (sub.metadata ?? {}) as Record<string, unknown>;
                 return (
                   <TableRow
                     key={sub.id}
@@ -450,13 +435,6 @@ export function SubscribersTable({
                     {cols.country && (
                       <TableCell className="text-xs text-muted-foreground">
                         {sub.country ?? "—"}
-                      </TableCell>
-                    )}
-                    {cols.extras && (
-                      <TableCell className="text-xs text-muted-foreground">
-                        {meta.custom_fields
-                          ? String(meta.custom_fields)
-                          : "—"}
                       </TableCell>
                     )}
                     <TableCell className="text-xs text-muted-foreground">

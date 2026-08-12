@@ -4,6 +4,7 @@
 # communication
 - Communicate in Spanish (user's native language). Confidence: 0.85
 - Agent should proactively ask for needed information (reference material, clarifications) rather than making assumptions or proceeding with incomplete context. Confidence: 0.75
+- When the user shares external advice/content (blog posts, Reddit threads), they want a critical, contextualized verdict on what actually applies to their stack and stage — separating relevant points from generic or irrelevant ones — rather than blanket acceptance of the advice. Confidence: 0.60
 # user-expertise
 - User is stronger at frontend than database/backend; provide detailed, step-by-step explanations for database and infrastructure tasks. Confidence: 0.70
 # debugging
@@ -11,6 +12,10 @@
 - When debugging third-party service issues (e.g., Paddle), user shares the full page HTML/source code rather than describing what they see on screen. Confidence: 0.70
 # deployment
 - Prefer infrastructure-level configuration (e.g., Cloudflare settings, environment variables) over client-side code changes for fixing deployment/security issues; modifying code unnecessarily can break existing functionality. Confidence: 0.65
+- Prefers keeping each platform in its natural role (Vercel for Next.js hosting, Cloudflare for DNS/CDN/proxy) rather than consolidating onto a single provider; values simple, low-maintenance infrastructure and avoids migrations that add complexity or break existing features. Confidence: 0.65
+# third-party-services
+- Wants to understand the operational limits, failure modes, and production-readiness (rate limits, ToS, cost) of third-party services before relying on them — specifically asks what the limits are and what happens when they're exhausted, expecting graceful degradation rather than silent breakage of core flows. Confidence: 0.60
+- Prefers free, infrastructure-native alternatives already available in the existing stack (e.g., Cloudflare's CF-IPCountry header) over adding third-party APIs that carry rate limits, cost, or production restrictions. Confidence: 0.70
 # product
 See [product/taste.md](product/taste.md)
 # workflow

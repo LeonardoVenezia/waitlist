@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateReferralCode } from "@/lib/api/referral-code";
 import { isDisposableEmail } from "@/lib/disposable-emails";
+import { getEmailQuality } from "@/lib/email-validation";
+import { getCountryFromHeaders } from "@/lib/geo";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { validateTurnstileToken } from "@/lib/api/validate-turnstile";
 import { getSubscriberCount, getSubscriberPosition } from "@/lib/api/position";
@@ -38,6 +40,7 @@ export async function POST(request: Request) {
 
   const publicKey = body.public_key as string;
   const email = (body.email as string)?.toLowerCase().trim();
+  const name = (body.name as string)?.trim() || null;
   const refCode = body.ref as string | undefined;
   const turnstileToken = body.turnstile_token as string | undefined;
   const customFields = body.fields ? JSON.parse(body.fields as string) : undefined;
@@ -110,6 +113,10 @@ export async function POST(request: Request) {
       { status: 429 },
     );
   }
+
+  // 5b. Email quality (MX lookup) + country from Cloudflare header
+  const emailQuality = await getEmailQuality(email);
+  const country = getCountryFromHeaders(headersList);
 
   // 6. Generate referral code
   let referralCode = generateReferralCode();
@@ -185,9 +192,12 @@ export async function POST(request: Request) {
     .insert({
       waitlist_id: waitlist.id,
       email,
+      name,
       referral_code: referralCode,
       referred_by: referredById,
       status: isOverLimit ? "hidden" : "active",
+      email_status: emailQuality,
+      country,
       metadata: metadata as unknown as Json,
     })
     .select("id")
