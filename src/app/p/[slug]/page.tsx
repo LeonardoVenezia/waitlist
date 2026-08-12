@@ -110,33 +110,43 @@ export default async function HostedPage(props: {
           {visibleSections.map((section) => {
             const s = section.settings ?? {};
             switch (section.type) {
-              case "hero":
+              case "hero": {
+                const bgPath = (s.bg_image as string) || "";
+                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:54321";
+                const bgUrl = bgPath
+                  ? bgPath.startsWith("http") ? bgPath : `${supabaseUrl}/storage/v1/object/public/showcase-images/${bgPath}`
+                  : "";
                 return (
                   <section
                     key={section.id}
-                    className="text-center py-12 space-y-4"
+                    className={`text-center py-16 space-y-4 relative ${bgUrl ? "bg-cover bg-center -mx-6 sm:-mx-0" : ""}`}
+                    style={bgUrl ? { backgroundImage: `url(${bgUrl})` } : undefined}
                   >
-                    <h1 className="text-3xl font-bold">
-                      {(s.title as string) || waitlist.name}
-                    </h1>
-                    {(s.subtitle as string) && (
-                      <p className="text-muted-foreground">
-                        {s.subtitle as string}
-                      </p>
-                    )}
-                    <PublicWaitlistForm
-                      publicKey={waitlist.public_key}
-                      waitlistId={waitlist.id}
-                      settings={settings}
-                      slug={waitlist.slug}
-                      ctaLabel={(s.cta_label as string) || "Join the waitlist"}
-                      buttonColor={global.button_color ?? "#0ea5e9"}
-                      buttonTextColor={global.button_text_color ?? "#ffffff"}
-                      showCount={global.show_count ?? true}
-                      showLeaderboard={global.show_leaderboard ?? true}
-                    />
+                    {bgUrl && <div className="absolute inset-0 bg-black/40" />}
+                    <div className={`relative z-10 ${bgUrl ? "text-white" : ""} space-y-4`}>
+                      <h1 className="text-3xl font-bold">
+                        {(s.title as string) || waitlist.name}
+                      </h1>
+                      {(s.subtitle as string) && (
+                        <p className={bgUrl ? "text-white/80" : "text-muted-foreground"}>
+                          {s.subtitle as string}
+                        </p>
+                      )}
+                      <PublicWaitlistForm
+                        publicKey={waitlist.public_key}
+                        waitlistId={waitlist.id}
+                        settings={settings}
+                        slug={waitlist.slug}
+                        ctaLabel={(s.cta_label as string) || "Join the waitlist"}
+                        buttonColor={global.button_color ?? "#0ea5e9"}
+                        buttonTextColor={global.button_text_color ?? "#ffffff"}
+                        showCount={global.show_count ?? true}
+                        showLeaderboard={global.show_leaderboard ?? true}
+                      />
+                    </div>
                   </section>
                 );
+              }
 
               case "features": {
                 const items =
@@ -225,7 +235,7 @@ export default async function HostedPage(props: {
                 return (
                   <section
                     key={section.id}
-                    className="py-8 space-y-4 max-w-xl mx-auto"
+                    className="py-8 space-y-4"
                   >
                     {(s.title as string) && (
                       <h2 className="text-2xl font-bold text-center">
@@ -290,10 +300,10 @@ export default async function HostedPage(props: {
                     <div className={`flex flex-col ${isLeft ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8`}>
                       {imageUrl ? (
                         <div className="w-full md:w-1/2">
-                          <img src={imageUrl} alt="" className="w-full rounded-xl object-cover aspect-video bg-muted" />
+                          <img src={imageUrl} alt="" className="w-full rounded-xl object-cover h-64 md:h-80 bg-muted" />
                         </div>
                       ) : (
-                        <div className="w-full md:w-1/2 bg-muted rounded-xl aspect-video" />
+                        <div className="w-full md:w-1/2 bg-muted rounded-xl h-64 md:h-80" />
                       )}
                       <div className="w-full md:w-1/2 space-y-3">
                         {(s.title as string) && <h2 className="text-2xl font-bold">{(s.title as string)}</h2>}

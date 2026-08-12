@@ -1,3 +1,5 @@
+# security
+- User is security-conscious and proactively verifies that sensitive operations (admin clients, service role keys, signed URL generation) are server-side only and never exposed to the client. Expects explicit confirmation of security boundaries when architectural changes touch auth/credentials. Confidence: 0.70
 # communication
 - Communicate in Spanish (user's native language). Confidence: 0.85
 - Agent should proactively ask for needed information (reference material, clarifications) rather than making assumptions or proceeding with incomplete context. Confidence: 0.75

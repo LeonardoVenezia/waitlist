@@ -93,6 +93,14 @@ function SectionEditor({ section, onChange }: { section: Section; onChange: (s: 
           <label className="block text-xs font-medium text-muted-foreground mb-1">CTA Button Text</label>
           <Input value={(s.cta_label as string) ?? "Join the waitlist"} onChange={(e) => onChange({ ...section, settings: { ...s, cta_label: e.target.value } })} />
         </div>
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Background Image <span className="text-muted-foreground/60 font-normal">(optional)</span></label>
+          <ImageUpload
+            value={(s.bg_image as string) ?? ""}
+            onChange={(v) => onChange({ ...section, settings: { ...s, bg_image: v } })}
+            onRemove={() => onChange({ ...section, settings: { ...s, bg_image: "" } })}
+          />
+        </div>
       </div>
     );
   }
@@ -337,13 +345,25 @@ function SectionListItem({
 
 function renderPreviewSection(section: Section, s: Record<string, unknown>, global: GlobalSettings) {
   if (section.type === "hero") {
+    const bgPath = (s.bg_image as string) || "";
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:54321";
+    const bgUrl = bgPath
+      ? bgPath.startsWith("http") ? bgPath : `${supabaseUrl}/storage/v1/object/public/showcase-images/${bgPath}`
+      : "";
     return (
-      <div key={section.id} className="text-center py-12 space-y-4">
-        <h1 className="text-3xl font-bold">{(s.title as string) || "Join the waitlist"}</h1>
-        {(s.subtitle as string) && <p className="text-muted-foreground">{s.subtitle as string}</p>}
-        <button className="inline-flex px-6 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: global.button_color, color: global.button_text_color }}>
-          {(s.cta_label as string) || "Join the waitlist"}
-        </button>
+      <div
+        key={section.id}
+        className={`text-center py-16 space-y-4 relative ${bgUrl ? "bg-cover bg-center" : ""}`}
+        style={bgUrl ? { backgroundImage: `url(${bgUrl})` } : undefined}
+      >
+        {bgUrl && <div className="absolute inset-0 bg-black/30" />}
+        <div className={`relative z-10 ${bgUrl ? "text-white" : ""}`}>
+          <h1 className="text-3xl font-bold">{(s.title as string) || "Join the waitlist"}</h1>
+          {(s.subtitle as string) && <p className="text-muted-foreground">{s.subtitle as string}</p>}
+          <button className="inline-flex mt-4 px-6 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: global.button_color, color: global.button_text_color }}>
+            {(s.cta_label as string) || "Join the waitlist"}
+          </button>
+        </div>
       </div>
     );
   }
@@ -389,7 +409,7 @@ function renderPreviewSection(section: Section, s: Record<string, unknown>, glob
   if (section.type === "faq") {
     const questions = (s.questions as Array<{ question: string; answer: string }>) ?? [];
     return (
-      <div key={section.id} className="py-8 space-y-4 max-w-xl mx-auto">
+      <div key={section.id} className="py-8 space-y-4">
         {(s.title as string) && <h2 className="text-2xl font-bold text-center">{(s.title as string)}</h2>}
         <div className="space-y-2">
           {questions.map((q, i) => {
@@ -423,10 +443,10 @@ function renderPreviewSection(section: Section, s: Record<string, unknown>, glob
         <div className={`flex flex-col ${isLeft ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8`}>
           {imageUrl ? (
             <div className="w-full md:w-1/2">
-              <img src={imageUrl} alt="" className="w-full rounded-xl object-cover aspect-video bg-muted" />
+              <img src={imageUrl} alt="" className="w-full rounded-xl object-cover h-64 md:h-80 bg-muted" />
             </div>
           ) : (
-            <div className="w-full md:w-1/2 bg-muted rounded-xl aspect-video flex items-center justify-center">
+            <div className="w-full md:w-1/2 bg-muted rounded-xl h-64 md:h-80 flex items-center justify-center">
               <span className="text-sm text-muted-foreground">Image</span>
             </div>
           )}

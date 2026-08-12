@@ -17,7 +17,7 @@
 - Prefers plain, self-explanatory labels over marketing or technical jargon. If a label doesn't sound intuitive to a new user, it should be renamed — even common terms like "Referral link" can be confusing when a simpler alternative like "Waitlist URL" or "Your link" exists. Confidence: 0.80
 # ui-patterns
 - Prefers accordion/collapsible patterns for long pages or lists of editable sections: only one section open at a time to keep the interface compact and avoid excessive scrolling. Confidence: 0.75
-- Sibling/adjacent sections on the same page should maintain consistent max-width and layout; visual misalignment between sections (e.g., FAQ narrower than How It Works) is noticeable and should be fixed. Confidence: 0.65
+- Sibling/adjacent sections on the same page should maintain consistent max-width and layout; visual misalignment between sections (e.g., FAQ narrower than How It Works) is noticeable and should be fixed. Confidence: 0.80
 
 # form-ux
 - Cancel/secondary actions should be plain text links, not styled buttons — styled cancel buttons blend in with primary actions and create bad UX ("se camufla"). Confidence: 0.70
