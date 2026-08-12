@@ -19,6 +19,7 @@
 - Prefers accordion/collapsible patterns for long pages or lists of editable sections: only one section open at a time to keep the interface compact and avoid excessive scrolling. Confidence: 0.75
 - Sibling/adjacent sections on the same page should maintain consistent max-width and layout; visual misalignment between sections (e.g., FAQ narrower than How It Works) is noticeable and should be fixed. Confidence: 0.80
 - Dislikes column filter/visibility toggles in data tables when they add clutter; prefers showing useful columns (name, country) by default and removing the toggle controls entirely rather than hiding data behind extra buttons. Confidence: 0.60
+- Prefers recognizable icon buttons (e.g., a trash can) over abbreviated text labels like "Del" for destructive row-level actions in data tables. Confidence: 0.60
 
 # feature-design
 - When a feature doesn't work end-to-end (saved but never rendered, toggle that doesn't affect output), user prefers removing it entirely rather than leaving dead code in the UI that confuses users. Confidence: 0.75
