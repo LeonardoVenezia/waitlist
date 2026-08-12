@@ -30,7 +30,6 @@ export async function GET(
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
   const cornerRadius = (layout.corner_radius as number) ?? 10;
-  const alignment = (layout.alignment as string) ?? "center";
   const fontSize = (layout.font_size as number) ?? 15;
   const borderWidth = (layout.border_width as number) ?? 1;
   const borderColor = (input.border_color as string) ?? "#cccccc";
@@ -50,12 +49,6 @@ export async function GET(
   const thankShowPosition = (thankYou.show_position as boolean) ?? true;
   const thankShowReferral = (thankYou.show_referral_link as boolean) ?? true;
 
-  const alignMap: Record<string, string> = {
-    start: "flex-start",
-    center: "center",
-    end: "flex-end",
-  };
-
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -64,7 +57,7 @@ export async function GET(
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: transparent; }
-    .wl-widget { display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: ${alignMap[alignment] ?? "center"}; }
+    .wl-widget { display: flex; flex-direction: column; gap: 8px; width: 100%; }
     .wl-input { width: 100%; padding: 8px 12px; border: ${borderWidth}px solid ${borderColor}; border-radius: ${cornerRadius}px; font-size: ${fontSize}px; color: ${inputText}; background: ${inputBg}; outline: none; }
     .wl-input::placeholder { color: ${placeholderColor}; }
     .wl-input:focus { border-color: ${buttonBg}; box-shadow: 0 0 0 1px ${buttonBg}; }
@@ -74,7 +67,7 @@ export async function GET(
     .wl-msg { padding: 8px 12px; border-radius: ${cornerRadius}px; font-size: 14px; width: 100%; display: none; }
     .wl-msg.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; display: block; }
     .wl-msg.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; display: block; }
-    .wl-success { display: none; flex-direction: column; gap: 12px; width: 100%; align-items: ${alignMap[alignment] ?? "center"}; }
+    .wl-success { display: none; flex-direction: column; gap: 12px; width: 100%; }
     .wl-success .wl-ref-link { font-size: 13px; background: ${inputBg}; border: 1px solid ${borderColor}; border-radius: ${cornerRadius}px; padding: 6px 10px; word-break: break-all; width: 100%; text-align: center; color: ${inputText}; }
     .wl-success .wl-copy-btn { padding: 6px 12px; font-size: 13px; border-radius: ${cornerRadius}px; cursor: pointer; color: ${buttonText}; background: ${buttonBg}; border: 1px solid ${buttonBorder}; }
   </style>

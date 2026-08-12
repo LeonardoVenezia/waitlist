@@ -13,7 +13,7 @@ type Tab = "design" | "install" | "leaderboard";
 interface WidgetSettings {
   [key: string]: unknown;
   collect_name?: boolean;
-  layout?: { corner_radius: number; alignment: string; font_size: number; border_width: number };
+  layout?: { corner_radius: number; font_size: number; border_width: number };
   input?: { border_color: string; background_color: string; text_color: string; placeholder_color: string };
   button?: { label: string; background_color: string; text_color: string; border_color: string };
 }
@@ -137,7 +137,7 @@ export function IntegrationClient({
 
   // ── Widget state ──
   const [wCollectName, setWCollectName] = useState(widget.collect_name ?? false);
-  const [wLayout, setWLayout] = useState(widget.layout ?? { corner_radius: 10, alignment: "center", font_size: 15, border_width: 1 });
+  const [wLayout, setWLayout] = useState(widget.layout ?? { corner_radius: 10, font_size: 15, border_width: 1 });
   const [wInput, setWInput] = useState(widget.input ?? { border_color: "#cccccc", background_color: "#ffffff", text_color: "#374151", placeholder_color: "#999999" });
   const [wButton, setWButton] = useState(widget.button ?? { label: "Sign Up", background_color: "#0ea5e9", text_color: "#ffffff", border_color: "#0ea5e9" });
 
@@ -297,7 +297,7 @@ async function joinWaitlist(e) {
             {/* Layout */}
             <Section
               title="Layout"
-              subtitle="Shape, alignment, spacing."
+              subtitle="Shape and spacing."
               icon={<svg className="size-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" /></svg>}
             >
               <div className="pt-4 space-y-5 divide-y">
@@ -336,20 +336,6 @@ async function joinWaitlist(e) {
                     onChange={(e) => setWLayout({ ...wLayout, corner_radius: Number(e.target.value) })}
                     className="w-full mt-3"
                   />
-                </section>
-                {/* Alignment */}
-                <section className="py-5">
-                  <h4 className="text-xs font-semibold tracking-wide uppercase">Alignment</h4>
-                  <div className="grid grid-cols-3 gap-2 mt-3">
-                    {(["start", "center", "end"] as const).map((a) => (
-                      <label key={a} className="cursor-pointer">
-                        <input type="radio" name="alignment" value={a} checked={wLayout.alignment === a} onChange={() => setWLayout({ ...wLayout, alignment: a })} className="sr-only peer" />
-                        <span className={`flex items-center gap-2 px-3 py-2.5 text-xs rounded-lg border transition ${wLayout.alignment === a ? "text-primary bg-primary/5 border-primary" : "text-muted-foreground bg-muted/50 border-input hover:border-primary/30"}`}>
-                          {a === "start" ? "Left" : a === "center" ? "Center" : "Right"}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
                 </section>
                 {/* Font size + Border width */}
                 <section className="grid grid-cols-2 gap-5 pt-5">
@@ -425,7 +411,6 @@ async function joinWaitlist(e) {
                   style={{
                     maxWidth: 320,
                     width: "100%",
-                    alignItems: wLayout.alignment === "center" ? "center" : wLayout.alignment === "end" ? "flex-end" : "flex-start",
                   }}
                   onSubmit={(e) => e.preventDefault()}
                 >
