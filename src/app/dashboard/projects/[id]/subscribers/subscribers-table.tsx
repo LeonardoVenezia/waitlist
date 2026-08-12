@@ -56,6 +56,14 @@ export function SubscribersTable({
   // Email validation
   const [validating, setValidating] = useState<Set<string>>(new Set());
 
+  // Confirm modal + pending single delete
+  const [confirmAction, setConfirmAction] = useState<null | {
+    type: "single" | "bulk" | "verify";
+    id?: string;
+    count?: number;
+  }>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
   const validateOne = async (id: string) => {
     setValidating((prev) => new Set(prev).add(id));
     await fetch("/api/projects/subscribers/validate", {
@@ -86,12 +94,8 @@ export function SubscribersTable({
   const allSelected =
     subscribers.length > 0 && subscribers.every((s) => selected.has(s.id));
 
-  const verifyAll = async () => {
-    if (!confirm(`Mark all ${unverifiedCount} subscriber(s) as verified?`)) return;
-    startTransition(async () => {
-      await verifyAllSubscribers(waitlistId);
-      router.refresh();
-    });
+  const verifyAll = () => {
+    setConfirmAction({ type: "verify", count: unverifiedCount });
   };
 
   const toggleSelect = (id: string) => {
@@ -112,22 +116,39 @@ export function SubscribersTable({
   };
 
   // Delete single
-  const deleteSingle = async (id: string) => {
-    if (!confirm("Delete this subscriber?")) return;
-    await deleteSubscriber(id);
-    router.refresh();
+  const deleteSingle = (id: string) => {
+    setConfirmAction({ type: "single", id });
   };
 
   // Bulk delete
-  const bulkDelete = async () => {
-    if (!confirm(`Delete ${selected.size} subscriber(s)?`)) return;
-    startTransition(async () => {
-      for (const id of selected) {
-        await deleteSubscriber(id);
-      }
-      setSelected(new Set());
+  const bulkDelete = () => {
+    setConfirmAction({ type: "bulk", count: selected.size });
+  };
+
+  const doConfirmAction = async () => {
+    if (!confirmAction) return;
+    const action = confirmAction;
+    setConfirmAction(null);
+
+    if (action.type === "verify") {
+      startTransition(async () => {
+        await verifyAllSubscribers(waitlistId);
+        router.refresh();
+      });
+    } else if (action.type === "single" && action.id) {
+      setPendingDeleteId(action.id);
+      await deleteSubscriber(action.id);
+      setPendingDeleteId(null);
       router.refresh();
-    });
+    } else if (action.type === "bulk") {
+      startTransition(async () => {
+        for (const id of selected) {
+          await deleteSubscriber(id);
+        }
+        setSelected(new Set());
+        router.refresh();
+      });
+    }
   };
 
   // Details modal
@@ -420,15 +441,24 @@ export function SubscribersTable({
                       {new Date(sub.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      <button
-                        onClick={() => deleteSingle(sub.id)}
-                        className="p-1.5 rounded-md text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
-                        title="Delete"
-                      >
-                        <svg className="size-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                        </svg>
-                      </button>
+                      {pendingDeleteId === sub.id ? (
+                        <span className="flex h-8 w-8 items-center justify-center">
+                          <svg className="size-4 animate-spin text-muted-foreground" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => deleteSingle(sub.id)}
+                          className="p-1.5 rounded-md text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          title="Delete"
+                        >
+                          <svg className="size-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                          </svg>
+                        </button>
+                      )}
                     </TableCell>
                   </TableRow>
                 );
@@ -573,8 +603,8 @@ export function SubscribersTable({
                 variant="destructive"
                 size="sm"
                 onClick={() => {
-                  deleteSingle(detailSub.id);
                   setDetailSub(null);
+                  deleteSingle(detailSub.id);
                 }}
               >
                 Delete
@@ -585,6 +615,59 @@ export function SubscribersTable({
                 onClick={() => setDetailSub(null)}
               >
                 Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm modal */}
+      {confirmAction && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setConfirmAction(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl bg-background p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <h2 className="text-lg font-semibold">
+                {confirmAction.type === "verify"
+                  ? "Verify all subscribers"
+                  : "Delete subscribers"}
+              </h2>
+              <button
+                onClick={() => setConfirmAction(null)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-sm text-muted-foreground mb-6">
+              {confirmAction.type === "verify" &&
+                `Mark all ${confirmAction.count} unverified subscriber(s) as verified?`}
+              {confirmAction.type === "single" &&
+                "This will permanently delete this subscriber. This action cannot be undone."}
+              {confirmAction.type === "bulk" &&
+                `This will permanently delete ${confirmAction.count} subscriber(s). This action cannot be undone.`}
+            </p>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmAction(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant={confirmAction.type === "verify" ? "default" : "destructive"}
+                size="sm"
+                onClick={doConfirmAction}
+              >
+                {confirmAction.type === "verify" ? "Verify" : "Delete"}
               </Button>
             </div>
           </div>
