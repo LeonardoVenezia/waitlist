@@ -26,11 +26,14 @@ A founder pays once and gets a **suite of pre-launch tools** for their project: 
 
 ## Current state
 
-- MVP with waitlist-only tool
-- DB model: account → waitlists (each waitlist = one project)
-- Purchases are per-waitlist but conceptually should be per-project
-- Multi-project UX not implemented (sidebar shows tools, not projects)
-- Visual identity is monochrome sans-serif — needs to evolve toward elegant/serif
+- Core product: **Showcase / Directory** (homepage is the directory, `/product/[slug]`, `/products`, `/launches`, `/coming-soon`)
+- Tools integrated per project: Waitlist, Showcase, Testimonials (phase 1)
+- Waitlist: hosted page (`/p/[slug]`), widget embed (`/w/e/[publicKey]`), referral system, leaderboard, analytics, export
+- Page Builder: hosted landing page with hero/features/how-it-works/faq/form/media-text sections
+- Testimonials: forms (`/t/[slug]`), manual entry, dashboard management, section on `/product/[slug]` (widget/import/studio are phase 2+)
+- Email validation (MX lookup) + geoIP (Cloudflare CF-IPCountry) on signup
+- DB model: account → project (each project has waitlist + showcase + testimonials)
+- Plan is per-project (free/launch/grow/scale), one-time payment via Paddle
 
 ## Design principles (draft)
 

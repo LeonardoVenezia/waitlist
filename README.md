@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# [PACK]
 
-## Getting Started
+Suite of pre-launch tools for founders. Pay once per project, get waitlist + showcase/directory + testimonials (and more tools planned).
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router, React 19, RSC, Server Actions)
+- **Supabase** (auth, Postgres, storage) — cloud project, migrations in `supabase/migrations/`
+- **Tailwind CSS v4** + shadcn/ui
+- **Resend** (transactional email)
+- **Paddle** (one-time payments)
+- **Cloudflare Turnstile** (captcha) + `CF-IPCountry` (geo)
+
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Env vars in `.env.local` (see `.env.example`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Key architecture
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Data model**: `account` → `project` (one project = waitlist + showcase + testimonials). Table `projects` (was `waitlists`, renamed in migration 010).
+- **Auth**: Supabase. `handle_new_user()` trigger auto-creates profile + account.
+- **RLS pattern**: `createClient()` (RLS) for reads, `createAdminClient()` (service role) for writes, always verifying ownership with an RLS read first.
+- **Feature gating**: `src/lib/plans.ts` — `hasFeature(plan, feature)`. Plans are per-project, one-time payment.
+- **Public routes**: `/` (directory), `/product/[slug]`, `/p/[slug]` (waitlist), `/t/[slug]` (testimonial form), `/w/e/[publicKey]` (widget).
+- **Dashboard**: `/dashboard/projects/[id]/...` (waitlist), `/dashboard/showcases/[id]`, `/dashboard/projects/[id]/testimonials/...`
 
-## Learn More
+## Database migrations
 
-To learn more about Next.js, take a look at the following resources:
+Migrations live in `supabase/migrations/` and are applied **manually** via Supabase SQL Editor (no CLI). The production DB may be out of sync — check missing columns by running the SQL in each migration.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Docs
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `PRODUCT.md` — product vision, business model, current state
+- `DESIGN.md` — design system and component guidance
+- `AGENTS.md` — agent instructions (read node_modules/next/dist/docs for breaking changes)

@@ -8,5 +8,8 @@
 - Reviews work incrementally and gives feedback one issue at a time rather than in a single large batch; signals upcoming rounds explicitly ("te voy a ir diciendo los detalles que me voy encontrando"). Confidence: 0.70
 - Values industry-standard, professional architectural patterns over "it works" workarounds; wants to know how established platforms do it and aligns with those approaches (e.g., presigned URLs over sequential file uploads through the server). Confidence: 0.70
 - Disable action buttons (publish, update, unpublish) during async operations like uploads to prevent double-submission and signal that work is in progress. Confidence: 0.75
-- For database schema changes, prefers raw SQL statements to paste into the Supabase SQL Editor over CLI migration commands (`supabase db push`); explicitly asks for copy-pasteable SQL. Confidence: 0.80
+- For database schema changes, prefers raw SQL statements to paste into the Supabase SQL Editor over CLI migration commands (`supabase db push`); explicitly asks for copy-pasteable SQL and chooses to stay manual even when installing the CLI is offered as the "recommended" option. Confidence: 0.90
 - Expects the "ponytail" skill to be active when coding — considers it important and asks the agent to activate it if it's not already on. Three levels available: lite, full, ultra. Confidence: 0.85
+# documentation
+- Values cross-session continuity: proactively considers whether documentation is needed so a new session can quickly understand the project structure and purpose, and is open to maintaining/updating project docs (README, PRODUCT.md) to support fast onboarding. Confidence: 0.55
+- For operational/infrastructure tasks (e.g., preparing for a production launch), prefers a written step-by-step guide with a prioritized checklist (what blocks launch vs. what can wait) saved as a dedicated doc file, rather than only a chat explanation. Confidence: 0.60

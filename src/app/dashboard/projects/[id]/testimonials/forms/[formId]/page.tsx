@@ -39,7 +39,7 @@ export default async function FormEditorPage(props: {
     .select("*", { count: "exact", head: true })
     .eq("form_id", formId);
 
-  const publicUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/t/${form.slug}`;
+  const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/t/${form.slug}`;
 
   const statusVariant: Record<string, "default" | "secondary" | "outline"> = {
     published: "default",

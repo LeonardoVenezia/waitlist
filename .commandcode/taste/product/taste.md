@@ -1,5 +1,6 @@
 # product-strategy
 - The showcase (directory listing) is the core product surface; the project/waitlist overview is secondary. Routing, onboarding flows, and primary CTAs should orient users toward the showcase, not the waitlist management page. Confidence: 0.80
+- Dogfoods their own product: uses their own waitlist as the first real-world deployment to validate the market while continuing to build, and wants it live and working early rather than waiting until everything is finished. Confidence: 0.70
 # pricing-model
 - Prefers one-time payment (not subscription) per project; users pay once for lifetime access to a project. Confidence: 0.75
 - New projects require a separate payment; each project starts on a free tier with the option to upgrade via one-time payment. Confidence: 0.70

@@ -11,7 +11,7 @@ export async function sendEmail({
   to,
   subject,
   html,
-  from = "Waitlist <waitlist@updates.[PACK].com>",
+  from = process.env.EMAIL_FROM ?? "Waitlist <waitlist@updates.[PACK].com>",
 }: SendEmailParams) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
