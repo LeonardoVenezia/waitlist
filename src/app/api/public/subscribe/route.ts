@@ -9,6 +9,7 @@ import { validateTurnstileToken } from "@/lib/api/validate-turnstile";
 import { getSubscriberCount, getSubscriberPosition } from "@/lib/api/position";
 import { getLeaderboard } from "@/lib/api/leaderboard";
 import { sendEmail } from "@/lib/email";
+import { parseEmailSettings } from "@/lib/email-settings";
 import { renderWelcomeEmail } from "@/emails/welcome";
 import { renderSignupNotificationEmail } from "@/emails/signup-notification";
 import { renderVerificationEmail } from "@/emails/verify";
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
   }
 
   const settings = waitlist.settings as Record<string, unknown>;
+  const emailSettings = parseEmailSettings(settings.email);
   const referralSettings = settings.referral as Record<string, unknown> || {};
   const milestones = (referralSettings.milestones as Array<{ count: number; reward: string }>) ?? [];
   const rewardText = referralSettings.reward_text as string | undefined;
@@ -264,20 +266,32 @@ export async function POST(request: Request) {
 
   // 14. Send emails (fire-and-forget — non-blocking)
   const plan = waitlist.plan as "free" | "launch" | "grow" | "scale";
+  const doubleOptinActive = hasFeature(plan, "double_optin") && emailSettings.verifyEmail;
+  const welcomeLink = `${pageUrl}?ref=${referralCode}`;
 
   // Welcome email (Launch+)
-  if (hasFeature(plan, "welcome_email")) {
+  if (
+    hasFeature(plan, "welcome_email") &&
+    emailSettings.welcomeEmail &&
+    !(doubleOptinActive && emailSettings.welcomeAfterVerification)
+  ) {
     sendEmail({
       to: email,
-      subject: `You're on the waitlist for ${waitlist.name}!`,
+      subject: emailSettings.welcomeSubject ?? `You're on the waitlist for ${waitlist.name}!`,
       html: renderWelcomeEmail({
         email,
         waitlistName: waitlist.name,
-        referralLink: `${pageUrl}?ref=${referralCode}`,
+        referralLink: welcomeLink,
         position,
         milestones,
         rewardText,
+        message: emailSettings.welcomeMessage,
+        signature: emailSettings.signature,
+        hideCta: emailSettings.hideWelcomeCta,
+        customizeCta: emailSettings.customizeWelcomeCta,
+        ctaUrl: emailSettings.welcomeCtaUrl,
       }),
+      replyTo: emailSettings.replyTo,
     }).catch(() => {});
   }
 
@@ -313,7 +327,7 @@ export async function POST(request: Request) {
   }
 
   // Verification email (Launch+ — double opt-in)
-  if (hasFeature(plan, "double_optin")) {
+  if (doubleOptinActive) {
     const vToken = createVerificationToken(subscriber.id, email);
     const verifyLink = `${process.env.NEXT_PUBLIC_APP_URL}/api/public/verify?token=${vToken}`;
     sendEmail({
@@ -323,7 +337,9 @@ export async function POST(request: Request) {
         email,
         waitlistName: waitlist.name,
         verificationLink: verifyLink,
+        message: emailSettings.verifyMessage,
       }),
+      replyTo: emailSettings.replyTo,
     }).catch(() => {});
   }
 

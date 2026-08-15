@@ -5,18 +5,25 @@ interface SendEmailParams {
   subject: string;
   html: string;
   from?: string;
+  replyTo?: string;
 }
 
 export async function sendEmail({
   to,
   subject,
   html,
-  from = process.env.EMAIL_FROM ?? "Waitlist <waitlist@updates.[PACK].com>",
+  from = process.env.EMAIL_FROM,
+  replyTo,
 }: SendEmailParams) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.warn("RESEND_API_KEY not set — email not sent");
     return { ok: false, error: "RESEND_API_KEY not configured" };
+  }
+
+  if (!from) {
+    console.warn("EMAIL_FROM not set — email not sent");
+    return { ok: false, error: "EMAIL_FROM not configured" };
   }
 
   const res = await fetch(RESEND_API_URL, {
@@ -30,6 +37,7 @@ export async function sendEmail({
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
+      ...(replyTo ? { reply_to: replyTo } : {}),
     }),
   });
 

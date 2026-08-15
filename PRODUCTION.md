@@ -64,14 +64,15 @@ Las imágenes del showcase y del page builder usan el bucket `showcase-images`. 
 - Marcarlo como **Public**
 - Verificar que la URL funcione: `https://tudominio.supabase.co/storage/v1/object/public/showcase-images/...`
 
-### Paso 5 — Resend: dominio verificado
+### Paso 5 — Resend: dominio verificado y remitente
 
-Hoy el email usa `from = "Waitlist <waitlist@updates.[PACK].com>"` — eso es un placeholder **inválido** que va a caer en spam o rebotar.
+El dominio `leovenezia.dev` ya está verificado en Resend. El remitente se configura con la variable `EMAIL_FROM`:
 
-1. En Resend, agregá tu dominio y verificá los registros DNS (SPF + DKIM)
-2. Cambiá el `from` en `src/lib/email.ts` por algo real, ej. `YourApp <updates@tudominio.com>`
+```bash
+EMAIL_FROM="LaunchList <hola@leovenezia.dev>"
+```
 
-**No saltes esto.** Sin dominio verificado en Resend, los emails de verificación y notificación no van a llegar.
+Tenés que setearla en `.env.local` y en Vercel → Settings → Environment Variables. Sin `EMAIL_FROM`, `sendEmail` no envía nada. No hace falta registrar la parte antes del `@` (ej. `hola`) por separado: con el dominio verificado, cualquier dirección de ese dominio es válida.
 
 ### Paso 6 — Paddle webhook (crítico de seguridad)
 

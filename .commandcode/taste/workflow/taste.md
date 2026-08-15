@@ -1,5 +1,6 @@
 # workflow
 - Prefers thorough analysis and planning before writing code: expects project exploration, gap analysis, and a structured plan (phases, ordered steps) before any implementation begins. Confidence: 0.95
+- When deciding whether to escalate to planning mode (or a similar process step), user defers to the agent's judgment — explicitly authorizes switching into planning mode if the agent deems it necessary ("si considerás necesario pasar al planning mode, hacélo") rather than waiting to be asked. Confidence: 0.60
 - Wants implementation work to be documented: expects a clear summary of what was built, which files were created/modified, and what each piece does — not just the code itself. Confidence: 0.80
 - Gathers reference material from competitor/peer products (HTML, screenshots, feature lists) to ground planning in concrete examples rather than abstract feature descriptions. Confidence: 0.75
 - Verifies code compiles and builds after every change: runs TypeScript type-check (`tsc --noEmit`) and production build (`next build`) as a matter of course before declaring work done. Confidence: 0.70

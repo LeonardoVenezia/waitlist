@@ -26,5 +26,11 @@ export default async function SettingsPage(props: { params: Promise<{ id: string
     .eq("account_id", waitlist.account_id)
     .order("role");
 
-  return <SettingsForm project={waitlist} members={members ?? []} />;
+  return (
+    <SettingsForm
+      project={waitlist}
+      members={members ?? []}
+      emailFrom={process.env.EMAIL_FROM}
+    />
+  );
 }

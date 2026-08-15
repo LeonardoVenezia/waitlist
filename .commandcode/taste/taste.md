@@ -19,6 +19,7 @@
 # third-party-services
 - Wants to understand the operational limits, failure modes, and production-readiness (rate limits, ToS, cost) of third-party services before relying on them — specifically asks what the limits are and what happens when they're exhausted, expecting graceful degradation rather than silent breakage of core flows. Confidence: 0.60
 - Prefers free, infrastructure-native alternatives already available in the existing stack (e.g., Cloudflare's CF-IPCountry header) over adding third-party APIs that carry rate limits, cost, or production restrictions. Confidence: 0.70
+- Prefers transactional/notification emails to be sent from their own branded, provider-verified domain (e.g., leovenezia.dev) rather than a generic or placeholder sender address. Confidence: 0.60
 # product
 See [product/taste.md](product/taste.md)
 # workflow

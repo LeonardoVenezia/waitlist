@@ -65,22 +65,51 @@ export async function updateProjectSettings(
   const initialPosition = Number(formData.get("submissions.initial_position")) || 0;
   const positionToMove = Number(formData.get("submissions.position_to_move")) || 10;
 
-  // Email
-  const emailSettings = {
-    welcome_email: formData.get("email.welcome_email") === "on",
-    welcome_subject: formData.get("email.welcome_subject") as string || "",
-    welcome_message: formData.get("email.welcome_message") as string || "",
-    hide_welcome_cta: formData.get("email.hide_welcome_cta") === "on",
-    customize_welcome_cta: formData.get("email.customize_welcome_cta") === "on",
-    welcome_cta_url: formData.get("email.welcome_cta_url") as string || "",
-    welcome_after_verification: formData.get("email.welcome_after_verification") === "on",
-    verify_email: formData.get("email.verify_email") === "on",
-    verify_message: formData.get("email.verify_message") as string || "",
-    signature: formData.get("email.signature") as string || "",
-    reply_to_name: formData.get("email.reply_to_name") as string || "",
-    reply_to_email: formData.get("email.reply_to_email") as string || "",
-    sender_domain: formData.get("email.sender_domain") as string || "default",
-  };
+  // Email — preserve existing values unless the Email tab is active
+  const activeTab = formData.get("active_tab") as string | null;
+  const existingEmail = ((current?.settings as Record<string, unknown>)?.email ??
+    {}) as Record<string, unknown>;
+
+  const emailSettings = activeTab === "Email"
+    ? {
+        welcome_email: formData.has("email.welcome_email")
+          ? formData.get("email.welcome_email") === "on"
+          : existingEmail.welcome_email !== false,
+        welcome_subject: formData.has("email.welcome_subject")
+          ? (formData.get("email.welcome_subject") as string) || ""
+          : (existingEmail.welcome_subject as string) ?? "",
+        welcome_message: formData.has("email.welcome_message")
+          ? (formData.get("email.welcome_message") as string) || ""
+          : (existingEmail.welcome_message as string) ?? "",
+        hide_welcome_cta: formData.has("email.hide_welcome_cta")
+          ? formData.get("email.hide_welcome_cta") === "on"
+          : existingEmail.hide_welcome_cta === true,
+        customize_welcome_cta: formData.has("email.customize_welcome_cta")
+          ? formData.get("email.customize_welcome_cta") === "on"
+          : existingEmail.customize_welcome_cta === true,
+        welcome_cta_url: formData.has("email.welcome_cta_url")
+          ? (formData.get("email.welcome_cta_url") as string) || ""
+          : (existingEmail.welcome_cta_url as string) ?? "",
+        welcome_after_verification: formData.has("email.welcome_after_verification")
+          ? formData.get("email.welcome_after_verification") === "on"
+          : existingEmail.welcome_after_verification === true,
+        verify_email: formData.has("email.verify_email")
+          ? formData.get("email.verify_email") === "on"
+          : existingEmail.verify_email !== false,
+        verify_message: formData.has("email.verify_message")
+          ? (formData.get("email.verify_message") as string) || ""
+          : (existingEmail.verify_message as string) ?? "",
+        signature: formData.has("email.signature")
+          ? (formData.get("email.signature") as string) || ""
+          : (existingEmail.signature as string) ?? "",
+        reply_to_name: formData.has("email.reply_to_name")
+          ? (formData.get("email.reply_to_name") as string) || ""
+          : (existingEmail.reply_to_name as string) ?? "",
+        reply_to_email: formData.has("email.reply_to_email")
+          ? (formData.get("email.reply_to_email") as string) || ""
+          : (existingEmail.reply_to_email as string) ?? "",
+      }
+    : existingEmail;
 
   // Notifications
   const notifications = {

@@ -26,6 +26,7 @@
 
 # feature-design
 - When a feature doesn't work end-to-end (saved but never rendered, toggle that doesn't affect output), user prefers removing it entirely rather than leaving dead code in the UI that confuses users. Confidence: 0.75
+- When a settings/UI feature exists but isn't actually wired to its effect (disconnected config), the user prefers connecting it so it works end-to-end rather than leaving it dead — removal is the fallback for features not worth wiring up. Confidence: 0.60
 - For simple embeddable widgets, prefers minimal configuration surface; rejects over-engineering with options (width, arrangement) that the embedder can control via their own container/CSS. The widget should do one thing well. Confidence: 0.70
 
 # form-ux

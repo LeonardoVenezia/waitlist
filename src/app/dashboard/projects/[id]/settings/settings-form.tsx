@@ -41,7 +41,10 @@ function ToggleRow({ id, name, label, description, defaultChecked, disabled }: {
         <Label htmlFor={id}>{label}</Label>
         {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
-      <Switch id={id} name={name} defaultChecked={defaultChecked} disabled={disabled} />
+      <div>
+        <Switch id={id} name={name} defaultChecked={defaultChecked} disabled={disabled} />
+        <input type="hidden" name={name} value="off" disabled={disabled} />
+      </div>
     </div>
   );
 }
@@ -206,7 +209,7 @@ function PostSignupEditor({ defaultPostSignup }: { defaultPostSignup: { enabled?
 }
 
 // ── Main ──
-export function SettingsForm({ project, members }: { project: Project; members: TeamMember[] }) {
+export function SettingsForm({ project, members, emailFrom }: { project: Project; members: TeamMember[]; emailFrom?: string }) {
   const settings = project.settings as Record<string, unknown>;
   const branding = (settings.branding ?? {}) as Record<string, unknown>;
   const hero = (settings.hero ?? {}) as Record<string, unknown>;
@@ -230,6 +233,7 @@ export function SettingsForm({ project, members }: { project: Project; members: 
 
   return (
     <form action={formAction} className="space-y-6">
+      <input type="hidden" name="active_tab" value={tab} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl">Settings</h1>
@@ -459,7 +463,7 @@ export function SettingsForm({ project, members }: { project: Project; members: 
               <CardDescription>How emails are sent to subscribers.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <ToggleRow id="email.welcome_email" name="email.welcome_email" label="Send welcome email" defaultChecked={(email.welcome_email as boolean) ?? false} disabled={project.plan === "free"} />
+              <ToggleRow id="email.welcome_email" name="email.welcome_email" label="Send welcome email" defaultChecked={(email.welcome_email as boolean) ?? project.plan !== "free"} disabled={project.plan === "free"} />
               <div className="space-y-2">
                 <Label htmlFor="email.welcome_subject">Welcome email subject</Label>
                 <Input id="email.welcome_subject" name="email.welcome_subject" defaultValue={(email.welcome_subject as string) ?? ""} disabled={project.plan === "free"} />
@@ -475,7 +479,7 @@ export function SettingsForm({ project, members }: { project: Project; members: 
                 <Input id="email.welcome_cta_url" name="email.welcome_cta_url" defaultValue={(email.welcome_cta_url as string) ?? ""} disabled={project.plan === "free"} />
               </div>
               <ToggleRow id="email.welcome_after_verification" name="email.welcome_after_verification" label="Send welcome after verification" defaultChecked={(email.welcome_after_verification as boolean) ?? false} disabled={project.plan === "free"} />
-              <ToggleRow id="email.verify_email" name="email.verify_email" label="Send verification email" defaultChecked={(email.verify_email as boolean) ?? false} disabled={project.plan === "free"} />
+              <ToggleRow id="email.verify_email" name="email.verify_email" label="Send verification email" defaultChecked={(email.verify_email as boolean) ?? project.plan !== "free"} disabled={project.plan === "free"} />
               <div className="space-y-2">
                 <Label htmlFor="email.verify_message">Verification message</Label>
                 <textarea id="email.verify_message" name="email.verify_message" rows={2} defaultValue={(email.verify_message as string) ?? ""} className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm" disabled={project.plan === "free"} />
@@ -495,11 +499,10 @@ export function SettingsForm({ project, members }: { project: Project; members: 
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email.sender_domain">Send from</Label>
-                <select id="email.sender_domain" name="email.sender_domain" defaultValue={(email.sender_domain as string) ?? "default"} disabled={project.plan !== "grow"} className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm">
-                  <option value="default">LaunchList (hello@getlaunchlist.com)</option>
-                </select>
-                {project.plan !== "grow" && <p className="text-xs text-primary">Upgrade to Grow to send from your domain</p>}
+                <Label>Send from</Label>
+                <p className="text-xs text-muted-foreground">
+                  {emailFrom || "LaunchList <hola@leovenezia.dev>"}
+                </p>
               </div>
             </CardContent>
           </Card>
