@@ -6,6 +6,7 @@
 - New projects require a separate payment; each project starts on a free tier with the option to upgrade via one-time payment. Confidence: 0.70
 - Each project bundles all products (currently 1 of 3 planned); the user pays for the whole project, not per product. Confidence: 0.70
 - Supports upgrade paths within a project: users who start free can pay to unlock higher tiers later. Confidence: 0.65
+- Expects free tiers to retain core delivery functionality (welcome emails reach subscribers even on Free); paid tiers gate premium features — double opt-in/verification and customization (custom sender domain, subject, message, signature, reply-to) — rather than cutting core email delivery entirely. Confidence: 0.80
 # navigation
 - Back buttons should use browser history (`router.back()`) with a fallback to home (`/`) for users arriving from external sites with no history. Confidence: 0.80
 # architecture
@@ -39,3 +40,4 @@
 # data-quality
 - Values data hygiene: expects signup email validation to block junk/fake entries (invalid formats, disposable domains) so the subscriber database isn't polluted with garbage. Confidence: 0.70
 - Dislikes empty/dead columns in data tables; for fields with no data source, prefers either wiring them up properly (e.g., geoIP for Country) or removing them entirely rather than leaving them perpetually blank. Confidence: 0.70
+empty/dead columns in data tables; for fields with no data source, prefers either wiring them up properly (e.g., geoIP for Country) or removing them entirely rather than leaving them perpetually blank. Confidence: 0.70

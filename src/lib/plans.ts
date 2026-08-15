@@ -32,8 +32,8 @@ export const PLANS: PlanInfo[] = [
     ],
     featureKeys: [
       "widget", "form_custom", "referrals", "export_csv_xlsx",
-      "basic_analytics", "email_notification", "fraud_detection", "email_validation",
-      "testimonials",
+      "basic_analytics", "email_notification", "welcome_email",
+      "fraud_detection", "email_validation", "testimonials",
     ],
     cta: "Get started",
     href: "/signup",

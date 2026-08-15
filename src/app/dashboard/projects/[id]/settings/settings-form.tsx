@@ -463,7 +463,7 @@ export function SettingsForm({ project, members, emailFrom }: { project: Project
               <CardDescription>How emails are sent to subscribers.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <ToggleRow id="email.welcome_email" name="email.welcome_email" label="Send welcome email" defaultChecked={(email.welcome_email as boolean) ?? project.plan !== "free"} disabled={project.plan === "free"} />
+              <ToggleRow id="email.welcome_email" name="email.welcome_email" label="Send welcome email" defaultChecked={(email.welcome_email as boolean) ?? true} />
               <div className="space-y-2">
                 <Label htmlFor="email.welcome_subject">Welcome email subject</Label>
                 <Input id="email.welcome_subject" name="email.welcome_subject" defaultValue={(email.welcome_subject as string) ?? ""} disabled={project.plan === "free"} />
