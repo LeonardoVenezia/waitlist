@@ -1,6 +1,10 @@
 # product-strategy
 - The showcase (directory listing) is the core product surface; the project/waitlist overview is secondary. Routing, onboarding flows, and primary CTAs should orient users toward the showcase, not the waitlist management page. Confidence: 0.80
+- Directory listings should be permanent, not transient: products remain listed after launch (and get updated), so scarcity should come from early access rather than from the listing being temporary. Rejects positioning the directory as "pre-launch only" because that implies listings disappear after launch. Confidence: 0.85
 - Dogfoods their own product: uses their own waitlist as the first real-world deployment to validate the market while continuing to build, and wants it live and working early rather than waiting until everything is finished. Confidence: 0.70
+- Operates lean during validation: prefers to stay on free tiers (Vercel Hobby, Supabase free, Resend free) and defer paid infrastructure and branding decisions (custom domain, project name) until market interest is proven. Confidence: 0.65
+- Cares that the end-user-facing experience stays clean and native even while validating on free infrastructure: wants a concrete assessment of user-visible roughness (e.g., platform subdomain URLs in referral/hosted links) and how to polish it, not just whether it technically works. Confidence: 0.55
+- Positions the directory's core value proposition around discoverability — SEO (search ranking), GEO (Generative Engine Optimization for AI answer engines), and broad visibility — rather than social proof (testimonials) or tooling bundles. Confidence: 0.55
 # pricing-model
 - Prefers one-time payment (not subscription) per project; users pay once for lifetime access to a project. Confidence: 0.75
 - New projects require a separate payment; each project starts on a free tier with the option to upgrade via one-time payment. Confidence: 0.70
@@ -17,6 +21,8 @@
 - Empty states and first-time user experiences must be informative and guide the user — show URLs, actionable steps, and clear next actions rather than leaving new users confused. When the user identifies a UX problem but isn't sure of the best solution, the agent should analyze it deeply and propose a complete UX solution. Confidence: 0.70
 # ux-copy
 - Prefers plain, self-explanatory labels over marketing or technical jargon. If a label doesn't sound intuitive to a new user, it should be renamed — even common terms like "Referral link" can be confusing when a simpler alternative like "Waitlist URL" or "Your link" exists. Confidence: 0.80
+# copy-language
+- End-user-facing marketing/landing copy (waitlist pages, directory landing) should be written in English to target an international founder/early-adopter audience, even though communication with the agent happens in Spanish. Confidence: 0.70
 # ui-patterns
 - Prefers accordion/collapsible patterns for long pages or lists of editable sections: only one section open at a time to keep the interface compact and avoid excessive scrolling. Confidence: 0.75
 - Sibling/adjacent sections on the same page should maintain consistent max-width and layout; visual misalignment between sections (e.g., FAQ narrower than How It Works) is noticeable and should be fixed. Confidence: 0.80
@@ -29,6 +35,7 @@
 - When a feature doesn't work end-to-end (saved but never rendered, toggle that doesn't affect output), user prefers removing it entirely rather than leaving dead code in the UI that confuses users. Confidence: 0.75
 - When a settings/UI feature exists but isn't actually wired to its effect (disconnected config), the user prefers connecting it so it works end-to-end rather than leaving it dead — removal is the fallback for features not worth wiring up. Confidence: 0.60
 - For simple embeddable widgets, prefers minimal configuration surface; rejects over-engineering with options (width, arrangement) that the embedder can control via their own container/CSS. The widget should do one thing well. Confidence: 0.70
+- When a product offers multiple integration/embed methods and one is broken (e.g., a legacy cross-origin snippet), prefers deleting the broken method and exposing only the working option(s), while still wanting to hear about any additional viable alternatives rather than a single-method-only answer. Confidence: 0.70
 
 # form-ux
 - Cancel/secondary actions should be plain text links, not styled buttons — styled cancel buttons blend in with primary actions and create bad UX ("se camufla"). Confidence: 0.70
@@ -39,5 +46,8 @@
 - Media/image fields should support direct file upload (drag-and-drop or file picker), not just URL pasting. Users expect to upload images from their device rather than finding and pasting external URLs. Confidence: 0.85
 # data-quality
 - Values data hygiene: expects signup email validation to block junk/fake entries (invalid formats, disposable domains) so the subscriber database isn't polluted with garbage. Confidence: 0.70
-- Dislikes empty/dead columns in data tables; for fields with no data source, prefers either wiring them up properly (e.g., geoIP for Country) or removing them entirely rather than leaving them perpetually blank. Confidence: 0.70
+- Dislikes # branding
+- Avoids copying a competitor's brand name when building an inspired-by product ("no les voy a robar el nombre"); uses a temporary placeholder name while deferring the real naming decision until later. Confidence: 0.70
 empty/dead columns in data tables; for fields with no data source, prefers either wiring them up properly (e.g., geoIP for Country) or removing them entirely rather than leaving them perpetually blank. Confidence: 0.70
+# typography
+- Prefers an elegant, high-contrast serif for headings and iterates on it until it feels right — moved from Instrument Serif to Playfair Display (a more classic, editorial Didone-style serif), paired with Geist sans for body text. Confidence: 0.60

@@ -7,7 +7,7 @@
 - Agent should proactively ask for needed information (reference material, clarifications) rather than making assumptions or proceeding with incomplete context. Confidence: 0.75
 - When the user shares external advice/content (blog posts, Reddit threads), they want a critical, contextualized verdict on what actually applies to their stack and stage — separating relevant points from generic or irrelevant ones — rather than blanket acceptance of the advice. Confidence: 0.60
 # user-expertise
-- User is stronger at frontend than database/backend; provide detailed, step-by-step explanations for database and infrastructure tasks. Confidence: 0.70
+- User is stronger at frontend than database/backend; provide detailed, step-by-step explanations for database and infrastructure tasks. Confidence: 0.75
 # debugging
 - When debugging, user prefers to solve root cause rather than bypass or workaround; explicitly rejects temporary bypasses. Confidence: 0.90
 - When debugging third-party service issues (e.g., Paddle), user shares the full page HTML/source code rather than describing what they see on screen. Confidence: 0.70
@@ -20,6 +20,11 @@
 - Wants to understand the operational limits, failure modes, and production-readiness (rate limits, ToS, cost) of third-party services before relying on them — specifically asks what the limits are and what happens when they're exhausted, expecting graceful degradation rather than silent breakage of core flows. Confidence: 0.60
 - Prefers free, infrastructure-native alternatives already available in the existing stack (e.g., Cloudflare's CF-IPCountry header) over adding third-party APIs that carry rate limits, cost, or production restrictions. Confidence: 0.70
 - Prefers transactional/notification emails to be sent from their own branded, provider-verified domain (e.g., leovenezia.dev) rather than a generic or placeholder sender address. Confidence: 0.60
+# product
+See [product/taste.md](product/taste.md)
+# workflow
+See [workflow/taste.md](workflow/taste.md)
+provider-verified domain (e.g., leovenezia.dev) rather than a generic or placeholder sender address. Confidence: 0.60
 # product
 See [product/taste.md](product/taste.md)
 # workflow
