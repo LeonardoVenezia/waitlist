@@ -44,10 +44,11 @@
 # editor-design
 - Form/editor sections should expose all relevant customizable fields directly (title, subtitle, button text, placeholder) rather than burying some settings in other tabs or inheriting them from a separate configuration. Users expect to edit everything about a section in one place. Confidence: 0.80
 - Media/image fields should support direct file upload (drag-and-drop or file picker), not just URL pasting. Users expect to upload images from their device rather than finding and pasting external URLs. Confidence: 0.85
+- Page builder/editor previews must faithfully mirror the real public rendering (same form fields, input visibility, button width, overlay opacity, typography) — the user flags any WYSIWYG discrepancy between preview and live page and expects the preview to be exact, not an approximation. Confidence: 0.70
 # data-quality
 - Values data hygiene: expects signup email validation to block junk/fake entries (invalid formats, disposable domains) so the subscriber database isn't polluted with garbage. Confidence: 0.70
 - Dislikes # branding
 - Avoids copying a competitor's brand name when building an inspired-by product ("no les voy a robar el nombre"); uses a temporary placeholder name while deferring the real naming decision until later. Confidence: 0.70
 empty/dead columns in data tables; for fields with no data source, prefers either wiring them up properly (e.g., geoIP for Country) or removing them entirely rather than leaving them perpetually blank. Confidence: 0.70
 # typography
-- Prefers an elegant, high-contrast serif for headings and iterates on it until it feels right — moved from Instrument Serif to Playfair Display (a more classic, editorial Didone-style serif), paired with Geist sans for body text. Confidence: 0.60
+- Prefers an elegant, high-contrast serif for headings and iterates on it until it feels right — moved from Instrument Serif to Playfair Display and rejected it ("No quedó tan bien como pensé"), settling on Italiana, paired with Geist sans for body text. Confidence: 0.70

@@ -124,7 +124,7 @@ export default async function HostedPage(props: {
                   >
                     {bgUrl && <div className="absolute inset-0 bg-black/40" />}
                     <div className={`relative z-10 ${bgUrl ? "text-white" : ""} space-y-4`}>
-                      <h1 className="text-3xl font-bold">
+                      <h1 className="text-4xl sm:text-5xl font-bold">
                         {(s.title as string) || waitlist.name}
                       </h1>
                       {(s.subtitle as string) && (
