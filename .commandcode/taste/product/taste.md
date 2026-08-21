@@ -30,6 +30,8 @@
 - Prefers recognizable icon buttons (e.g., a trash can) over abbreviated text labels like "Del" for destructive row-level actions in data tables. Confidence: 0.60
 - Wants visible feedback (e.g., a spinner) during async operations so users aren't left waiting with no indication something is happening. Confidence: 0.75
 - Rejects native browser `alert()`/`confirm()` dialogs in favor of custom, styled confirmation modals. Confidence: 0.80
+- Prefers contained, narrower form controls (e.g., a centered `max-w-sm` form) in hero/landing sections over full-width stretching; finds the more compact layout "más sentido". Confidence: 0.55
+- Prefers generous vertical spacing between stacked hero elements (title, subtitle, form input); flags cramped spacing and asks for extra margin rather than accepting the default. Confidence: 0.55
 
 # feature-design
 - When a feature doesn't work end-to-end (saved but never rendered, toggle that doesn't affect output), user prefers removing it entirely rather than leaving dead code in the UI that confuses users. Confidence: 0.75

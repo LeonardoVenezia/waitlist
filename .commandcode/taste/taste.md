@@ -12,6 +12,7 @@
 - When debugging, user prefers to solve root cause rather than bypass or workaround; explicitly rejects temporary bypasses. Confidence: 0.90
 - When debugging third-party service issues (e.g., Paddle), user shares the full page HTML/source code rather than describing what they see on screen. Confidence: 0.70
 - When reporting bugs in their own app, user includes concrete diagnostic evidence (exact endpoint URL, HTTP status code, and response body) alongside the symptom, rather than only describing what they see. Confidence: 0.70
+- Extends the same habit to CLI/tooling failures: pastes the exact raw terminal output (shell prompt, command, and error line, e.g. `zsh: command not found: cmd`) rather than paraphrasing the symptom. Confidence: 0.60
 - User independently re-tests proposed fixes (e.g., hard refresh with cache cleared) and pushes back when the symptom persists ("¿Estás seguro de que con eso alcanza?"); expects the agent to treat a still-broken report as authoritative and keep digging for the actual root cause rather than defending or over-claiming the initial fix. Confidence: 0.65
 # deployment
 - Prefer infrastructure-level configuration (e.g., Cloudflare settings, environment variables) over client-side code changes for fixing deployment/security issues; modifying code unnecessarily can break existing functionality. Confidence: 0.65

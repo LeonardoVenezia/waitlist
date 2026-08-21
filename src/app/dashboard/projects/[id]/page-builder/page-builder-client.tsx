@@ -353,14 +353,14 @@ function renderPreviewSection(section: Section, s: Record<string, unknown>, glob
     return (
       <div
         key={section.id}
-        className={`text-center py-16 space-y-4 relative ${bgUrl ? "bg-cover bg-center" : ""}`}
+        className={`text-center py-16 space-y-6 relative ${bgUrl ? "bg-cover bg-center" : ""}`}
         style={bgUrl ? { backgroundImage: `url(${bgUrl})` } : undefined}
       >
         {bgUrl && <div className="absolute inset-0 bg-black/40" />}
-        <div className={`relative z-10 ${bgUrl ? "text-white" : ""}`}>
+        <div className={`relative z-10 ${bgUrl ? "text-white" : ""} space-y-6`}>
           <h1 className="text-4xl sm:text-5xl font-bold">{(s.title as string) || "Join the waitlist"}</h1>
           {(s.subtitle as string) && <p className={bgUrl ? "text-white/80" : "text-muted-foreground"}>{s.subtitle as string}</p>}
-          <div className="max-w-sm mx-auto mt-4 space-y-4 text-left">
+          <div className="max-w-sm mx-auto space-y-4 text-left">
             <div className="space-y-2">
               <label className={`text-sm font-medium ${bgUrl ? "text-white" : ""}`}>Email</label>
               <input type="email" placeholder="you@example.com" className="w-full px-3 py-2 rounded-lg border bg-card text-sm" disabled />

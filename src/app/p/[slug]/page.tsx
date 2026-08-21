@@ -123,7 +123,7 @@ export default async function HostedPage(props: {
                     style={bgUrl ? { backgroundImage: `url(${bgUrl})` } : undefined}
                   >
                     {bgUrl && <div className="absolute inset-0 bg-black/40" />}
-                    <div className={`relative z-10 ${bgUrl ? "text-white" : ""} space-y-4`}>
+                    <div className={`relative z-10 ${bgUrl ? "text-white" : ""} space-y-6`}>
                       <h1 className="text-4xl sm:text-5xl font-bold">
                         {(s.title as string) || waitlist.name}
                       </h1>
@@ -132,17 +132,19 @@ export default async function HostedPage(props: {
                           {s.subtitle as string}
                         </p>
                       )}
-                      <PublicWaitlistForm
-                        publicKey={waitlist.public_key}
-                        waitlistId={waitlist.id}
-                        settings={settings}
-                        slug={waitlist.slug}
-                        ctaLabel={(s.cta_label as string) || "Join the waitlist"}
-                        buttonColor={global.button_color ?? "#0ea5e9"}
-                        buttonTextColor={global.button_text_color ?? "#ffffff"}
-                        showCount={global.show_count ?? true}
-                        showLeaderboard={global.show_leaderboard ?? true}
-                      />
+                      <div className="max-w-sm mx-auto">
+                        <PublicWaitlistForm
+                          publicKey={waitlist.public_key}
+                          waitlistId={waitlist.id}
+                          settings={settings}
+                          slug={waitlist.slug}
+                          ctaLabel={(s.cta_label as string) || "Join the waitlist"}
+                          buttonColor={global.button_color ?? "#0ea5e9"}
+                          buttonTextColor={global.button_text_color ?? "#ffffff"}
+                          showCount={global.show_count ?? true}
+                          showLeaderboard={global.show_leaderboard ?? true}
+                        />
+                      </div>
                     </div>
                   </section>
                 );
