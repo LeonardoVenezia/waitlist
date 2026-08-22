@@ -1,6 +1,6 @@
 import type { Plan } from "@/lib/plans";
 
-export type TemplateId = "neon" | "carbon" | "pastel";
+export type TemplateId = "neon" | "carbon" | "pastel" | "editorial" | "split";
 
 export interface NeonTemplateData {
   badge_text: string;
@@ -35,7 +35,37 @@ export interface PastelTemplateData {
   floating_tags: string[];
 }
 
-export type TemplateData = NeonTemplateData | CarbonTemplateData | PastelTemplateData;
+export interface EditorialTemplateData {
+  accent_color: string;
+  title: string;
+  title_italic: string;
+  subtitle: string;
+  cta_label: string;
+  features: Array<{ icon: string; title: string; description: string }>;
+  launch_timeline: string;
+  version_status: string;
+  social_x: string;
+  social_linkedin: string;
+  show_social_proof: boolean;
+}
+
+export interface SplitTemplateData {
+  title: string;
+  subtitle: string;
+  benefits: string[];
+  cta_label: string;
+  social_count_override: string;
+  tabs: Array<{ label: string; title: string; description: string }>;
+  testimonials: Array<{ quote: string; author: string }>;
+  show_social_proof: boolean;
+}
+
+export type TemplateData =
+  | NeonTemplateData
+  | CarbonTemplateData
+  | PastelTemplateData
+  | EditorialTemplateData
+  | SplitTemplateData;
 
 export interface TemplateDefinition {
   id: TemplateId;
@@ -78,6 +108,49 @@ const pastelDefaults: PastelTemplateData = {
   floating_tags: ["Early access", "No spam", "Founder-only"],
 };
 
+const editorialDefaults: EditorialTemplateData = {
+  accent_color: "#2563eb",
+  title: "Built for people who build",
+  title_italic: "what's next",
+  subtitle: "Join the waitlist and get early access to the tools behind the next wave of products.",
+  cta_label: "Join the list →",
+  features: [
+    { icon: "◆", title: "Launch faster", description: "Everything you need to go from idea to public." },
+    { icon: "◇", title: "Get discovered", description: "Reach founders and early adopters looking for what's new." },
+    { icon: "○", title: "Collect proof", description: "Testimonials that compound your product's credibility." },
+    { icon: "□", title: "Stay in control", description: "Clean tools, no lock-in, no unnecessary complexity." },
+  ],
+  launch_timeline: "Launching Q4 2026",
+  version_status: "Private beta",
+  social_x: "https://x.com",
+  social_linkedin: "https://linkedin.com",
+  show_social_proof: true,
+};
+
+const splitDefaults: SplitTemplateData = {
+  title: "Everything you need to launch with confidence",
+  subtitle: "One toolkit for waitlists, discovery, and social proof. Join early and shape what comes next.",
+  benefits: [
+    "Early access to new features",
+    "Founder-first directory listing",
+    "Waitlist with viral referrals",
+    "Testimonials built in",
+  ],
+  cta_label: "Request access",
+  social_count_override: "",
+  tabs: [
+    { label: "Waitlist", title: "Waitlist that grows itself", description: "Referral links, leaderboard, and smart positions built in." },
+    { label: "Showcase", title: "Your product, discovered", description: "A curated directory that puts you in front of early adopters." },
+    { label: "Proof", title: "Social proof on autopilot", description: "Collect and publish testimonials without extra tools." },
+  ],
+  testimonials: [
+    { quote: "The fastest way to validate demand before we launched.", author: "Founder, early-stage SaaS" },
+    { quote: "Our waitlist turned into our first community.", author: "Indie hacker" },
+    { quote: "Simple to set up, and the referrals actually work.", author: "Product builder" },
+  ],
+  show_social_proof: true,
+};
+
 export const TEMPLATE_DEFINITIONS: Record<TemplateId, TemplateDefinition> = {
   neon: {
     id: "neon",
@@ -99,6 +172,20 @@ export const TEMPLATE_DEFINITIONS: Record<TemplateId, TemplateDefinition> = {
     description: "Soft animated gradient with a floating glass card.",
     thumbnail: "🌸",
     defaultData: pastelDefaults,
+  },
+  editorial: {
+    id: "editorial",
+    name: "Editorial",
+    description: "High-contrast asymmetric layout with a feature grid.",
+    thumbnail: "📰",
+    defaultData: editorialDefaults,
+  },
+  split: {
+    id: "split",
+    name: "Split",
+    description: "Sticky benefits column with an interactive tabbed preview.",
+    thumbnail: "🧩",
+    defaultData: splitDefaults,
   },
 };
 
@@ -122,6 +209,10 @@ function asBool(value: unknown, fallback: boolean): boolean {
 
 function asStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
+}
+
+function asObjectArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
 }
 
 export function normalizeTemplateData(id: TemplateId, value: unknown): TemplateData {
@@ -159,17 +250,58 @@ export function normalizeTemplateData(id: TemplateId, value: unknown): TemplateD
     };
   }
 
-  const defaults = def.defaultData as PastelTemplateData;
+  if (id === "pastel") {
+    const defaults = def.defaultData as PastelTemplateData;
+    return {
+      ...defaults,
+      badge_text: asString(raw.badge_text) || defaults.badge_text,
+      title: asString(raw.title) || defaults.title,
+      subtitle: asString(raw.subtitle) || defaults.subtitle,
+      cta_label: asString(raw.cta_label) || defaults.cta_label,
+      social_count_override: asString(raw.social_count_override),
+      show_social_proof: asBool(raw.show_social_proof, defaults.show_social_proof),
+      floating_tags: asStringArray(raw.floating_tags).length
+        ? asStringArray(raw.floating_tags)
+        : defaults.floating_tags,
+    };
+  }
+
+  if (id === "editorial") {
+    const defaults = def.defaultData as EditorialTemplateData;
+    return {
+      ...defaults,
+      accent_color: asString(raw.accent_color) || defaults.accent_color,
+      title: asString(raw.title) || defaults.title,
+      title_italic: asString(raw.title_italic) || defaults.title_italic,
+      subtitle: asString(raw.subtitle) || defaults.subtitle,
+      cta_label: asString(raw.cta_label) || defaults.cta_label,
+      features: asObjectArray<EditorialTemplateData["features"][number]>(raw.features).length
+        ? asObjectArray<EditorialTemplateData["features"][number]>(raw.features)
+        : defaults.features,
+      launch_timeline: asString(raw.launch_timeline) || defaults.launch_timeline,
+      version_status: asString(raw.version_status) || defaults.version_status,
+      social_x: asString(raw.social_x) || defaults.social_x,
+      social_linkedin: asString(raw.social_linkedin) || defaults.social_linkedin,
+      show_social_proof: asBool(raw.show_social_proof, defaults.show_social_proof),
+    };
+  }
+
+  const defaults = def.defaultData as SplitTemplateData;
   return {
     ...defaults,
-    badge_text: asString(raw.badge_text) || defaults.badge_text,
     title: asString(raw.title) || defaults.title,
     subtitle: asString(raw.subtitle) || defaults.subtitle,
+    benefits: asStringArray(raw.benefits).length
+      ? asStringArray(raw.benefits)
+      : defaults.benefits,
     cta_label: asString(raw.cta_label) || defaults.cta_label,
     social_count_override: asString(raw.social_count_override),
+    tabs: asObjectArray<SplitTemplateData["tabs"][number]>(raw.tabs).length
+      ? asObjectArray<SplitTemplateData["tabs"][number]>(raw.tabs)
+      : defaults.tabs,
+    testimonials: asObjectArray<SplitTemplateData["testimonials"][number]>(raw.testimonials).length
+      ? asObjectArray<SplitTemplateData["testimonials"][number]>(raw.testimonials)
+      : defaults.testimonials,
     show_social_proof: asBool(raw.show_social_proof, defaults.show_social_proof),
-    floating_tags: asStringArray(raw.floating_tags).length
-      ? asStringArray(raw.floating_tags)
-      : defaults.floating_tags,
   };
 }

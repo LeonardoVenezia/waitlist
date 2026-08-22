@@ -265,7 +265,7 @@ export async function POST(request: Request) {
   const pageUrl = `${process.env.NEXT_PUBLIC_APP_URL}/p/${waitlist.slug}`;
 
   // 14. Send emails (fire-and-forget — non-blocking)
-  const plan = waitlist.plan as "free" | "launch" | "grow" | "scale";
+  const plan = waitlist.plan as "free" | "launch" | "grow";
   const doubleOptinActive = hasFeature(plan, "double_optin") && emailSettings.verifyEmail;
   const welcomeLink = `${pageUrl}?ref=${referralCode}`;
 

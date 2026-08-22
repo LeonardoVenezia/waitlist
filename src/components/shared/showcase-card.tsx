@@ -34,9 +34,11 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
     <Link
       href={`/product/${data.slug}`}
       className={`group block rounded-xl border overflow-hidden transition-all duration-200 ${
-        isComingSoon
-          ? "border-coming-soon/30 bg-coming-soon/[0.03] hover:border-coming-soon/50"
-          : "bg-card hover:border-primary/40 hover:shadow-sm"
+        data.featured_badge
+          ? "bg-card border-primary/25 hover:border-primary/50"
+          : isComingSoon
+            ? "border-coming-soon/30 bg-coming-soon/[0.03] hover:border-coming-soon/50"
+            : "bg-card hover:border-primary/40 hover:shadow-sm"
       }`}
     >
       <div className="aspect-video bg-muted flex items-center justify-center text-4xl relative">
@@ -73,9 +75,6 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
       <div className="p-5 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-heading font-semibold text-base truncate group-hover:text-primary transition-colors">{data.name}</h3>
-          {data.featured_badge && (
-            <Badge variant="default" className="shrink-0 text-[11px] px-1.5 py-0">Featured</Badge>
-          )}
         </div>
         <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{data.description}</p>
         <div className="flex flex-wrap gap-1.5">

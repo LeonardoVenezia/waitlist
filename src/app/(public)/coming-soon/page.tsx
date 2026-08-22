@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ShowcaseCard } from "@/components/shared/showcase-card";
 import { PublicHeader } from "@/components/shared/public-header";
+import { buildPlanMap, sortShowcases } from "@/lib/showcase-sort";
 
 export const dynamic = "force-dynamic";
 
@@ -26,11 +27,15 @@ export default async function ComingSoonPage() {
 
   const { data: rows } = await admin
     .from("showcases")
-    .select("slug, name, description, category_1, category_2, images, video_url, featured_badge, link, waitlist_id, main_type, main_image, card_image, status")
-    .eq("status", "coming_soon")
-    .order("created_at", { ascending: false });
+    .select("slug, name, description, category_1, category_2, images, video_url, featured_badge, link, waitlist_id, main_type, main_image, card_image, status, created_at")
+    .eq("status", "coming_soon");
 
   const showcases = (rows ?? []) as ShowcaseRow[];
+  const planMap = await buildPlanMap(
+    admin,
+    showcases.map((s) => s.waitlist_id),
+  );
+  const sortedShowcases = sortShowcases(showcases, planMap);
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,12 +47,12 @@ export default async function ComingSoonPage() {
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {showcases.map((s) => (
+          {sortedShowcases.map((s) => (
             <ShowcaseCard key={s.slug} data={s} />
           ))}
         </div>
 
-        {showcases.length === 0 && (
+        {sortedShowcases.length === 0 && (
           <div className="text-center py-20 text-muted-foreground">
             No products in the works yet. Be the first!
           </div>

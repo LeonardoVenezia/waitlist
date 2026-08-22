@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ShowcaseCard } from "@/components/shared/showcase-card";
 import { LaunchesList } from "@/components/shared/launches-list";
 import { PublicHeader } from "@/components/shared/public-header";
+import { buildPlanMap, sortShowcases } from "@/lib/showcase-sort";
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +30,10 @@ export default async function HomePage() {
   // This week's launches
   const { data: launches } = await admin
     .from("showcases")
-    .select("slug, name, description, main_image, published_at")
+    .select("slug, name, description, main_image, published_at, waitlist_id")
     .eq("status", "published")
     .not("published_at", "is", null)
     .gte("published_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-    .order("published_at", { ascending: false })
     .limit(15);
 
   // All products
@@ -43,17 +43,16 @@ export default async function HomePage() {
     .eq("status", "published");
 
   const showcases = (rows ?? []) as ShowcaseRow[];
+  const planMap = await buildPlanMap(
+    admin,
+    showcases.map((s) => s.waitlist_id),
+  );
+  const sortedShowcases = sortShowcases(showcases, planMap);
 
-  // Sort: random-ish shuffle per day
-  if (showcases.length > 0) {
-    const daySeed = new Date().toISOString().slice(0, 10);
-    const seed = daySeed.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-    showcases.sort((a, b) => {
-      const ha = (a.slug.split("").reduce((s, c) => s + c.charCodeAt(0), 0) + seed) % 1000;
-      const hb = (b.slug.split("").reduce((s, c) => s + c.charCodeAt(0), 0) + seed) % 1000;
-      return ha - hb;
-    });
-  }
+  const sortedLaunches = sortShowcases(
+    (launches ?? []) as Array<{ waitlist_id: string; published_at: string | null; [k: string]: unknown }>,
+    planMap,
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -63,18 +62,18 @@ export default async function HomePage() {
         <section className="mb-20">
           <div className="flex items-baseline gap-3 mb-8">
             <h2 className="font-heading text-2xl font-bold tracking-tight">This week&apos;s launches</h2>
-            {launches && launches.length > 0 && (
-              <span className="text-sm text-muted-foreground">{launches.length} new</span>
+            {sortedLaunches.length > 0 && (
+              <span className="text-sm text-muted-foreground">{sortedLaunches.length} new</span>
             )}
           </div>
-          {launches && launches.length > 0 ? (
+          {sortedLaunches.length > 0 ? (
             <LaunchesList
-              items={launches.map((l) => ({
-                slug: l.slug,
-                name: l.name,
-                description: l.description,
-                main_image: l.main_image,
-                published_at: l.published_at,
+              items={sortedLaunches.map((l) => ({
+                slug: l.slug as string,
+                name: l.name as string,
+                description: l.description as string,
+                main_image: l.main_image as string | null,
+                published_at: l.published_at as string | null,
               }))}
             />
           ) : (
@@ -88,12 +87,12 @@ export default async function HomePage() {
         <section>
           <h2 className="font-heading text-2xl font-bold tracking-tight mb-8">All products</h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {showcases.map((s) => (
+            {sortedShowcases.map((s) => (
               <ShowcaseCard key={s.slug} data={s} />
             ))}
           </div>
 
-          {showcases.length === 0 && (
+          {sortedShowcases.length === 0 && (
             <div className="text-center py-20 text-muted-foreground">
               No products published yet. Be the first!
             </div>

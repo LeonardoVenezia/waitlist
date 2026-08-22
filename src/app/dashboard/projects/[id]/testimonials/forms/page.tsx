@@ -53,7 +53,7 @@ export default async function FormsPage(props: {
     });
   }
 
-  const plan = project.plan as "free" | "launch" | "grow" | "scale";
+  const plan = project.plan as "free" | "launch" | "grow";
   const formLimit = getFormLimit(plan);
   const canCreate = !formLimit || (forms?.length ?? 0) < formLimit;
 

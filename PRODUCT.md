@@ -6,7 +6,7 @@ A founder pays once and gets a **suite of pre-launch tools** for their project: 
 
 ## Business model
 
-- **Per-project pricing**: Free (150 leads), Launch ($29, 500), Grow ($79, 10k), Scale (custom)
+- **Per-project pricing**: Free (150 leads), Launch ($29, 500), Grow ($79, 10k)
 - One payment unlocks **all current and future tools** for that project
 - A user can have multiple projects, each on its own plan
 - Payments via Paddle (one-time, not subscription)
@@ -33,7 +33,7 @@ A founder pays once and gets a **suite of pre-launch tools** for their project: 
 - Testimonials: forms (`/t/[slug]`), manual entry, dashboard management, section on `/product/[slug]` (widget/import/studio are phase 2+)
 - Email validation (MX lookup) + geoIP (Cloudflare CF-IPCountry) on signup
 - DB model: account → project (each project has waitlist + showcase + testimonials)
-- Plan is per-project (free/launch/grow/scale), one-time payment via Paddle
+- Plan is per-project (free/launch/grow), one-time payment via Paddle
 
 ## Design principles (draft)
 

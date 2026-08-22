@@ -68,7 +68,7 @@ export async function GET(request: Request) {
       .maybeSingle();
 
     if (waitlist) {
-      const plan = waitlist.plan as "free" | "launch" | "grow" | "scale";
+      const plan = waitlist.plan as "free" | "launch" | "grow";
       const emailSettings = parseEmailSettings(
         (waitlist.settings as Record<string, unknown> | null)?.email,
       );

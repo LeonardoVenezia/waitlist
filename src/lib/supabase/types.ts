@@ -106,7 +106,7 @@ export interface Database {
           name: string;
           slug: string;
           public_key: string;
-          plan: "free" | "launch" | "grow" | "scale";
+          plan: "free" | "launch" | "grow";
           submission_limit: number;
           settings: Json;
           status: "active" | "archived";
@@ -118,7 +118,7 @@ export interface Database {
           name: string;
           slug: string;
           public_key?: string;
-          plan?: "free" | "launch" | "grow" | "scale";
+          plan?: "free" | "launch" | "grow";
           submission_limit?: number;
           settings?: Json;
           status?: "active" | "archived";
@@ -130,7 +130,7 @@ export interface Database {
           name?: string;
           slug?: string;
           public_key?: string;
-          plan?: "free" | "launch" | "grow" | "scale";
+          plan?: "free" | "launch" | "grow";
           submission_limit?: number;
           settings?: Json;
           status?: "active" | "archived";

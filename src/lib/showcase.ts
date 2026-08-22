@@ -12,7 +12,6 @@ const PLAN_WEIGHT: Record<Plan, number> = {
   free: 1,
   launch: 2,
   grow: 3,
-  scale: 3,
 };
 
 export function getPlanWeight(plan: Plan): number {

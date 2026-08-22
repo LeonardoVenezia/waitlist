@@ -22,7 +22,7 @@ export default async function NewFormPage(props: {
     .maybeSingle();
   if (!project) notFound();
 
-  const plan = project.plan as "free" | "launch" | "grow" | "scale";
+  const plan = project.plan as "free" | "launch" | "grow";
   const formLimit = getFormLimit(plan);
 
   const { count: formCount } = await supabase

@@ -74,7 +74,7 @@ export function UpgradeContent({
     [project.account_id, project.id, userEmail],
   );
 
-  if (project.plan === "scale") {
+  if (project.plan === "grow") {
     return (
       <div className="flex flex-1 items-center justify-center">
         <p className="text-muted-foreground">You&apos;re already on the highest plan.</p>

@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ShowcaseCard } from "@/components/shared/showcase-card";
 import { PublicHeader } from "@/components/shared/public-header";
 import ProductsDirectoryClient from "./products-directory-client";
+import { buildPlanMap, sortShowcases } from "@/lib/showcase-sort";
 
 export const dynamic = "force-dynamic";
 
@@ -47,17 +48,11 @@ export default async function ProductsPage(props: {
 
   const { data: rows } = await query;
   const showcases = (rows ?? []) as ShowcaseRow[];
-
-  // Sort: random-ish shuffle per day
-  if (showcases.length > 0) {
-    const daySeed = new Date().toISOString().slice(0, 10);
-    const seed = daySeed.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-    showcases.sort((a, b) => {
-      const ha = (a.slug.split("").reduce((s, c) => s + c.charCodeAt(0), 0) + seed) % 1000;
-      const hb = (b.slug.split("").reduce((s, c) => s + c.charCodeAt(0), 0) + seed) % 1000;
-      return ha - hb;
-    });
-  }
+  const planMap = await buildPlanMap(
+    admin,
+    showcases.map((s) => s.waitlist_id),
+  );
+  const sortedShowcases = sortShowcases(showcases, planMap);
 
   return (
     <div className="min-h-screen bg-background">
@@ -70,12 +65,12 @@ export default async function ProductsPage(props: {
 
         <ProductsDirectoryClient search={search} category={category} categories={CATEGORIES}>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {showcases.map((s) => (
+            {sortedShowcases.map((s) => (
               <ShowcaseCard key={s.slug} data={s} />
             ))}
           </div>
 
-          {showcases.length === 0 && (
+          {sortedShowcases.length === 0 && (
             <div className="text-center py-20 text-muted-foreground">
               {search || category
                 ? "No products match your filters."

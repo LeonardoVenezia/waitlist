@@ -530,16 +530,120 @@ function TemplateEditor({
     );
   }
 
+  if (templateId === "pastel") {
+    return (
+      <div className="space-y-4">
+        <Field label="Badge text">
+          <Input value={(data.badge_text as string) ?? ""} onChange={(e) => set("badge_text", e.target.value)} />
+        </Field>
+        <Field label="Title">
+          <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} />
+        </Field>
+        <Field label="Subtitle">
+          <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} />
+        </Field>
+        <Field label="CTA label">
+          <Input value={(data.cta_label as string) ?? ""} onChange={(e) => set("cta_label", e.target.value)} />
+        </Field>
+        <Field label="Social count override">
+          <Input
+            value={(data.social_count_override as string) ?? ""}
+            onChange={(e) => set("social_count_override", e.target.value)}
+            placeholder="Leave empty to use real count"
+          />
+        </Field>
+        <Field label="Floating tags (comma separated)">
+          <FloatingTagsInput
+            value={(data.floating_tags as string[]) ?? []}
+            onChange={(v) => set("floating_tags", v)}
+          />
+        </Field>
+        <ToggleField
+          label="Show social proof"
+          checked={(data.show_social_proof as boolean) ?? true}
+          onChange={(v) => set("show_social_proof", v)}
+        />
+        <Button size="sm" onClick={onSave} disabled={saving}>
+          {saving ? "Saving…" : "Save template"}
+        </Button>
+      </div>
+    );
+  }
+
+  if (templateId === "editorial") {
+    const features = (data.features as Array<{ icon: string; title: string; description: string }>) ?? [];
+    return (
+      <div className="space-y-4">
+        <Field label="Accent color">
+          <Input value={(data.accent_color as string) ?? ""} onChange={(e) => set("accent_color", e.target.value)} />
+        </Field>
+        <Field label="Title">
+          <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} />
+        </Field>
+        <Field label="Italic title">
+          <Input value={(data.title_italic as string) ?? ""} onChange={(e) => set("title_italic", e.target.value)} />
+        </Field>
+        <Field label="Subtitle">
+          <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} />
+        </Field>
+        <Field label="CTA label">
+          <Input value={(data.cta_label as string) ?? ""} onChange={(e) => set("cta_label", e.target.value)} />
+        </Field>
+        <Field label="Features (JSON)">
+          <textarea
+            value={JSON.stringify(features, null, 2)}
+            onChange={(e) => {
+              try {
+                set("features", JSON.parse(e.target.value));
+              } catch {
+                // keep previous value while invalid
+              }
+            }}
+            rows={8}
+            className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-xs font-mono"
+          />
+        </Field>
+        <Field label="Launch timeline">
+          <Input value={(data.launch_timeline as string) ?? ""} onChange={(e) => set("launch_timeline", e.target.value)} />
+        </Field>
+        <Field label="Version status">
+          <Input value={(data.version_status as string) ?? ""} onChange={(e) => set("version_status", e.target.value)} />
+        </Field>
+        <Field label="Social X URL">
+          <Input value={(data.social_x as string) ?? ""} onChange={(e) => set("social_x", e.target.value)} />
+        </Field>
+        <Field label="Social LinkedIn URL">
+          <Input value={(data.social_linkedin as string) ?? ""} onChange={(e) => set("social_linkedin", e.target.value)} />
+        </Field>
+        <ToggleField
+          label="Show social proof"
+          checked={(data.show_social_proof as boolean) ?? true}
+          onChange={(v) => set("show_social_proof", v)}
+        />
+        <Button size="sm" onClick={onSave} disabled={saving}>
+          {saving ? "Saving…" : "Save template"}
+        </Button>
+      </div>
+    );
+  }
+
+  const benefits = (data.benefits as string[]) ?? [];
+  const tabs = (data.tabs as Array<{ label: string; title: string; description: string }>) ?? [];
+  const testimonials = (data.testimonials as Array<{ quote: string; author: string }>) ?? [];
+
   return (
     <div className="space-y-4">
-      <Field label="Badge text">
-        <Input value={(data.badge_text as string) ?? ""} onChange={(e) => set("badge_text", e.target.value)} />
-      </Field>
       <Field label="Title">
         <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} />
       </Field>
       <Field label="Subtitle">
         <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} />
+      </Field>
+      <Field label="Benefits (comma separated)">
+        <FloatingTagsInput
+          value={benefits}
+          onChange={(v) => set("benefits", v)}
+        />
       </Field>
       <Field label="CTA label">
         <Input value={(data.cta_label as string) ?? ""} onChange={(e) => set("cta_label", e.target.value)} />
@@ -551,10 +655,32 @@ function TemplateEditor({
           placeholder="Leave empty to use real count"
         />
       </Field>
-      <Field label="Floating tags (comma separated)">
-        <FloatingTagsInput
-          value={(data.floating_tags as string[]) ?? []}
-          onChange={(v) => set("floating_tags", v)}
+      <Field label="Tabs (JSON)">
+        <textarea
+          value={JSON.stringify(tabs, null, 2)}
+          onChange={(e) => {
+            try {
+              set("tabs", JSON.parse(e.target.value));
+            } catch {
+              // keep previous value while invalid
+            }
+          }}
+          rows={8}
+          className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-xs font-mono"
+        />
+      </Field>
+      <Field label="Testimonials (JSON)">
+        <textarea
+          value={JSON.stringify(testimonials, null, 2)}
+          onChange={(e) => {
+            try {
+              set("testimonials", JSON.parse(e.target.value));
+            } catch {
+              // keep previous value while invalid
+            }
+          }}
+          rows={6}
+          className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-xs font-mono"
         />
       </Field>
       <ToggleField

@@ -639,7 +639,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
           </div>
 
           {showcase && (
-            <FeatureGate plan={plan} feature="remove_branding" waitlistId={waitlistId}>
+            <FeatureGate plan={plan} feature="featured_badge" waitlistId={waitlistId}>
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -647,7 +647,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
                   onChange={(e) => setFeaturedB(e.target.checked)}
                   className="rounded"
                 />
-                Mostrar badge destacado en el directorio
+                Destacar este producto en el directorio
               </label>
             </FeatureGate>
           )}

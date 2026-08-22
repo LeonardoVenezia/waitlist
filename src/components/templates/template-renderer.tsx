@@ -3,12 +3,16 @@
 import { NeonTemplate } from "./neon-template";
 import { CarbonTemplate } from "./carbon-template";
 import { PastelTemplate } from "./pastel-template";
+import { EditorialTemplate } from "./editorial-template";
+import { SplitTemplate } from "./split-template";
 import {
   normalizeTemplateData,
   type TemplateId,
   type NeonTemplateData,
   type CarbonTemplateData,
   type PastelTemplateData,
+  type EditorialTemplateData,
+  type SplitTemplateData,
 } from "@/lib/templates";
 
 export function TemplateRenderer({
@@ -52,16 +56,34 @@ export function TemplateRenderer({
     );
   }
 
-  const data = normalizeTemplateData("pastel", templateData) as PastelTemplateData;
+  if (templateId === "pastel") {
+    const data = normalizeTemplateData("pastel", templateData) as PastelTemplateData;
+    return (
+      <div
+        className={`${shell} flex items-center justify-center px-4 py-16`}
+        style={{
+          background:
+            "linear-gradient(120deg, rgba(244,114,182,0.18), rgba(168,85,247,0.18), rgba(96,165,250,0.18))",
+        }}
+      >
+        <PastelTemplate publicKey={publicKey} data={data} realCount={realCount} />
+      </div>
+    );
+  }
+
+  if (templateId === "editorial") {
+    const data = normalizeTemplateData("editorial", templateData) as EditorialTemplateData;
+    return (
+      <div className={`${shell} bg-white px-4 py-16 flex items-center`}>
+        <EditorialTemplate publicKey={publicKey} data={data} realCount={realCount} />
+      </div>
+    );
+  }
+
+  const data = normalizeTemplateData("split", templateData) as SplitTemplateData;
   return (
-    <div
-      className={`${shell} flex items-center justify-center px-4 py-16`}
-      style={{
-        background:
-          "linear-gradient(120deg, rgba(244,114,182,0.18), rgba(168,85,247,0.18), rgba(96,165,250,0.18))",
-      }}
-    >
-      <PastelTemplate publicKey={publicKey} data={data} realCount={realCount} />
+    <div className={`${shell} bg-[#fafafa] px-4 py-16`}>
+      <SplitTemplate publicKey={publicKey} data={data} realCount={realCount} />
     </div>
   );
 }

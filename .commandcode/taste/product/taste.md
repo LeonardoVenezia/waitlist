@@ -1,16 +1,18 @@
 # product-strategy
-- The showcase (directory listing) is the core product surface; the project/waitlist overview is secondary. Routing, onboarding flows, and primary CTAs should orient users toward the showcase, not the waitlist management page. Confidence: 0.80
+- The showcase (directory listing) is the core product surface; the project/waitlist overview is secondary. Routing, onboarding flows, and primary CTAs should orient users toward the showcase, not the waitlist management page. Confidence: 0.90
 - Directory listings should be permanent, not transient: products remain listed after launch (and get updated), so scarcity should come from early access rather than from the listing being temporary. Rejects positioning the directory as "pre-launch only" because that implies listings disappear after launch. Confidence: 0.85
 - Dogfoods their own product: uses their own waitlist as the first real-world deployment to validate the market while continuing to build, and wants it live and working early rather than waiting until everything is finished. Confidence: 0.70
 - Operates lean during validation: prefers to stay on free tiers (Vercel Hobby, Supabase free, Resend free) and defer paid infrastructure and branding decisions (custom domain, project name) until market interest is proven. Confidence: 0.65
 - Cares that the end-user-facing experience stays clean and native even while validating on free infrastructure: wants a concrete assessment of user-visible roughness (e.g., platform subdomain URLs in referral/hosted links) and how to polish it, not just whether it technically works. Confidence: 0.55
 - Positions the directory's core value proposition around discoverability — SEO (search ranking), GEO (Generative Engine Optimization for AI answer engines), and broad visibility — rather than social proof (testimonials) or tooling bundles. Confidence: 0.55
+- Directory listings should be ranked by subscription tier — highest plan (Grow) first, then Launch, then Free — and newest-to-oldest within each tier; this ordering must apply consistently across every listing surface (home, all products, launches, coming soon). Confidence: 0.85
 # pricing-model
 - Prefers one-time payment (not subscription) per project; users pay once for lifetime access to a project. Confidence: 0.75
 - New projects require a separate payment; each project starts on a free tier with the option to upgrade via one-time payment. Confidence: 0.70
 - Each project bundles all products (currently 1 of 3 planned); the user pays for the whole project, not per product. Confidence: 0.70
 - Supports upgrade paths within a project: users who start free can pay to unlock higher tiers later. Confidence: 0.65
 - Expects free tiers to retain core delivery functionality (welcome emails reach subscribers even on Free); paid tiers gate premium features — double opt-in/verification and customization (custom sender domain, subject, message, signature, reply-to) — rather than cutting core email delivery entirely. Confidence: 0.80
+- The product has exactly three plan tiers: Free, Launch, and Grow. Scale is discontinued and must not exist anywhere — not in pricing, upgrade flow, code, types, DB, or docs; any residual Scale reference is a bug to eliminate, not an option to support. Confidence: 0.85
 # navigation
 - Back buttons should use browser history (`router.back()`) with a fallback to home (`/`) for users arriving from external sites with no history. Confidence: 0.80
 # architecture
@@ -32,6 +34,7 @@
 - Rejects native browser `alert()`/`confirm()` dialogs in favor of custom, styled confirmation modals. Confidence: 0.80
 - Prefers contained, narrower form controls (e.g., a centered `max-w-sm` form) in hero/landing sections over full-width stretching; finds the more compact layout "más sentido". Confidence: 0.55
 - Prefers generous vertical spacing between stacked hero elements (title, subtitle, form input); flags cramped spacing and asks for extra margin rather than accepting the default. Confidence: 0.55
+- Prefers subtle visual distinction for status flags (e.g., a "featured" product) — a border or background color tint — over an explicit text badge/tag label; the cue should stay understated. Confidence: 0.75
 
 # feature-design
 - When a feature doesn't work end-to-end (saved but never rendered, toggle that doesn't affect output), user prefers removing it entirely rather than leaving dead code in the UI that confuses users. Confidence: 0.75
@@ -51,7 +54,7 @@
 # data-quality
 - Values data hygiene: expects signup email validation to block junk/fake entries (invalid formats, disposable domains) so the subscriber database isn't polluted with garbage. Confidence: 0.70
 - Dislikes # branding
-- Avoids copying a competitor's brand name when building an inspired-by product ("no les voy a robar el nombre"); uses a temporary placeholder name while deferring the real naming decision until later. Confidence: 0.70
+- Avoids copying a competitor's brand name when building an inspired-by product ("no les voy a robar el nombre"); defers the real naming decision to later (using a temporary placeholder like "LaunchList"), and has now settled on "Startpack" as the product name. Confidence: 0.80
 empty/dead columns in data tables; for fields with no data source, prefers either wiring them up properly (e.g., geoIP for Country) or removing them entirely rather than leaving them perpetually blank. Confidence: 0.70
 # typography
 - Prefers an elegant, high-contrast serif for headings and iterates on it until it feels right — moved from Instrument Serif to Playfair Display and rejected it ("No quedó tan bien como pensé"), settling on Italiana, paired with Geist sans for body text. Confidence: 0.70

@@ -1,14 +1,27 @@
-# Contexto del Proyecto — Waitlist by [PACK]
+# Contexto del Proyecto — Startpack
 
-> Creado: 2026-07-22
-> Stack: Next.js 16 + Supabase + shadcn/ui + Tailwind 4
-> Dominio: https://waitlist-nine-pink.vercel.app
+> Actualizado: 2026-08-22
+> Stack: Next.js 16 + Supabase + shadcn/ui + Tailwind CSS v4
+> Dominios: `https://waitlist.leovenezia.dev` (producción) · `https://waitlist-nine-pink.vercel.app` (preview)
 
 ---
 
-## El Producto
+## El producto
 
-Software de **waitlist viral pre-lanzamiento** (clon de LaunchList). El usuario crea una waitlist, la gente se anota con un link de referido único y sube en la cola cuando trae amigos. Free hasta 150 suscriptores, después pago único por proyecto vía Paddle.
+**Startpack** es una suite de herramientas para founders/indie hackers. El núcleo actual es el **showcase / directorio de productos**: la home es el directorio, y cada proyecto puede publicar una ficha de producto con nombre, descripción, categorías, imágenes, video y link.
+
+Sobre ese núcleo se integran dos herramientas más:
+
+- **Waitlist viral con referidos** (`/p/[slug]` + widget embebible)
+- **Testimonials** (`/t/[formSlug]` + sección en la ficha de producto)
+
+Cada proyecto es una unidad independiente con su propio plan. Los planes son de pago **único por proyecto** vía Paddle:
+
+- **Free** — $0, 150 submissions
+- **Launch** — $29, 500 submissions
+- **Grow** — $79, 10.000 submissions
+
+La idea de negocio es que un fundador paga una vez y desbloquea todas las herramientas actuales y futuras para ese proyecto.
 
 ---
 
@@ -16,144 +29,190 @@ Software de **waitlist viral pre-lanzamiento** (clon de LaunchList). El usuario 
 
 | Capa | Tecnología | Variables de entorno |
 |---|---|---|
-| Frontend + Backend | Next.js 16 (App Router, Turbopark) | — |
-| UI | shadcn/ui + Tailwind 4 + `@base-ui/react` | — |
+| Frontend + Backend | Next.js 16 (App Router, React 19, RSC, Server Actions) | `NEXT_PUBLIC_APP_URL` |
+| UI | shadcn/ui + Tailwind CSS v4 | — |
 | BD + Auth + Storage | Supabase (Postgres) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` |
-| Pagos | Paddle Billing (one-time) | `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`, `PADDLE_API_KEY`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_PRICE_LAUNCH`, `PADDLE_PRICE_GROW` |
+| Pagos | Paddle (one-time) | `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`, `PADDLE_API_KEY`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_PRICE_LAUNCH`, `PADDLE_PRICE_GROW` |
 | Anti-bot | Cloudflare Turnstile | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` |
-| Email | Resend | `RESEND_API_KEY` |
-
-## Cuentas creadas
-
-- **Supabase**: proyecto `dxgxbugfjxzgvqzsjgff` (ref: `dxgxbugfjxzgvqzsjgff`)
-- **Vercel**: proyecto `waitlist-nine-pink`
-- **Paddle**: vendedor `LeoVenezia Studios` (ID: 382617), cuenta en verificación (`verificationStatus: pending`)
-- **Turnstile (Cloudflare)**: site para `waitlist-nine-pink.vercel.app`
-- **Resend**: pendiente de configurar API key real
-
-**Estado de Paddle**: la cuenta está en verificación, por lo que `transaction.completed` rechaza con `transaction_checkout_not_enabled`. Para probar pagos, hay que esperar que Paddle verifique la cuenta, o alternativamente crear precios en sandbox (cuando Paddle lo habilite).
+| Email | Resend (API REST directa, sin SDK) | `RESEND_API_KEY`, `EMAIL_FROM` |
+| Fonts | Geist (body) + Italiana (headings) | — |
 
 ---
 
-## Rutas construidas (23 rutas dinámicas)
+## Cuentas e infraestructura
 
-### Públicas (sin sesión)
-| Ruta | Método | Descripción |
-|---|---|---|
-| `/` | GET | Landing page, redirige a /dashboard si hay sesión |
-| `/login` | GET | Login (email/password + Google OAuth) |
-| `/signup` | GET | Registro |
-| `/pricing` | GET | Página de precios |
-| `/p/[slug]` | GET | Página hosteada de waitlist (SSR) |
-| `/auth/callback` | GET | Callback OAuth de Supabase |
-| `/api/public/waitlist/[publicKey]` | GET | Config pública de waitlist (branding, campos) |
-| `/api/public/subscribe` | POST | Endpoint de registro (con Turnstile, rate limit, referidos) |
-| `/api/public/position` | GET | Consultar posición actual + referral_count |
-| `/api/public/verify` | GET | Verificar email (double opt-in, token HMAC) |
+- **Supabase**: proyecto `dxgxbugfjxzgvqzsjgff`
+- **Vercel**: proyecto `waitlist-nine-pink`; dominio custom `waitlist.leovenezia.dev`
+- **Paddle**: vendedor `LeoVenezia Studios`
+- **Resend**: dominio `leovenezia.dev` verificado; remitente `EMAIL_FROM="Startpack <hola@leovenezia.dev>"`
+- **Cloudflare**: zona `leovenezia.dev` gestionada por Cloudflare; subdominio `waitlist` proxied hacia Vercel
 
-### Dashboard (requieren sesión)
+---
+
+## Rutas principales
+
+### Públicas
+
 | Ruta | Descripción |
 |---|---|
-| `/dashboard` | Overview, redirige a primera waitlist o a crear |
-| `/dashboard/waitlists` | Lista de waitlists |
-| `/dashboard/waitlists/new` | Crear waitlist (form con nombre + slug) |
-| `/dashboard/waitlists/[id]` | Detalle + navegación a subsecciones |
-| `/dashboard/waitlists/[id]/settings` | Settings (branding, hero, form, thank-you, referral, notificaciones, idioma) |
-| `/dashboard/waitlists/[id]/subscribers` | Tabla de suscriptores con búsqueda, filtros, paginación |
-| `/dashboard/waitlists/[id]/analytics` | Agregados básicos (total, verificados, con referidos) |
-| `/dashboard/waitlists/[id]/embed` | Código del widget + link hosteado |
-| `/dashboard/waitlists/[id]/export` | Exportar CSV/XLSX |
-| `/dashboard/waitlists/[id]/upgrade` | Upgrade con checkout de Paddle |
-| `/dashboard/settings/purchases` | Historial de compras |
-| `/dashboard/sign-out` | Cerrar sesión |
+| `/` | Directorio de productos |
+| `/product/[slug]` | Detalle de producto del directorio |
+| `/products` | Listado de productos |
+| `/launches` | Lanzamientos recientes |
+| `/coming-soon` | Productos por lanzar |
+| `/p/[slug]` | Página hosteada de waitlist (SSR, con page builder o template) |
+| `/t/[formSlug]` | Formulario público de testimonios |
+| `/login`, `/signup` | Auth |
+| `/auth/callback` | Callback OAuth Supabase |
 
-### Webhook
+### API públicas
+
 | Ruta | Método | Descripción |
 |---|---|---|
-| `/api/webhooks/paddle` | POST | Webhook de Paddle (transaction.completed, adjustment.created/updated) |
+| `/api/public/waitlist/[publicKey]` | GET | Config pública de waitlist |
+| `/api/public/subscribe` | POST | Registro de suscriptor (Turnstile, rate limit, referidos, email) |
+| `/api/public/subscriber` | PATCH | Respuestas post-signup |
+| `/api/public/position` | GET | Posición actual y referral_count |
+| `/api/public/verify` | GET | Verificación de email (double opt-in) |
+| `/api/public/pageview` | POST | Track de page views |
+| `/api/testimonials/submit` | POST | Submit de testimonios |
+| `/api/webhooks/paddle` | POST | Webhook de Paddle |
 
-### Proxy (Middleware)
-`/proxy.ts` — Antes era `middleware.ts` pero Next.js 16 lo renombró a `proxy`. Refresca la sesión de Supabase en cada request.
+### Dashboard
+
+| Ruta | Descripción |
+|---|---|
+| `/dashboard` | Overview |
+| `/dashboard/projects` | Lista de proyectos |
+| `/dashboard/projects/new` | Crear proyecto |
+| `/dashboard/projects/[id]` | Detalle del proyecto |
+| `/dashboard/projects/[id]/settings` | Branding, hero, thank-you, submissions, post-signup, email, notifications, team, block |
+| `/dashboard/projects/[id]/page-builder` | Page builder + selector de templates |
+| `/dashboard/projects/[id]/integration` | Widget, custom form, leaderboard |
+| `/dashboard/projects/[id]/subscribers` | Gestión de suscriptores |
+| `/dashboard/projects/[id]/analytics` | Analíticas |
+| `/dashboard/projects/[id]/export` | Export CSV/XLSX |
+| `/dashboard/projects/[id]/upgrade` | Checkout Paddle |
+| `/dashboard/projects/[id]/testimonials` | Testimonios del proyecto |
+| `/dashboard/showcases/[id]` | Directorio/showcase del proyecto |
 
 ---
 
-## Base de datos (esquema en `supabase/schema.sql`)
+## Base de datos
+
+Tabla principal renombrada de `waitlists` a **`projects`** (migración `010`).
 
 ### Tablas
-1. **`profiles`** — 1:1 con `auth.users`. Se crea automáticamente con trigger.
-2. **`accounts`** — Backbone multi-producto. Cada usuario tiene su cuenta.
-3. **`account_members`** — Miembros de equipo (para plan Grow, UI pendiente).
-4. **`waitlists`** — Proyecto de waitlist. Tiene `settings` (JSONB) con branding, hero, etc.
-5. **`subscribers`** — Cada persona que se anota. `referral_count` denormalizado.
-6. **`purchases`** — Historial de transacciones de Paddle.
 
-### RLS (Row Level Security)
-- `profiles`: el usuario ve solo su fila (`auth.uid() = id`)
-- `accounts`: solo el owner (`auth.uid() = owner_id`)
-- `waitlists/subscribers/purchases`: acceso vía `account_members`
-- El endpoint público de signup usa `service_role` (bypass RLS) con validación manual
+- **`profiles`** — 1:1 con `auth.users`, creada por trigger
+- **`accounts`** — backbone multi-producto
+- **`account_members`** — miembros de equipo
+- **`projects`** — proyecto (waitlist + showcase + testimonials); incluye `settings` JSONB
+- **`subscribers`** — suscriptores con `referral_count` denormalizado
+- **`purchases`** — auditoría de transacciones Paddle
+- **`page_events`** — views y signups de páginas hosteadas
+- **`showcases`** — entradas del directorio
+- **`testimonial_forms`** — formularios de testimonios
+- **`testimonials`** — testimonios recolectados
 
-### Funciones SQL
-- `get_position(subscriber_id)` — calcula posición via `ROW_NUMBER() OVER (ORDER BY referral_count DESC, created_at ASC)`
+### RLS
+
+- **`createClient()`** — cliente RLS para lecturas autenticadas
+- **`createAdminClient()`** — service role para escrituras; siempre verificar ownership con una lectura RLS antes del write
+- Endpoints públicos usan service role con validación manual
+
+### Funciones/triggers
+
+- `get_position(subscriber_id)` — posición por `ROW_NUMBER()`
 - `increment_referral_count(subscriber_id)` — incremento atómico
-
-### Trigger
-- `on_auth_user_created` — al registrarse crea profile + account + account_membership
+- `handle_new_user()` / `on_auth_user_created` — crea profile + account + member al registrarse
 
 ---
 
 ## Loop de referidos
 
-1. Cada signup genera un `referral_code` único (nanoid de 8 chars)
-2. Si viene con `?ref=CODE`, se busca al referidor por `referral_code` misma waitlist
-3. Se inserta subscriber con `referred_by` y en la misma operación se incrementa `referral_count`
-4. La posición se calcula al leer: `ROW_NUMBER() OVER (referral_count DESC, created_at ASC)`
-5. El leaderboard muestra top N por referral_count (emails enmascarados: `jo***@gmail.com`)
+1. Cada signup genera `referral_code` único
+2. `?ref=CODE` identifica al referidor
+3. Se inserta subscriber con `referred_by` y se incrementa `referral_count`
+4. Posición calculada al leer
+5. Leaderboard muestra top N con emails enmascarados
 
 ---
 
 ## Anti-spam
 
-1. **Turnstile** — widget de Cloudflare en el formulario, verificado server-side
-2. **Email desechable** — lista de 30+ dominios conocidos
-3. **Rate limit** — 10 requests/min por IP (en memoria, no sirve para producción multi-instancia)
-4. **Validación de formato** — regex de email
+- Cloudflare Turnstile (implícito en la página hosteada)
+- Lista de emails desechables
+- Rate limit in-memory (no apto multi-instancia)
+- Validación de formato y MX lookup
 
 ---
 
-## Widget JS (`public/widget.js`)
+## Email (Resend)
 
-Vanilla JS, sin dependencias. Busca contenedores `.wl-waitlist[data-key]` y renderiza formulario inline. CORS abierto en todos los endpoints públicos (`Access-Control-Allow-Origin: *`).
+Envío server-side en `src/lib/email.ts` con `fetch` directo a `https://api.resend.com/emails`.
+
+Emails implementados:
+
+- Welcome al suscriptor (según plan y settings)
+- Notificación de signup al owner
+- Verificación de email (double opt-in)
+- Milestone de referidos
+
+Configuración por proyecto guardada en `settings.email` y parseada por `src/lib/email-settings.ts`. Remitente global vía `EMAIL_FROM`.
+
+---
+
+## Widget
+
+`public/widget.js` soporta dos selectores:
+
+- `.launchlist-widget[data-key-id]` — método iframe, **recomendado**
+- `.wl-waitlist[data-key]` — método legacy inline (usa API relativa; roto en embeds cross-origin)
+
+El snippet correcto se genera en **Integration** (`/dashboard/projects/[id]/integration`).
+
+---
+
+## Page Builder y templates
+
+`settings.page_sections` contiene:
+
+```json
+{
+  "template_id": "neon" | "carbon" | "pastel" | null,
+  "template_data": { ... },
+  "sections": [ ... ],
+  "global": { ... }
+}
+```
+
+- Si `template_id` es válido, la página pública ignora `sections` y renderiza el template.
+- Templates disponibles solo para planes pagos (`hasTemplateAccess`).
+- La elección es reversible: elegir "Custom builder" restaura el editor de secciones.
+- `src/lib/templates.ts` define tipos, defaults y normalización.
+- `src/components/templates/template-renderer.tsx` es la **única fuente** de layout/switch de templates, usada tanto por la página pública como por el preview del Page Builder.
 
 ---
 
 ## Planes y gating
 
-| Plan | Precio | Límite | Features clave |
-|---|---|---|---|
-| Free | $0 | 150 | Widget, referrals, export CSV/XLSX, analytics básica, email notification |
-| Launch | $29 | 500 | + double opt-in, welcome email, Slack, milestones, traducción, Turnstile |
-| Grow | $79 | 10.000 | + team members, webhooks, quitar branding, priority support |
-| Scale | Custom | ilimitado | Talk to us (sin checkout) |
+Archivo: `src/lib/plans.ts` (antes `plan-gates.ts`).
 
-Archivo `src/lib/plan-gates.ts` — contiene feature sets y función `hasFeature(plan, feature)`. Componente `FeatureGate` para UI con candado.
+`hasFeature(plan, feature)` para features por plan. `FeatureGate` en `src/components/shared/feature-gate.tsx` para UI con candado. Templates usan `hasTemplateAccess(plan)` en `src/lib/templates.ts`.
 
 ---
 
-## Limitaciones conocidas / Pendientes
+## Limitaciones y pendientes
 
-### Bugs conocidos
-- **Rate limiting en memoria**: no funciona con múltiples instancias de Vercel. Migrar a Upstash Redis.
-- **El menú de perfil (user-nav) se rompió con `@base-ui/react`**: lo reemplacé por HTML puro.
-
-### Funcionalidad pendiente
-- **Deploy a producción completo**: falta conectar algunas env vars reales en Vercel.
-- **UI de miembros de equipo**: la tabla `account_members` existe pero no hay pantalla de gestión.
-- **Formulario "Talk to us" para Scale**: actualmente no hay forma de contactar.
-- **Internacionalización (i18n)**: el widget y la página hosteada ignoran el idioma configurado.
-- **Rewards & milestones**: display-only, no implementado.
+- **Rate limit in-memory**: no funciona en multi-instancia. Migrar a Redis/Upstash.
+- **Paddle webhook**: la firma no está verificada todavía.
+- **Turnstile en widget iframe**: el widget embebido no envía Turnstile.
+- **`verify-token.ts`** usa `SUPABASE_SERVICE_ROLE_KEY` como secret; ideal sería una env propia.
+- **i18n**: el widget y la página hosteada no usan el idioma configurado.
+- **Team UI**: `account_members` existe pero la gestión es parcial.
 - **Webhooks + Zapier**: configuración de webhooks personalizados (plan Grow).
-- **Paddle verificación pendiente**: la cuenta de Paddle no puede procesar pagos hasta que complete verificación.
+- **Método legacy del widget** (`wl-waitlist`) sigue en `public/widget.js` pero está roto para embeds cross-origin.
 
 ---
 
@@ -161,12 +220,12 @@ Archivo `src/lib/plan-gates.ts` — contiene feature sets y función `hasFeature
 
 ```bash
 pnpm dev
-# necesita .env.local con todas las variables
+# requiere .env.local con todas las variables
 ```
 
 ## Cómo deployar
 
-Push a main → Vercel deploya automáticamente. Las env vars se configuran en Vercel → Settings → Environment Variables.
+Push a `main` → Vercel deploya automáticamente. Env vars en Vercel → Settings → Environment Variables.
 
 ---
 
@@ -174,27 +233,29 @@ Push a main → Vercel deploya automáticamente. Las env vars se configuran en V
 
 | Archivo | Propósito |
 |---|---|
-| `supabase/schema.sql` | Esquema completo de BD |
-| `supabase/backfill.sql` | Backfill para usuarios creados antes del trigger |
-| `src/lib/supabase/types.ts` | Tipos de TypeScript para la BD |
-| `src/lib/plan-gates.ts` | Features por plan |
-| `src/lib/api/account.ts` | Helper para obtener account_id |
-| `src/lib/api/cors.ts` | Headers CORS para endpoints públicos |
-| `src/lib/api/verify-token.ts` | Tokens HMAC para verificación de email |
-| `src/lib/api/rate-limit.ts` | Rate limiter en memoria |
-| `src/lib/api/referral-code.ts` | Generación de códigos de referido |
-| `src/lib/api/position.ts` | Cálculo de posición |
-| `src/lib/api/leaderboard.ts` | Leaderboard (emails enmascarados) |
+| `supabase/schema.sql` | Esquema base (usa nombre `waitlists`) |
+| `supabase/migrations/` | Migraciones aplicadas manualmente |
+| `src/lib/supabase/types.ts` | Tipos TypeScript para BD |
+| `src/lib/plans.ts` | Planes y feature gating |
+| `src/lib/templates.ts` | Tipos, defaults y validación de templates |
+| `src/lib/email-settings.ts` | Parseo de `settings.email` |
+| `src/lib/email.ts` | Envío Resend |
+| `src/lib/api/cors.ts` | CORS para endpoints públicos |
+| `src/lib/api/verify-token.ts` | Tokens de verificación de email |
+| `src/lib/api/rate-limit.ts` | Rate limiter in-memory |
+| `src/lib/api/referral-code.ts` | Generación de referral codes |
+| `src/lib/api/position.ts` | Posición y conteo de suscriptores |
+| `src/lib/api/leaderboard.ts` | Leaderboard |
 | `src/lib/api/slack.ts` | Notificaciones Slack |
 | `src/lib/api/validate-turnstile.ts` | Validación Turnstile |
-| `src/lib/email.ts` | Envío de emails vía Resend |
-| `src/lib/paddle.ts` | Helper de Paddle |
-| `src/lib/disposable-emails.ts` | Lista de dominios desechables |
-| `src/proxy.ts` | Proxy de sesión (reemplaza middleware.ts) |
-| `public/widget.js` | Widget JS embebible |
-| `src/components/shared/feature-gate.tsx` | Componente de candado por plan |
-| `src/components/shared/paddle-init.tsx` | Inicialización de Paddle.js |
-| `src/components/dashboard/user-nav.tsx` | Menú de perfil (HTML puro, sin base-ui) |
+| `src/lib/disposable-emails.ts` | Dominios desechables |
+| `src/components/templates/` | Templates de waitlist + renderer |
+| `src/components/shared/feature-gate.tsx` | Candado por plan |
+| `src/components/shared/paddle-init.tsx` | Inicialización Paddle |
+| `src/proxy.ts` | Proxy de sesión |
+| `public/widget.js` | Widget embebible |
 | `src/app/p/[slug]/public-waitlist-form.tsx` | Formulario de página hosteada |
-| `CHANGELOG.md` | Historial de cambios (inglés) |
-| `CHANGELOG.es.md` | Historial de cambios (español) |
+| `PRODUCT.md` | Visión de producto |
+| `PRODUCTION.md` | Guía de salida a producción |
+| `DESIGN.md` | Sistema de diseño |
+| `CHANGELOG.md` / `CHANGELOG.es.md` | Historial de cambios |

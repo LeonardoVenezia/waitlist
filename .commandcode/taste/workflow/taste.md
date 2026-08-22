@@ -3,7 +3,7 @@
 - When deciding whether to escalate to planning mode (or a similar process step), user defers to the agent's judgment — explicitly authorizes switching into planning mode if the agent deems it necessary ("si considerás necesario pasar al planning mode, hacélo") rather than waiting to be asked. Confidence: 0.60
 - Wants implementation work to be documented: expects a clear summary of what was built, which files were created/modified, and what each piece does — not just the code itself. Confidence: 0.80
 - Gathers reference material from competitor/peer products (HTML, screenshots, feature lists) to ground planning in concrete examples rather than abstract feature descriptions. Confidence: 0.75
-- Provides detailed, implementation-ready design specs when requesting features — exact hex colors, layout structure, and micro-interactions — and expects the agent to honor them faithfully rather than interpreting loosely. Confidence: 0.60
+- Provides detailed, implementation-ready design specs when requesting features — exact hex colors, layout structure, and micro-interactions — and expects the agent to honor them faithfully rather than interpreting loosely. Confidence: 0.70
 - Verifies code compiles and builds after every change: runs TypeScript type-check (`tsc --noEmit`) and production build (`next build`) as a matter of course before declaring work done. Confidence: 0.70
 - Prefers completing and polishing existing features (e.g., responsive design, UX polish) before starting a new major feature or product; values shipping quality over expanding scope prematurely. Confidence: 0.65
 - Prefers security/captcha widgets to be invisible or minimal — dislikes large visible challenge rectangles that clutter forms; values clean, minimal form design. Confidence: 0.60
@@ -13,8 +13,13 @@
 - Disable action buttons (publish, update, unpublish) during async operations like uploads to prevent double-submission and signal that work is in progress. Confidence: 0.75
 - For direct database operations (schema changes and data mutations like plan/submission-limit updates), prefers raw SQL statements to paste into the Supabase SQL Editor over CLI migration commands (`supabase db push`); explicitly asks for copy-pasteable SQL and chooses to stay manual even when installing the CLI is offered as the "recommended" option. Confidence: 0.92
 - Expects the "ponytail" skill to be active when coding — considers it important and asks the agent to activate it if it's not already on. Three levels available: lite, full, ultra. Confidence: 0.85
+# testing
+- When testing or demoing a product surface (e.g., the showcase directory), prefers seeding realistic, varied data — multiple users across subscription tiers and many entries with varied categories/attributes — rather than a minimal or empty dataset. Confidence: 0.55
+- Seeds backdated entries (e.g., a month old) specifically to test time-window filtering like "this week's launches", verifying that stale items are correctly excluded. Confidence: 0.55
+
 # documentation
 - Values cross-session continuity: proactively considers whether documentation is needed so a new session can quickly understand the project structure and purpose, and is open to maintaining/updating project docs (README, PRODUCT.md) to support fast onboarding. Confidence: 0.55
 - For operational/infrastructure tasks (e.g., preparing for a production launch), prefers a written step-by-step guide with a prioritized checklist (what blocks launch vs. what can wait) saved as a dedicated doc file, rather than only a chat explanation. Confidence: 0.60
+- Maintains a dedicated project-context document (`.commandcode/contexto-proyecto.md`) and proactively asks for it to be rewritten to reflect the actual current state of the project (product name, stack, accounts/infra, routes, DB schema, features, limitations, key files) as the project evolves — not left accumulating stale placeholders or outdated names. Confidence: 0.75
 # code-quality
 - Prefers a single source of truth for logic/rendering that would otherwise be duplicated across surfaces (e.g., the same template layout rendered in both the public page and the editor preview); flags duplicated code and wants it unified into one shared component rather than kept in sync manually. Confidence: 0.75
