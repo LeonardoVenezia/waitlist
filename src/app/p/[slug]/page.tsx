@@ -81,12 +81,16 @@ export default async function HostedPage(props: {
   const { slug } = await props.params;
   const supabase = createAdminClient();
 
-  const { data: waitlist } = await supabase
+  const { data: waitlist, error: waitlistError } = await supabase
     .from("projects")
     .select("id, name, slug, public_key, settings")
     .eq("slug", slug)
     .eq("status", "active")
     .maybeSingle();
+
+  if (waitlistError) {
+    throw new Error(`Failed to load waitlist: ${waitlistError.message}`);
+  }
 
   if (!waitlist) notFound();
 
