@@ -77,8 +77,11 @@ export async function generateMetadata(props: {
 
 export default async function HostedPage(props: {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ embed?: string; from?: string }>;
 }) {
   const { slug } = await props.params;
+  const sp = await props.searchParams;
+  const isEmbed = sp?.embed === "1";
   const supabase = createAdminClient();
 
   const { data: waitlist, error: waitlistError } = await supabase
@@ -118,13 +121,14 @@ export default async function HostedPage(props: {
     const realCount = await getSubscriberCount(waitlist.id);
 
     return (
-      <div className="min-h-screen">
-        <PageViewTracker waitlistId={waitlist.id} />
+      <div className={isEmbed ? "" : "min-h-screen"}>
+        {!isEmbed && <PageViewTracker waitlistId={waitlist.id} />}
         <TemplateRenderer
           templateId={templateDefinition.id}
           templateData={templateData}
           publicKey={waitlist.public_key}
           realCount={realCount}
+          embedded={isEmbed}
         />
       </div>
     );

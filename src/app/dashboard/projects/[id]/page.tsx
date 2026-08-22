@@ -203,7 +203,6 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
           { label: "Integration", href: "integration" },
           { label: "Analytics", href: "analytics" },
           { label: "Export", href: "export" },
-          { label: "Embed", href: "embed" },
           { label: "Settings", href: "settings" },
         ].map((tab) => {
           return (

@@ -6,6 +6,7 @@
 - Cares that the end-user-facing experience stays clean and native even while validating on free infrastructure: wants a concrete assessment of user-visible roughness (e.g., platform subdomain URLs in referral/hosted links) and how to polish it, not just whether it technically works. Confidence: 0.55
 - Positions the directory's core value proposition around discoverability — SEO (search ranking), GEO (Generative Engine Optimization for AI answer engines), and broad visibility — rather than social proof (testimonials) or tooling bundles. Confidence: 0.55
 - Directory listings should be ranked by subscription tier — highest plan (Grow) first, then Launch, then Free — and newest-to-oldest within each tier; this ordering must apply consistently across every listing surface (home, all products, launches, coming soon). Confidence: 0.85
+- Uses free-plan embed branding as a growth channel: free users' embedded widgets carry a subtle "Made with Startpack" dofollow backlink, while paid plans get the same widget with no branding/link. The SEO backlink is the real goal — the attribution should stay small and understated so it doesn't degrade UX. Confidence: 0.75
 # pricing-model
 - Prefers one-time payment (not subscription) per project; users pay once for lifetime access to a project. Confidence: 0.75
 - New projects require a separate payment; each project starts on a free tier with the option to upgrade via one-time payment. Confidence: 0.70

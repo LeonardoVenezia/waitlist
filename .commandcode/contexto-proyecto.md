@@ -165,12 +165,12 @@ Configuración por proyecto guardada en `settings.email` y parseada por `src/lib
 
 ## Widget
 
-`public/widget.js` soporta dos selectores:
+`public/widget.js` monta el widget de waitlist dentro de un iframe usando el selector `.startpack-widget[data-key-id]`.
 
-- `.launchlist-widget[data-key-id]` — método iframe, **recomendado**
-- `.wl-waitlist[data-key]` — método legacy inline (usa API relativa; roto en embeds cross-origin)
-
-El snippet correcto se genera en **Integration** (`/dashboard/projects/[id]/integration`).
+- El iframe apunta a `/w/e/[publicKey]`.
+- Si el proyecto tiene un template activo, `/w/e` redirige a la página pública en modo embebido (`?embed=1`) para renderizar el template.
+- Los proyectos Free muestran un backlink dofollow "Made with Startpack" al pie del widget. Los planes pagos no lo muestran.
+- El snippet correcto se genera en **Integration** (`/dashboard/projects/[id]/integration`).
 
 ---
 
@@ -212,7 +212,6 @@ Archivo: `src/lib/plans.ts` (antes `plan-gates.ts`).
 - **i18n**: el widget y la página hosteada no usan el idioma configurado.
 - **Team UI**: `account_members` existe pero la gestión es parcial.
 - **Webhooks + Zapier**: configuración de webhooks personalizados (plan Grow).
-- **Método legacy del widget** (`wl-waitlist`) sigue en `public/widget.js` pero está roto para embeds cross-origin.
 
 ---
 

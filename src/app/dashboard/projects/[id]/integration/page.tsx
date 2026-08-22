@@ -26,6 +26,7 @@ export default async function IntegrationPage(props: {
       waitlistId={waitlist.id}
       publicKey={waitlist.public_key}
       settings={waitlist.settings as Record<string, unknown>}
+      plan={waitlist.plan}
     />
   );
 }

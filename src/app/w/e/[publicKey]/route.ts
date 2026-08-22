@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getTemplateDefinition } from "@/lib/templates";
 
 export async function GET(
   _req: Request,
@@ -10,7 +11,7 @@ export async function GET(
 
   const { data: waitlist } = await supabase
     .from("projects")
-    .select("id, name, public_key, settings")
+    .select("id, name, slug, public_key, plan, settings")
     .eq("public_key", publicKey)
     .eq("status", "active")
     .maybeSingle();
@@ -20,6 +21,18 @@ export async function GET(
   }
 
   const settings = (waitlist.settings as Record<string, unknown>) ?? {};
+  const pageSections = (settings.page_sections as Record<string, unknown>) ?? {};
+  const templateDefinition = getTemplateDefinition(pageSections.template_id);
+
+  // If a template is active, redirect to the embedded hosted page so the
+  // widget uses the exact same template renderer as /p/[slug].
+  if (templateDefinition) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    return NextResponse.redirect(
+      `${appUrl}/p/${waitlist.slug}?embed=1&from=widget`,
+    );
+  }
+
   const widget = (settings.widget ?? {}) as Record<string, unknown>;
   const layout = (widget.layout ?? {}) as Record<string, unknown>;
   const input = (widget.input ?? {}) as Record<string, unknown>;
@@ -48,6 +61,10 @@ export async function GET(
   const thankPositionText = (thankYou.position_text as string) || "Your position: #{POSITION}";
   const thankShowPosition = (thankYou.show_position as boolean) ?? true;
   const thankShowReferral = (thankYou.show_referral_link as boolean) ?? true;
+
+  const brandingHtml = waitlist.plan === "free"
+    ? `<div style="text-align:center;margin-top:12px;"><a href="https://waitlist.leovenezia.dev" target="_blank" rel="dofollow" style="font-size:11px;color:#9ca3af;text-decoration:none;opacity:0.7;">Made with Startpack</a></div>`
+    : "";
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -98,8 +115,8 @@ export async function GET(
         formDiv.innerHTML = '<div class="wl-widget">' +
           '<div class="wl-msg" id="wl-msg"></div>' +
           ${collectName ? "'<input type=\"text\" class=\"wl-input\" id=\"wl-name\" placeholder=\"Name\" />' +" : "'' +"}
-          '<input type="email" class=\"wl-input\" id=\"wl-email\" placeholder=\"you@example.com\" required />' +
-          '<button class=\"wl-btn\" id=\"wl-submit\">${buttonLabel.replace(/'/g, "\\'")}</button>' +
+          '<input type="email" class="wl-input" id="wl-email" placeholder="you@example.com" required />' +
+          '<button class="wl-btn" id="wl-submit">${buttonLabel.replace(/'/g, "\\'")}</button>' +
           '</div>';
         document.getElementById("wl-submit").addEventListener("click", submit);
       }
@@ -164,6 +181,7 @@ export async function GET(
       renderForm();
     })();
   </script>
+  ${brandingHtml}
 </body>
 </html>`;
 

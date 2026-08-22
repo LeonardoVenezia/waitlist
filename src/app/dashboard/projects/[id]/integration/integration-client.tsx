@@ -40,6 +40,7 @@ interface IntegrationClientProps {
   waitlistId: string;
   publicKey: string;
   settings: Record<string, unknown>;
+  plan: string;
 }
 
 // ── Color Picker Helper ────────────────────────────────
@@ -125,6 +126,7 @@ export function IntegrationClient({
   waitlistId,
   publicKey,
   settings,
+  plan,
 }: IntegrationClientProps) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("design");
@@ -169,7 +171,7 @@ export function IntegrationClient({
   // ── URLs ──
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const embedScript = `<script async src="${appUrl}/widget.js"></script>`;
-  const embedDiv = `<div class="launchlist-widget" data-key-id="${publicKey}"></div>`;
+  const embedDiv = `<div class="startpack-widget" data-key-id="${publicKey}"></div>`;
   const leaderboardIframe = `<iframe scrolling="yes" src="${appUrl}/w/e/${publicKey}/leaderboard" style="width: 100%; display: block; border: none; height: 100vh;"></iframe>`;
   const customAjaxCode = `<!-- Add this form to your site -->
 <form id="wl-form" onsubmit="joinWaitlist(event)">
