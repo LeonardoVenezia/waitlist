@@ -16,3 +16,5 @@
 # documentation
 - Values cross-session continuity: proactively considers whether documentation is needed so a new session can quickly understand the project structure and purpose, and is open to maintaining/updating project docs (README, PRODUCT.md) to support fast onboarding. Confidence: 0.55
 - For operational/infrastructure tasks (e.g., preparing for a production launch), prefers a written step-by-step guide with a prioritized checklist (what blocks launch vs. what can wait) saved as a dedicated doc file, rather than only a chat explanation. Confidence: 0.60
+# code-quality
+- Prefers a single source of truth for logic/rendering that would otherwise be duplicated across surfaces (e.g., the same template layout rendered in both the public page and the editor preview); flags duplicated code and wants it unified into one shared component rather than kept in sync manually. Confidence: 0.75

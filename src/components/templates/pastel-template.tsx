@@ -178,24 +178,22 @@ export function PastelTemplate({
           </div>
         </GlassCard>
 
-        {data.floating_tags.map((tag, i) => {
-          const isLeft = i % 2 === 0;
-          return (
-            <span
-              key={i}
-              className="absolute rounded-full border border-white/40 bg-white/40 px-3 py-1 text-xs text-zinc-700 backdrop-blur-md"
-              style={{
-                top: `${-8 + i * 12}px`,
-                left: isLeft ? "12%" : undefined,
-                right: isLeft ? undefined : "12%",
-                transform: `translate(${tilt.x * (i + 1)}px, ${tilt.y * (i + 1)}px)`,
-                transition: "transform 0.2s ease-out",
-              }}
-            >
-              {tag}
-            </span>
-          );
-        })}
+        {data.floating_tags.length > 0 && (
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {data.floating_tags.map((tag, i) => (
+              <span
+                key={i}
+                className="rounded-full border border-white/40 bg-white/40 px-3 py-1 text-xs text-zinc-700 backdrop-blur-md"
+                style={{
+                  transform: `translate(${tilt.x * (i + 1)}px, ${tilt.y * (i + 1)}px)`,
+                  transition: "transform 0.2s ease-out",
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

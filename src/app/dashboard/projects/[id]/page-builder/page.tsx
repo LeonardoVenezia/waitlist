@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import type { Plan } from "@/lib/plans";
+import { getSubscriberCount } from "@/lib/api/position";
 import { PageBuilderClient } from "./page-builder-client";
 
 export default async function PageBuilderPage(props: {
@@ -21,11 +22,14 @@ export default async function PageBuilderPage(props: {
 
   const settings = (waitlist.settings as Record<string, unknown>) ?? {};
   const pageSections = (settings.page_sections as Record<string, unknown>) ?? {};
+  const realCount = await getSubscriberCount(waitlist.id);
 
   return (
     <PageBuilderClient
       waitlistId={waitlist.id}
       slug={waitlist.slug}
+      publicKey={waitlist.public_key}
+      realCount={realCount}
       plan={waitlist.plan as Plan}
       initialSections={(pageSections.sections as Section[]) ?? []}
       initialGlobal={(pageSections.global as GlobalSettings) ?? defaultGlobal}

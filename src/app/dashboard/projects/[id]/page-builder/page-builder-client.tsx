@@ -13,6 +13,7 @@ import {
   type TemplateId,
 } from "@/lib/templates";
 import type { Plan } from "@/lib/plans";
+import { TemplateRenderer } from "@/components/templates/template-renderer";
 
 // ── Section icons & labels ──
 const SECTION_META: Record<string, { emoji: string; label: string }> = {
@@ -60,6 +61,8 @@ function makeSection(type: Section["type"], order: number): Section {
 interface Props {
   waitlistId: string;
   slug: string;
+  publicKey: string;
+  realCount: number;
   plan: Plan;
   initialSections: Section[];
   initialGlobal: GlobalSettings;
@@ -367,6 +370,29 @@ function Field({
   );
 }
 
+function FloatingTagsInput({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (value: string[]) => void;
+}) {
+  const [text, setText] = useState(value.join(", "));
+
+  return (
+    <textarea
+      value={text}
+      onChange={(e) => {
+        setText(e.target.value);
+        onChange(e.target.value.split(",").map((s) => s.trim()).filter(Boolean));
+      }}
+      onBlur={() => setText(value.join(", "))}
+      rows={3}
+      className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm"
+    />
+  );
+}
+
 function ToggleField({
   label,
   checked,
@@ -526,11 +552,9 @@ function TemplateEditor({
         />
       </Field>
       <Field label="Floating tags (comma separated)">
-        <textarea
-          value={((data.floating_tags as string[]) ?? []).join(", ")}
-          onChange={(e) => set("floating_tags", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
-          rows={3}
-          className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm"
+        <FloatingTagsInput
+          value={(data.floating_tags as string[]) ?? []}
+          onChange={(v) => set("floating_tags", v)}
         />
       </Field>
       <ToggleField
@@ -687,6 +711,8 @@ function renderPreviewSection(section: Section, s: Record<string, unknown>, glob
 export function PageBuilderClient({
   waitlistId,
   slug,
+  publicKey,
+  realCount,
   plan,
   initialSections,
   initialGlobal,
@@ -1070,18 +1096,13 @@ export function PageBuilderClient({
             <div className="min-h-[500px] max-h-[700px] overflow-y-auto" style={{ backgroundColor: global.bg_color }}>
               <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px" }}>
                 {templateId ? (
-                  <div className="text-center py-16 text-muted-foreground">
-                    <p className="text-sm font-medium">Template active: {TEMPLATE_DEFINITIONS[templateId].name}</p>
-                    <p className="mt-1 text-xs">Open the live page to preview the template.</p>
-                    <a
-                      href={pageUrl}
-                      target="_blank"
-                      rel="noopener"
-                      className="mt-3 inline-flex text-xs text-primary hover:underline"
-                    >
-                      Open live page ↗
-                    </a>
-                  </div>
+                  <TemplateRenderer
+                    templateId={templateId}
+                    templateData={templateData}
+                    publicKey={publicKey}
+                    realCount={realCount}
+                    embedded
+                  />
                 ) : (
                   <>
                     {sections.filter((s) => s.visible).sort((a, b) => a.order - b.order).map((section) => {
