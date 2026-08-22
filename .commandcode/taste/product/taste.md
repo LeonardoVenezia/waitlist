@@ -38,6 +38,7 @@
 - When a settings/UI feature exists but isn't actually wired to its effect (disconnected config), the user prefers connecting it so it works end-to-end rather than leaving it dead — removal is the fallback for features not worth wiring up. Confidence: 0.60
 - For simple embeddable widgets, prefers minimal configuration surface; rejects over-engineering with options (width, arrangement) that the embedder can control via their own container/CSS. The widget should do one thing well. Confidence: 0.70
 - When a product offers multiple integration/embed methods and one is broken (e.g., a legacy cross-origin snippet), prefers deleting the broken method and exposing only the working option(s), while still wanting to hear about any additional viable alternatives rather than a single-method-only answer. Confidence: 0.70
+- When a template/theme is selected, it overrides the custom builder and locks structure — the user can only edit content (text, images), and the page builder does nothing while the template is active (clear separation of content vs. layout). Confidence: 0.65
 
 # form-ux
 - Cancel/secondary actions should be plain text links, not styled buttons — styled cancel buttons blend in with primary actions and create bad UX ("se camufla"). Confidence: 0.70

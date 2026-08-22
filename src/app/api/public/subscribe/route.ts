@@ -364,6 +364,7 @@ export async function POST(request: Request) {
     position,
     referral_code: referralCode,
     referral_link: `${pageUrl}?ref=${referralCode}`,
+    referral_count: 0,
     leaderboard,
     milestones,
     reward_text: rewardText ?? null,

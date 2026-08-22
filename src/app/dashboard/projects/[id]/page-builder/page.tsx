@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
+import type { Plan } from "@/lib/plans";
 import { PageBuilderClient } from "./page-builder-client";
 
 export default async function PageBuilderPage(props: {
@@ -12,7 +13,7 @@ export default async function PageBuilderPage(props: {
 
   const { data: waitlist } = await supabase
     .from("projects")
-    .select("id, name, slug, public_key, settings")
+    .select("id, name, slug, public_key, plan, settings")
     .eq("id", id)
     .maybeSingle();
 
@@ -25,8 +26,11 @@ export default async function PageBuilderPage(props: {
     <PageBuilderClient
       waitlistId={waitlist.id}
       slug={waitlist.slug}
+      plan={waitlist.plan as Plan}
       initialSections={(pageSections.sections as Section[]) ?? []}
       initialGlobal={(pageSections.global as GlobalSettings) ?? defaultGlobal}
+      initialTemplateId={(pageSections.template_id as string | null) ?? null}
+      initialTemplateData={pageSections.template_data}
     />
   );
 }

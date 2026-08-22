@@ -6,7 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageUpload } from "@/components/shared/image-upload";
 import type { Section, GlobalSettings } from "./page";
-import { savePageSections } from "./actions";
+import { savePageSections, selectTemplate, saveTemplateData } from "./actions";
+import {
+  TEMPLATE_DEFINITIONS,
+  hasTemplateAccess,
+  type TemplateId,
+} from "@/lib/templates";
+import type { Plan } from "@/lib/plans";
 
 // ── Section icons & labels ──
 const SECTION_META: Record<string, { emoji: string; label: string }> = {
@@ -54,8 +60,11 @@ function makeSection(type: Section["type"], order: number): Section {
 interface Props {
   waitlistId: string;
   slug: string;
+  plan: Plan;
   initialSections: Section[];
   initialGlobal: GlobalSettings;
+  initialTemplateId: string | null;
+  initialTemplateData: unknown;
 }
 
 // ── ColorInput helper ──
@@ -341,6 +350,201 @@ function SectionListItem({
   );
 }
 
+// ── Template Editor ──
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="block text-xs font-medium text-muted-foreground">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function ToggleField({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm">{label}</span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-5 w-9 rounded-full border-2 border-transparent transition-colors ${
+          checked ? "bg-primary" : "bg-muted-foreground/20"
+        }`}
+      >
+        <span
+          className={`inline-block size-4 rounded-full bg-white shadow-sm transition-transform ${
+            checked ? "translate-x-4" : "translate-x-0"
+          }`}
+        />
+      </button>
+    </div>
+  );
+}
+
+function TemplateEditor({
+  templateId,
+  data,
+  onChange,
+  onSave,
+  saving,
+}: {
+  templateId: TemplateId;
+  data: Record<string, unknown>;
+  onChange: (patch: Record<string, unknown>) => void;
+  onSave: () => void;
+  saving: boolean;
+}) {
+  const set = (key: string, value: unknown) => onChange({ [key]: value });
+
+  if (templateId === "neon") {
+    return (
+      <div className="space-y-4">
+        <Field label="Badge text">
+          <Input value={(data.badge_text as string) ?? ""} onChange={(e) => set("badge_text", e.target.value)} />
+        </Field>
+        <Field label="Title">
+          <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} />
+        </Field>
+        <Field label="Subtitle">
+          <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} />
+        </Field>
+        <Field label="CTA label">
+          <Input value={(data.cta_label as string) ?? ""} onChange={(e) => set("cta_label", e.target.value)} />
+        </Field>
+        <Field label="Social count override">
+          <Input
+            value={(data.social_count_override as string) ?? ""}
+            onChange={(e) => set("social_count_override", e.target.value)}
+            placeholder="Leave empty to use real count"
+          />
+        </Field>
+        <Field label="Milestone 3 label">
+          <Input value={(data.milestone_3_label as string) ?? ""} onChange={(e) => set("milestone_3_label", e.target.value)} />
+        </Field>
+        <Field label="Milestone 5 label">
+          <Input value={(data.milestone_5_label as string) ?? ""} onChange={(e) => set("milestone_5_label", e.target.value)} />
+        </Field>
+        <Field label="Milestone 10 label">
+          <Input value={(data.milestone_10_label as string) ?? ""} onChange={(e) => set("milestone_10_label", e.target.value)} />
+        </Field>
+        <ToggleField
+          label="Show social proof"
+          checked={(data.show_social_proof as boolean) ?? true}
+          onChange={(v) => set("show_social_proof", v)}
+        />
+        <Button size="sm" onClick={onSave} disabled={saving}>
+          {saving ? "Saving…" : "Save template"}
+        </Button>
+      </div>
+    );
+  }
+
+  if (templateId === "carbon") {
+    return (
+      <div className="space-y-4">
+        <Field label="Eyebrow">
+          <Input value={(data.eyebrow as string) ?? ""} onChange={(e) => set("eyebrow", e.target.value)} />
+        </Field>
+        <Field label="Title">
+          <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} />
+        </Field>
+        <Field label="Emphasis word">
+          <Input
+            value={(data.emphasis as string) ?? ""}
+            onChange={(e) => set("emphasis", e.target.value)}
+            placeholder="Word to highlight with gradient"
+          />
+        </Field>
+        <Field label="Subtitle">
+          <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} />
+        </Field>
+        <Field label="CTA label">
+          <Input value={(data.cta_label as string) ?? ""} onChange={(e) => set("cta_label", e.target.value)} />
+        </Field>
+        <Field label="Mockup image">
+          <ImageUpload
+            value={(data.mockup_image as string) ?? ""}
+            onChange={(v) => set("mockup_image", v)}
+            onRemove={() => set("mockup_image", "")}
+          />
+        </Field>
+        <Field label="Social count override">
+          <Input
+            value={(data.social_count_override as string) ?? ""}
+            onChange={(e) => set("social_count_override", e.target.value)}
+            placeholder="Leave empty to use real count"
+          />
+        </Field>
+        <ToggleField
+          label="Show social proof"
+          checked={(data.show_social_proof as boolean) ?? true}
+          onChange={(v) => set("show_social_proof", v)}
+        />
+        <Button size="sm" onClick={onSave} disabled={saving}>
+          {saving ? "Saving…" : "Save template"}
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <Field label="Badge text">
+        <Input value={(data.badge_text as string) ?? ""} onChange={(e) => set("badge_text", e.target.value)} />
+      </Field>
+      <Field label="Title">
+        <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} />
+      </Field>
+      <Field label="Subtitle">
+        <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} />
+      </Field>
+      <Field label="CTA label">
+        <Input value={(data.cta_label as string) ?? ""} onChange={(e) => set("cta_label", e.target.value)} />
+      </Field>
+      <Field label="Social count override">
+        <Input
+          value={(data.social_count_override as string) ?? ""}
+          onChange={(e) => set("social_count_override", e.target.value)}
+          placeholder="Leave empty to use real count"
+        />
+      </Field>
+      <Field label="Floating tags (comma separated)">
+        <textarea
+          value={((data.floating_tags as string[]) ?? []).join(", ")}
+          onChange={(e) => set("floating_tags", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+          rows={3}
+          className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm"
+        />
+      </Field>
+      <ToggleField
+        label="Show social proof"
+        checked={(data.show_social_proof as boolean) ?? true}
+        onChange={(v) => set("show_social_proof", v)}
+      />
+      <Button size="sm" onClick={onSave} disabled={saving}>
+        {saving ? "Saving…" : "Save template"}
+      </Button>
+    </div>
+  );
+}
+
 // ── Main Component ──
 
 function renderPreviewSection(section: Section, s: Record<string, unknown>, global: GlobalSettings) {
@@ -480,20 +684,36 @@ function renderPreviewSection(section: Section, s: Record<string, unknown>, glob
   );
 }
 
-export function PageBuilderClient({ waitlistId, slug, initialSections, initialGlobal }: Props) {
+export function PageBuilderClient({
+  waitlistId,
+  slug,
+  plan,
+  initialSections,
+  initialGlobal,
+  initialTemplateId,
+  initialTemplateData,
+}: Props) {
   const router = useRouter();
   const [sections, setSections] = useState<Section[]>(initialSections);
   const [global, setGlobal] = useState<GlobalSettings>(initialGlobal);
+  const [templateId, setTemplateId] = useState<TemplateId | null>(
+    initialTemplateId as TemplateId | null,
+  );
+  const [templateData, setTemplateData] = useState<Record<string, unknown>>(
+    (initialTemplateData as Record<string, unknown>) ?? {},
+  );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [addSectionOpen, setAddSectionOpen] = useState(false);
   const [globalOpen, setGlobalOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [openSectionId, setOpenSectionId] = useState<string | null>(null);
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const pageUrl = `${appUrl}/p/${slug}`;
+  const canUseTemplates = hasTemplateAccess(plan);
 
   const save = useCallback(async () => {
     setSaving(true);
@@ -503,6 +723,38 @@ export function PageBuilderClient({ waitlistId, slug, initialSections, initialGl
     setTimeout(() => setSaved(false), 2000);
     router.refresh();
   }, [waitlistId, slug, sections, global, router]);
+
+  const handleSelectTemplate = useCallback(
+    async (next: TemplateId | null) => {
+      if (!canUseTemplates) return;
+      if (next && next !== templateId) {
+        const def = TEMPLATE_DEFINITIONS[next];
+        setTemplateData(def.defaultData as unknown as Record<string, unknown>);
+      }
+      setSaving(true);
+      await selectTemplate(waitlistId, slug, next);
+      setTemplateId(next);
+      setSaving(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      router.refresh();
+    },
+    [canUseTemplates, waitlistId, slug, templateId, router],
+  );
+
+  const handleSaveTemplate = useCallback(async () => {
+    if (!templateId) return;
+    setSaving(true);
+    await saveTemplateData(waitlistId, slug, templateData);
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+    router.refresh();
+  }, [templateId, waitlistId, slug, templateData, router]);
+
+  const updateTemplateData = useCallback((patch: Record<string, unknown>) => {
+    setTemplateData((prev) => ({ ...prev, ...patch }));
+  }, []);
 
   const addSection = (type: Section["type"]) => {
     setSections([...sections, makeSection(type, sections.length)]);
@@ -587,6 +839,87 @@ export function PageBuilderClient({ waitlistId, slug, initialSections, initialGl
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* Left: Sections */}
         <div className="lg:col-span-5 space-y-3">
+          {/* Template selector */}
+          <div className="border rounded-xl overflow-hidden">
+            <button
+              onClick={() => setTemplateOpen(!templateOpen)}
+              className="flex items-center justify-between w-full px-4 py-3 bg-card hover:bg-muted/50 transition-colors text-left"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">🎨</span>
+                <span className="text-sm font-semibold">Template</span>
+              </div>
+              <svg
+                className="size-4 text-muted-foreground transition-transform"
+                style={{ transform: templateOpen ? "rotate(180deg)" : "" }}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2.5}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {templateOpen && (
+              <div className="border-t bg-muted/30 p-4 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => handleSelectTemplate(null)}
+                  className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
+                    !templateId ? "border-primary bg-primary/5" : "hover:bg-muted"
+                  }`}
+                >
+                  <span className="font-medium">Custom builder</span>
+                  <span className="block text-xs text-muted-foreground">Build your own sections</span>
+                </button>
+                {Object.values(TEMPLATE_DEFINITIONS).map((def) => {
+                  const active = templateId === def.id;
+                  const locked = !canUseTemplates;
+                  return (
+                    <div key={def.id} className="relative">
+                      <button
+                        type="button"
+                        onClick={() => handleSelectTemplate(def.id)}
+                        disabled={locked}
+                        className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition disabled:cursor-not-allowed ${
+                          active ? "border-primary bg-primary/5" : locked ? "opacity-50" : "hover:bg-muted"
+                        }`}
+                      >
+                        <span className="font-medium">{def.thumbnail} {def.name}</span>
+                        <span className="block text-xs text-muted-foreground">{def.description}</span>
+                      </button>
+                      {locked && (
+                        <a
+                          href={`/dashboard/projects/${waitlistId}/upgrade`}
+                          className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/60 text-xs font-medium text-primary"
+                        >
+                          Upgrade to use templates
+                        </a>
+                      )}
+                    </div>
+                  );
+                })}
+                {templateId && (
+                  <div className="border-t pt-3">
+                    <TemplateEditor
+                      templateId={templateId}
+                      data={templateData}
+                      onChange={updateTemplateData}
+                      onSave={handleSaveTemplate}
+                      saving={saving}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {templateId ? (
+            <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
+              Section editing is disabled while a template is active. Choose Custom builder to edit sections.
+            </div>
+          ) : (
+            <>
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold">Sections</h3>
             <div className="relative">
@@ -711,6 +1044,8 @@ export function PageBuilderClient({ waitlistId, slug, initialSections, initialGl
               </div>
             )}
           </div>
+          </>
+          )}
         </div>
 
         {/* Right: Preview */}
@@ -734,14 +1069,31 @@ export function PageBuilderClient({ waitlistId, slug, initialSections, initialGl
             {/* Preview rendered inline */}
             <div className="min-h-[500px] max-h-[700px] overflow-y-auto" style={{ backgroundColor: global.bg_color }}>
               <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px" }}>
-                {sections.filter((s) => s.visible).sort((a, b) => a.order - b.order).map((section) => {
-                  const s = section.settings;
-                  return renderPreviewSection(section, s, global);
-                })}
-                {sections.length === 0 && (
+                {templateId ? (
                   <div className="text-center py-16 text-muted-foreground">
-                    <p className="text-sm">No sections yet. Add a section to start building your page.</p>
+                    <p className="text-sm font-medium">Template active: {TEMPLATE_DEFINITIONS[templateId].name}</p>
+                    <p className="mt-1 text-xs">Open the live page to preview the template.</p>
+                    <a
+                      href={pageUrl}
+                      target="_blank"
+                      rel="noopener"
+                      className="mt-3 inline-flex text-xs text-primary hover:underline"
+                    >
+                      Open live page ↗
+                    </a>
                   </div>
+                ) : (
+                  <>
+                    {sections.filter((s) => s.visible).sort((a, b) => a.order - b.order).map((section) => {
+                      const s = section.settings;
+                      return renderPreviewSection(section, s, global);
+                    })}
+                    {sections.length === 0 && (
+                      <div className="text-center py-16 text-muted-foreground">
+                        <p className="text-sm">No sections yet. Add a section to start building your page.</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
