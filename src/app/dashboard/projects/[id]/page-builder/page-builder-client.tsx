@@ -535,23 +535,29 @@ export function PageBuilderClient({
     router.refresh();
   }, [waitlistId, slug, sections, global, router]);
 
-  const handleSelectTemplate = useCallback(
-    async (next: TemplateId | null) => {
+  const handlePickTemplate = useCallback(
+    (next: TemplateId | null) => {
       if (!canUseTemplates) return;
       if (next && next !== templateId) {
         const def = TEMPLATE_DEFINITIONS[next];
         setTemplateData(def.defaultData as unknown as Record<string, unknown>);
+      } else if (!next) {
+        setTemplateData({});
       }
-      setSaving(true);
-      await selectTemplate(waitlistId, slug, next);
       setTemplateId(next);
-      setSaving(false);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-      router.refresh();
     },
-    [canUseTemplates, waitlistId, slug, templateId, router],
+    [canUseTemplates, templateId],
   );
+
+  const handleApplyTemplate = useCallback(async () => {
+    if (!templateId) return;
+    setSaving(true);
+    await selectTemplate(waitlistId, slug, templateId);
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+    router.refresh();
+  }, [templateId, waitlistId, slug, router]);
 
   const handleSaveTemplate = useCallback(async () => {
     if (!templateId) return;
@@ -675,7 +681,7 @@ export function PageBuilderClient({
               <div className="border-t bg-muted/30 p-4 space-y-3">
                 <button
                   type="button"
-                  onClick={() => handleSelectTemplate(null)}
+                  onClick={() => handlePickTemplate(null)}
                   className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
                     !templateId ? "border-primary bg-primary/5" : "hover:bg-muted"
                   }`}
@@ -690,7 +696,7 @@ export function PageBuilderClient({
                     <div key={def.id} className="relative">
                       <button
                         type="button"
-                        onClick={() => handleSelectTemplate(def.id)}
+                        onClick={() => handlePickTemplate(def.id)}
                         disabled={locked}
                         className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition disabled:cursor-not-allowed ${
                           active ? "border-primary bg-primary/5" : locked ? "opacity-50" : "hover:bg-muted"
@@ -711,7 +717,10 @@ export function PageBuilderClient({
                   );
                 })}
                 {templateId && (
-                  <div className="border-t pt-3">
+                  <div className="border-t pt-3 space-y-3">
+                    <Button size="sm" onClick={handleApplyTemplate} disabled={saving}>
+                      {saving ? "Applying…" : "Apply template"}
+                    </Button>
                     <TemplateEditor
                       templateId={templateId}
                       data={templateData}
