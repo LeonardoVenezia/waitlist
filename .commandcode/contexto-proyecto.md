@@ -168,8 +168,14 @@ Configuración por proyecto guardada en `settings.email` y parseada por `src/lib
 `public/widget.js` monta el widget de waitlist dentro de un iframe usando el selector `.startpack-widget[data-key-id]`.
 
 - El iframe apunta a `/w/e/[publicKey]`.
-- Si el proyecto tiene un template activo, `/w/e` redirige a la página pública en modo embebido (`?embed=1`) para renderizar el template.
-- Los proyectos Free muestran un backlink dofollow "Made with Startpack" al pie del widget. Los planes pagos no lo muestran.
+- `settings.widget.mode` define el origen:
+  - `"custom"`: formulario genérico configurable (`settings.widget`).
+  - `"template"`: usa el template activo del Page Builder (`settings.page_sections.template_id`).
+- Si hay un template activo y `mode === "template"`, `/w/e` redirige a la página pública en modo embebido (`?embed=1`).
+- Los proyectos Free muestran un backlink dofollow "Made with Startpack" al pie del widget custom. Los planes pagos no lo muestran.
+- El preview de Integration usa las mismas fuentes de render que producción:
+  - Custom: `buildWidgetHtml` en un `iframe srcDoc`.
+  - Template: `TemplateRenderer` con `embedded`.
 - El snippet correcto se genera en **Integration** (`/dashboard/projects/[id]/integration`).
 
 ---

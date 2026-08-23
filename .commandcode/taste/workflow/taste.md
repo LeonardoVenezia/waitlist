@@ -1,5 +1,6 @@
 # workflow
 - Prefers thorough analysis and planning before writing code: expects project exploration, gap analysis, and a structured plan (phases, ordered steps) before any implementation begins. Confidence: 0.95
+- When the user explicitly asks to enter plan mode ("pases a plan mode"), expects the agent to actually switch into it, explore the relevant code first (parallel sub-agents), then surface design decisions as multiple-choice questions before writing the plan. Confidence: 0.75
 - When deciding whether to escalate to planning mode (or a similar process step), user defers to the agent's judgment — explicitly authorizes switching into planning mode if the agent deems it necessary ("si considerás necesario pasar al planning mode, hacélo") rather than waiting to be asked. Confidence: 0.60
 - Wants implementation work to be documented: expects a clear summary of what was built, which files were created/modified, and what each piece does — not just the code itself. Confidence: 0.80
 - Gathers reference material from competitor/peer products (HTML, screenshots, feature lists) to ground planning in concrete examples rather than abstract feature descriptions. Confidence: 0.75

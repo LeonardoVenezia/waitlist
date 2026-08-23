@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateWidgetSettings, updateLeaderboardSettings } from "./actions";
+import { saveTemplateData } from "../page-builder/actions";
+import { getTemplateDefinition, hasTemplateAccess, type TemplateId } from "@/lib/templates";
+import { TemplateRenderer } from "@/components/templates/template-renderer";
+import { TemplateEditor } from "@/components/templates/template-editor";
+import { buildWidgetHtml } from "@/lib/widget-html";
 
 // ── Types ──────────────────────────────────────────────
 
@@ -38,6 +43,7 @@ interface LeaderboardSettings {
 
 interface IntegrationClientProps {
   waitlistId: string;
+  slug: string;
   publicKey: string;
   settings: Record<string, unknown>;
   plan: string;
@@ -124,6 +130,7 @@ function Section({
 
 export function IntegrationClient({
   waitlistId,
+  slug,
   publicKey,
   settings,
   plan,
@@ -136,6 +143,16 @@ export function IntegrationClient({
   // Parse current widget/leaderboard settings from DB
   const widget = (settings.widget ?? {}) as WidgetSettings;
   const leaderboard = (settings.leaderboard ?? {}) as LeaderboardSettings;
+  const pageSections = (settings.page_sections ?? {}) as Record<string, unknown>;
+  const activeTemplateId = getTemplateDefinition(pageSections.template_id)?.id ?? null;
+  const canUseTemplates = hasTemplateAccess(plan as never);
+
+  const [widgetMode, setWidgetMode] = useState<"custom" | "template">(
+    (widget.mode as "custom" | "template") ?? "custom",
+  );
+  const [templateData, setTemplateData] = useState<Record<string, unknown>>(
+    (pageSections.template_data as Record<string, unknown>) ?? {},
+  );
 
   // ── Widget state ──
   const [wCollectName, setWCollectName] = useState(widget.collect_name ?? false);
@@ -210,6 +227,7 @@ async function joinWaitlist(e) {
   const saveWidget = useCallback(async () => {
     setSaving(true);
     const ws: WidgetSettings = {
+      mode: "custom",
       collect_name: wCollectName,
       layout: wLayout,
       input: wInput,
@@ -236,6 +254,31 @@ async function joinWaitlist(e) {
     router.refresh();
   }, [waitlistId, lbContent, lbColumns, lbColors, router]);
 
+  const saveTemplate = useCallback(async () => {
+    if (!activeTemplateId) return;
+    setSaving(true);
+    await updateWidgetSettings(waitlistId, { mode: "template" });
+    await saveTemplateData(waitlistId, slug, templateData);
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+    router.refresh();
+  }, [waitlistId, slug, activeTemplateId, templateData, router]);
+
+  const handleSave = useCallback(async () => {
+    if (tab === "leaderboard") {
+      await saveLeaderboard();
+    } else if (widgetMode === "template") {
+      await saveTemplate();
+    } else {
+      await saveWidget();
+    }
+  }, [tab, widgetMode, saveLeaderboard, saveTemplate, saveWidget]);
+
+  const updateTemplateData = useCallback((patch: Record<string, unknown>) => {
+    setTemplateData((prev) => ({ ...prev, ...patch }));
+  }, []);
+
   // ── Copy to clipboard ──
   const [copied, setCopied] = useState<string | null>(null);
   const copy = (key: string, text: string) => {
@@ -260,7 +303,7 @@ async function joinWaitlist(e) {
           {saved && <span className="text-sm text-green-600 font-medium">✓ Saved</span>}
           <Button
             size="sm"
-            onClick={() => (tab === "leaderboard" ? saveLeaderboard() : saveWidget())}
+            onClick={handleSave}
             disabled={saving}
           >
             {saving ? "Saving…" : "Save"}
@@ -296,6 +339,35 @@ async function joinWaitlist(e) {
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
           {/* Left: Settings */}
           <div className="lg:col-span-7 space-y-4">
+            {/* Source selector */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setWidgetMode("custom")}
+                className={`rounded-xl border px-4 py-3 text-left transition ${
+                  widgetMode === "custom" ? "bg-card border-primary ring-1 ring-primary" : "bg-card hover:border-foreground/20"
+                }`}
+              >
+                <span className="block text-sm font-medium">Custom widget</span>
+                <span className="block text-xs text-muted-foreground mt-0.5">Build a simple signup form</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => canUseTemplates && setWidgetMode("template")}
+                disabled={!canUseTemplates}
+                className={`rounded-xl border px-4 py-3 text-left transition ${
+                  widgetMode === "template" ? "bg-card border-primary ring-1 ring-primary" : "bg-card hover:border-foreground/20 disabled:opacity-50"
+                }`}
+              >
+                <span className="block text-sm font-medium">Page builder template</span>
+                <span className="block text-xs text-muted-foreground mt-0.5">
+                  {canUseTemplates ? "Use your selected template" : "Upgrade to use templates"}
+                </span>
+              </button>
+            </div>
+
+            {widgetMode === "custom" ? (
+              <>
             {/* Layout */}
             <Section
               title="Layout"
@@ -389,6 +461,26 @@ async function joinWaitlist(e) {
                 </div>
               </div>
             </Section>
+              </>
+            ) : activeTemplateId ? (
+              <div className="bg-card border rounded-2xl shadow-sm p-5">
+                <TemplateEditor
+                  templateId={activeTemplateId}
+                  data={templateData}
+                  onChange={updateTemplateData}
+                  onSave={handleSave}
+                  saving={saving}
+                />
+              </div>
+            ) : (
+              <div className="rounded-xl border bg-muted/30 p-6 text-sm text-muted-foreground">
+                <p className="font-medium text-foreground">No template selected</p>
+                <p className="mt-1">Choose a template in the Page Builder first.</p>
+                <a href={`/dashboard/projects/${waitlistId}/page-builder`} className="mt-3 inline-flex text-primary hover:underline">
+                  Open Page Builder →
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Right: Preview */}
@@ -407,61 +499,39 @@ async function joinWaitlist(e) {
                   <span className="size-2.5 rounded-full bg-green-400/70" />
                 </div>
               </div>
-              <div className="p-6 bg-muted/30 min-h-[300px] flex items-center justify-center">
-                <form
-                  className="flex flex-col gap-2"
-                  style={{
-                    maxWidth: 320,
-                    width: "100%",
-                  }}
-                  onSubmit={(e) => e.preventDefault()}
-                >
-                  {wCollectName && (
-                    <input
-                      type="text"
-                      placeholder="Name"
-                      disabled
-                      className="w-full px-3 py-2 border rounded-md text-sm bg-background disabled:opacity-60"
-                      style={{
-                        borderRadius: `${wLayout.corner_radius}px`,
-                        borderColor: wInput.border_color,
-                        borderWidth: `${wLayout.border_width}px`,
-                        backgroundColor: wInput.background_color,
-                        color: wInput.text_color,
-                        fontSize: `${wLayout.font_size}px`,
-                      }}
-                    />
-                  )}
-                  <input
-                    type="email"
-                    placeholder="you@example.com"
-                    disabled
-                    className="w-full px-3 py-2 border rounded-md text-sm bg-background disabled:opacity-60"
-                    style={{
-                      borderRadius: `${wLayout.corner_radius}px`,
-                      borderColor: wInput.border_color,
-                      borderWidth: `${wLayout.border_width}px`,
-                      backgroundColor: wInput.background_color,
-                      color: wInput.text_color,
-                      fontSize: `${wLayout.font_size}px`,
-                    }}
+              <div className="p-4 bg-muted/30 min-h-[300px]">
+                {widgetMode === "custom" ? (
+                  <iframe
+                    title="Widget preview"
+                    srcDoc={buildWidgetHtml({
+                      publicKey,
+                      appUrl,
+                      plan,
+                      widget: {
+                        mode: "custom",
+                        collect_name: wCollectName,
+                        layout: wLayout,
+                        input: wInput,
+                        button: wButton,
+                      },
+                      thankYou: (settings.thank_you ?? {}) as Record<string, unknown>,
+                      preview: true,
+                    })}
+                    style={{ width: "100%", height: "auto", minHeight: 320, border: "none" }}
                   />
-                  <button
-                    type="button"
-                    disabled
-                    className="px-4 py-2 text-sm font-medium rounded-md disabled:opacity-60 w-full"
-                    style={{
-                      borderRadius: `${wLayout.corner_radius}px`,
-                      backgroundColor: wButton.background_color,
-                      color: wButton.text_color,
-                      borderColor: wButton.border_color,
-                      borderWidth: `${wLayout.border_width}px`,
-                      borderStyle: "solid",
-                    }}
-                  >
-                    {wButton.label || "Sign Up"}
-                  </button>
-                </form>
+                ) : activeTemplateId ? (
+                  <TemplateRenderer
+                    templateId={activeTemplateId}
+                    templateData={templateData}
+                    publicKey={publicKey}
+                    realCount={0}
+                    embedded
+                  />
+                ) : (
+                  <div className="flex items-center justify-center min-h-[300px] text-sm text-muted-foreground">
+                    No template selected.
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -24,6 +24,7 @@ export default async function IntegrationPage(props: {
   return (
     <IntegrationClient
       waitlistId={waitlist.id}
+      slug={waitlist.slug}
       publicKey={waitlist.public_key}
       settings={waitlist.settings as Record<string, unknown>}
       plan={waitlist.plan}
