@@ -25,8 +25,3 @@
 See [product/taste.md](product/taste.md)
 # workflow
 See [workflow/taste.md](workflow/taste.md)
-provider-verified domain (e.g., leovenezia.dev) rather than a generic or placeholder sender address. Confidence: 0.60
-# product
-See [product/taste.md](product/taste.md)
-# workflow
-See [workflow/taste.md](workflow/taste.md)

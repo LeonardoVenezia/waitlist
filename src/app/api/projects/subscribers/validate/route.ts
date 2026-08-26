@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Basic email validation: check format, disposable domains, common typos
@@ -35,13 +36,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "subscriberId required" }, { status: 400 });
     }
 
-    const supabase = createAdminClient();
+    const supabase = await createClient();
 
+    // RLS-protected read: only visible if the caller owns the parent project
     const { data: sub } = await supabase
       .from("subscribers")
       .select("id, email")
       .eq("id", subscriberId)
-      .single();
+      .maybeSingle();
 
     if (!sub) {
       return NextResponse.json({ error: "Subscriber not found" }, { status: 404 });
@@ -49,7 +51,8 @@ export async function POST(request: Request) {
 
     const { status } = validateEmailQuality(sub.email);
 
-    await supabase
+    const admin = createAdminClient();
+    await admin
       .from("subscribers")
       .update({ email_status: status })
       .eq("id", subscriberId);

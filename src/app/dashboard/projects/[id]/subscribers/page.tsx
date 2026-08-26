@@ -21,7 +21,8 @@ export default async function SubscribersPage(props: {
 }) {
   const { id } = await props.params;
   const sp = await props.searchParams;
-  const pageNum = Math.max(0, Number(sp?.page ?? 1) - 1);
+  const parsedPage = Number.parseInt(sp?.page ?? "1", 10);
+  const pageNum = Number.isNaN(parsedPage) ? 0 : Math.max(0, parsedPage - 1);
   const search = sp?.search ?? "";
   const verified = sp?.verified ?? "";
   const dateFrom = sp?.date_from ?? "";
@@ -83,7 +84,7 @@ export default async function SubscribersPage(props: {
 
   const totalPages = Math.ceil((totalCount ?? 0) / PAGE_SIZE);
 
-  // Build export link with current filters
+  // Build export link with current filters (also reused for out-of-range redirect)
   const exportParams = new URLSearchParams();
   if (search) exportParams.set("search", search);
   if (verified) exportParams.set("verified", verified);
@@ -91,6 +92,14 @@ export default async function SubscribersPage(props: {
   if (dateUntil) exportParams.set("date_until", dateUntil);
   if (emailStatus) exportParams.set("email_status", emailStatus);
   const exportQs = exportParams.toString();
+
+  // Out-of-range page (?page=999, stale links after deletes):
+  // redirect to the last valid page, preserving filters
+  if (pageNum > 0 && (totalCount ?? 0) > 0 && (subscribers ?? []).length === 0) {
+    const redirectParams = new URLSearchParams(exportParams);
+    redirectParams.set("page", String(totalPages));
+    redirect(`/dashboard/projects/${id}/subscribers?${redirectParams.toString()}`);
+  }
 
   return (
     <div className="space-y-6">

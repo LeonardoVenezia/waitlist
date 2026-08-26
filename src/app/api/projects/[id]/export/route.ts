@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import * as XLSX from "xlsx";
 
@@ -7,6 +8,18 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+
+  // RLS-protected read: only the project owner can see this row
+  const supabase = await createClient();
+  const { data: project } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!project) {
+    return new NextResponse("Not found", { status: 404 });
+  }
+
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") ?? "csv";
   const search = searchParams.get("search") ?? "";
@@ -15,9 +28,9 @@ export async function GET(
   const dateUntil = searchParams.get("date_until") ?? "";
   const emailStatus = searchParams.get("email_status") ?? "";
 
-  const supabase = createAdminClient();
+  const admin = createAdminClient();
 
-  let query = supabase
+  let query = admin
     .from("subscribers")
     .select("id, email, name, country, referral_code, referral_count, referred_by, status, verified, email_status, metadata, created_at")
     .eq("waitlist_id", id)

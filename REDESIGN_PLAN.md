@@ -179,15 +179,16 @@ export interface Plan {
 
 ---
 
-### 3.3 Subscribers table: paginación server-side
+### 3.3 Subscribers table: paginación server-side ✅
 
-**Qué**: Actualmente el server trae solo 50 subscribers y la paginación cliente divide esos 50 en páginas de 25. Si hay >50 subscribers, el resto es invisible. Implementar paginación server-side con `offset`/`limit` pasados como search params.
+**Estado**: Resuelto. La paginación server-side ya estaba implementada (`.range()` + `count: "exact"` con página/filtros como search params, introducido en el renombre de tablas). En esta revisión se corrigieron los bugs residuales:
 
-**Por qué**: Feature roto por diseño. Los 50 actuales son un límite arbitrario que esconde datos.
+- **Export sin auth** (`api/projects/[id]/export`): cualquiera podía descargar todos los suscriptores conociendo el project id. Ahora verifica ownership con lectura RLS (`createClient()`) antes del admin client.
+- **Validate sin auth** (`api/projects/subscribers/validate`): POST anónimo mutaba `email_status` de cualquier suscriptor. Mismo fix: lectura RLS previa.
+- **Debounce del buscador**: los timers no se limpiaban entre teclas (navegaciones encadenadas). Ahora usa ref con cleanup.
+- **`?page=` sin sanitizar**: `page=abc` producía `NaN` en `.range()`, `page=999` mostraba rango inválido. Ahora se parsea como entero y las páginas fuera de rango redirigen a la primera conservando filtros.
 
-**Prioridad**: Alta (bug).
-
-**Archivos**: `src/app/dashboard/waitlists/[id]/subscribers/page.tsx`, `src/app/dashboard/waitlists/[id]/subscribers/subscribers-table.tsx`
+**Archivos**: `src/app/dashboard/projects/[id]/subscribers/page.tsx`, `subscribers-table.tsx`, `src/app/api/projects/[id]/export/route.ts`, `src/app/api/projects/subscribers/validate/route.ts`
 
 ---
 

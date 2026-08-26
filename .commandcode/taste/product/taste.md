@@ -54,7 +54,7 @@
 - Page builder/editor previews must faithfully mirror the real public rendering (same form fields, input visibility, button width, overlay opacity, typography, and — for templates — the actual template component rather than a placeholder) — the user flags any WYSIWYG discrepancy between preview and live page and expects the preview to be exact, not an approximation. This extends to embeddable widget previews (Integration), which must render the real widget HTML/template via a shared source rather than a Tailwind approximation. Confidence: 0.80
 # data-quality
 - Values data hygiene: expects signup email validation to block junk/fake entries (invalid formats, disposable domains) so the subscriber database isn't polluted with garbage. Confidence: 0.70
-- Dislikes # branding
+# branding
 - Avoids copying a competitor's brand name when building an inspired-by product ("no les voy a robar el nombre"); defers the real naming decision to later (using a temporary placeholder like "LaunchList"), and has now settled on "Startpack" as the product name. Confidence: 0.80
 - Uses the product's official brand name "Startpack" consistently; treats leftover competitor/placeholder branding (e.g., `launchlist-widget`) as a bug to rename. Confidence: 0.65
 empty/dead columns in data tables; for fields with no data source, prefers either wiring them up properly (e.g., geoIP for Country) or removing them entirely rather than leaving them perpetually blank. Confidence: 0.70

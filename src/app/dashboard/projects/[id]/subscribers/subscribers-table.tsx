@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import type { Database } from "@/lib/supabase/types";
 import { Button } from "@/components/ui/button";
@@ -177,12 +177,15 @@ export function SubscribersTable({
 
   // Debounced search
   const [searchValue, setSearchValue] = useState(filters.search);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => clearTimeout(debounceRef.current ?? undefined), []);
+
   const handleSearch = (value: string) => {
     setSearchValue(value);
-    const timeout = setTimeout(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
       router.push(buildUrl({ search: value }));
     }, 400);
-    return () => clearTimeout(timeout);
   };
 
   const hasFilters =
