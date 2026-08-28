@@ -115,9 +115,6 @@ export default async function SubscribersPage(props: {
           <Link href={`/dashboard/projects/${id}/export${exportQs ? "?" + exportQs : ""}`}>
             <Button variant="outline" size="sm">Export</Button>
           </Link>
-          <Link href={`/dashboard/projects/${id}/upgrade`}>
-            <Button size="sm">Upgrade plan</Button>
-          </Link>
         </div>
       </div>
       <SubscribersTable

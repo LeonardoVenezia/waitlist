@@ -16,7 +16,7 @@ export default function PricingPage() {
             Empezás gratis. Upgradéas solo cuando tu producto despega.
           </p>
         </div>
-        <div className="mt-12 grid gap-6 sm:grid-cols-2">
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {PLANS.map((plan) => (
             <Card
               key={plan.id}

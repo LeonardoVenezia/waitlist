@@ -68,9 +68,6 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
             /p/{waitlist.slug}
           </p>
         </div>
-        <Link href={`/dashboard/projects/${id}/upgrade`}>
-          <Button size="sm">Upgrade plan</Button>
-        </Link>
       </div>
 
       {/* Onboarding card — only for new projects, dismissable */}

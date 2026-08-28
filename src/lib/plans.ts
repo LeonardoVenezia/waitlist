@@ -1,4 +1,4 @@
-export type Plan = "free" | "launch"
+export type Plan = "free" | "launch" | "grow"
 
 export interface PlanInfo {
   id: Plan
@@ -55,7 +55,32 @@ export const PLANS: PlanInfo[] = [
     ],
     cta: "Suscribirme",
     href: "/signup?plan=launch",
-    paddlePriceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_LAUNCH ?? null,
+    paddlePriceId: process.env.PADDLE_PRICE_LAUNCH ?? null,
+  },
+  {
+    id: "grow",
+    name: "Grow",
+    price: "$29 / mes",
+    interval: "month",
+    description: "Para products en crecimiento",
+    showcaseExpiry: "indefinite",
+    waitlistLimit: 10000,
+    templatesAccess: true,
+    features: [
+      "Producto publicado sin límite de tiempo",
+      "Hasta 10.000 emails en la waitlist",
+      "Acceso a templates de page builder",
+      "Team members (unlimited)",
+      "Webhooks & Zapier",
+      "Custom domain",
+      "Remove branding",
+      "AJAX submissions",
+      "Conversion tracking",
+      "Priority support",
+    ],
+    cta: "Suscribirme",
+    href: "/signup?plan=grow",
+    paddlePriceId: process.env.PADDLE_PRICE_GROW ?? null,
   },
 ]
 
@@ -91,10 +116,23 @@ const FEATURE_MATRIX: Record<Plan, string[]> = {
     "double_optin",
     "slack_notification",
   ],
+  grow: [
+    "welcome_email",
+    "double_optin",
+    "slack_notification",
+    "team_members",
+    "webhooks",
+    "zapier",
+    "custom_domain",
+    "ajax_submit",
+    "conversion_tracking",
+    "remove_branding",
+    "priority_support",
+  ],
 }
 
 export function hasFeature(plan: Plan | string | null | undefined, feature: string): boolean {
   const p = plan as Plan
-  if (p !== "free" && p !== "launch") return false
+  if (p !== "free" && p !== "launch" && p !== "grow") return false
   return FEATURE_MATRIX[p]?.includes(feature) ?? false
 }

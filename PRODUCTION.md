@@ -24,7 +24,8 @@ Copiá de `.env.local` a Vercel. **Ojo**: hay una inconsistencia que arreglar.
 | `RESEND_API_KEY` | Resend → API Keys | |
 | `PADDLE_WEBHOOK_SECRET` | Paddle → Developer Tools → Notifications | Ver Paso 6, crítico |
 | `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` | Paddle → Checkout settings | |
-| `PADDLE_PRICE_LAUNCH` | Paddle → Catálogo | ID del price (tipo **subscription**, no one-time) |
+| `PADDLE_PRICE_LAUNCH` | Paddle → Catálogo | ID del price (tipo **subscription**) |
+| `PADDLE_PRICE_GROW` | Paddle → Catálogo | ID del price (tipo **subscription**) |
 | `CRON_SECRET` | Generá uno con `openssl rand -hex 32` | Protege `/api/cron/dispatch-emails` |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare → Turnstile | |
 | `TURNSTILE_SECRET_KEY` | Cloudflare → Turnstile | Secreto |

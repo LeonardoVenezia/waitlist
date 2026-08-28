@@ -13,7 +13,7 @@
 - Each project bundles all products (currently 1 of 3 planned); the user pays for the whole project, not per product. Confidence: 0.70
 - Supports upgrade paths within a project: users who start free can pay to unlock higher tiers later. Confidence: 0.65
 - Expects free tiers to retain core delivery functionality (welcome emails reach subscribers even on Free); paid tiers gate premium features — double opt-in/verification and customization (custom sender domain, subject, message, signature, reply-to) — rather than cutting core email delivery entirely. Confidence: 0.80
-- The product has exactly three plan tiers: Free, Launch, and Grow. Scale is discontinued and must not exist anywhere — not in pricing, upgrade flow, code, types, DB, or docs; any residual Scale reference is a bug to eliminate, not an option to support. Confidence: 0.85
+- The product has exactly three plan tiers: Free, Launch, and Grow. Scale is discontinued and must not exist anywhere — not in pricing, upgrade flow, code, types, DB, or docs; any residual Scale reference is a bug to eliminate, not an option to support. The user actively notices and pushes back when the upgrade page or model drops a tier (e.g., reduced to 2 plans). Confidence: 0.90
 # navigation
 - Back buttons should use browser history (`router.back()`) with a fallback to home (`/`) for users arriving from external sites with no history. Confidence: 0.80
 # architecture
@@ -36,6 +36,7 @@
 - Prefers contained, narrower form controls (e.g., a centered `max-w-sm` form) in hero/landing sections over full-width stretching; finds the more compact layout "más sentido". Confidence: 0.55
 - Prefers generous vertical spacing between stacked hero elements (title, subtitle, form input); flags cramped spacing and asks for extra margin rather than accepting the default. Confidence: 0.55
 - Prefers subtle visual distinction for status flags (e.g., a "featured" product) — a border or background color tint — over an explicit text badge/tag label; the cue should stay understated. Confidence: 0.75
+- Prefers global/contextual actions (e.g., Upgrade, Upgrade plan) to live in the dashboard header so they're always visible across all subpages, rather than being duplicated on each subpage's local header; the same action should never appear in multiple places within the same navigation scope. Confidence: 0.85
 
 # feature-design
 - When a feature doesn't work end-to-end (saved but never rendered, toggle that doesn't affect output), user prefers removing it entirely rather than leaving dead code in the UI that confuses users. Confidence: 0.75

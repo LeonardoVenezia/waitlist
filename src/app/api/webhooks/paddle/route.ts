@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const PLAN_LIMITS: Record<string, number> = {
   launch: 1000,
+  grow: 10000,
 };
 
 async function readVerifiedPayload(request: Request): Promise<{ raw: string; payload: unknown } | null> {
@@ -96,7 +97,7 @@ export async function POST(request: Request) {
             account_id: accountId,
             project_id: projectId,
             paddle_subscription_id: data.id,
-            plan: plan as "launch",
+            plan: (plan === "grow" ? "grow" : "launch") as "launch" | "grow",
             status: subscriptionStatus,
             current_period_end: periodEnd,
             cancel_at_period_end: data.scheduled_change?.action === "cancel" ? true : false,
@@ -118,7 +119,7 @@ export async function POST(request: Request) {
         await supabase
           .from("projects")
           .update({
-            plan: plan as "launch",
+            plan: (plan === "grow" ? "grow" : "launch") as "launch" | "grow",
             ...(limit !== null ? { submission_limit: limit } : {}),
           })
           .eq("id", projectId);

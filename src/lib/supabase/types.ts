@@ -106,7 +106,7 @@ export interface Database {
           name: string;
           slug: string;
           public_key: string;
-          plan: "free" | "launch";
+          plan: "free" | "launch" | "grow";
           submission_limit: number;
           settings: Json;
           status: "active" | "archived";
@@ -118,7 +118,7 @@ export interface Database {
           name: string;
           slug: string;
           public_key?: string;
-          plan?: "free" | "launch";
+          plan?: "free" | "launch" | "grow";
           submission_limit?: number;
           settings?: Json;
           status?: "active" | "archived";
@@ -130,7 +130,7 @@ export interface Database {
           name?: string;
           slug?: string;
           public_key?: string;
-          plan?: "free" | "launch";
+          plan?: "free" | "launch" | "grow";
           submission_limit?: number;
           settings?: Json;
           status?: "active" | "archived";
@@ -511,7 +511,7 @@ export interface Database {
           account_id: string;
           project_id: string;
           paddle_subscription_id: string;
-          plan: "launch";
+          plan: "launch" | "grow";
           status: "active" | "canceled" | "past_due" | "paused";
           current_period_end: string;
           cancel_at_period_end: boolean;
@@ -523,7 +523,7 @@ export interface Database {
           account_id: string;
           project_id: string;
           paddle_subscription_id: string;
-          plan?: "launch";
+          plan?: "launch" | "grow";
           status?: "active" | "canceled" | "past_due" | "paused";
           current_period_end: string;
           cancel_at_period_end?: boolean;

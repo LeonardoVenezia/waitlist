@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/dashboard/sidebar";
-import { UserNav } from "@/components/dashboard/user-nav";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 
 async function ensureAccount(userId: string): Promise<string> {
   const supabase = await createClient();
@@ -90,12 +90,11 @@ export default async function DashboardLayout({
     <div className="flex h-screen">
       <Sidebar projects={projects ?? []} />
       <div className="flex flex-1 flex-col">
-        <header className="flex h-12 items-center justify-end border-b px-8">
-          <UserNav
-            email={user.email!}
-            fullName={profile?.full_name ?? null}
-          />
-        </header>
+        <DashboardHeader
+          userEmail={user.email!}
+          fullName={profile?.full_name ?? null}
+          projects={projects ?? []}
+        />
         <main className="flex-1 overflow-y-auto p-8">{children}</main>
       </div>
     </div>
