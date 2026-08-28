@@ -11,6 +11,7 @@ export default async function LaunchesPage() {
     .select("slug, name, description, main_image, published_at, waitlist_id")
     .eq("status", "published")
     .not("published_at", "is", null)
+    .or("expires_at.is.null,expires_at.gt.now()")
     .limit(100);
 
   const planMap = await buildPlanMap(

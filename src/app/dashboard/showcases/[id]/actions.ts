@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getShowcaseExpiryMonths } from "@/lib/plans";
 import { revalidatePath } from "next/cache";
 
 // ── create ──
@@ -188,6 +189,29 @@ export async function publishShowcase(
       updateFields.published_at = new Date().toISOString();
       updateFields.last_domain_check = new Date().toISOString();
     }
+
+    // Set expires_at for free plan (1 year from publish).
+    // Launch plan keeps no expiry (indefinite).
+    if (targetStatus === "published" || targetStatus === "coming_soon") {
+      const { data: proj } = await admin
+        .from("projects")
+        .select("plan")
+        .eq("id", waitlistId)
+        .maybeSingle();
+      const months = getShowcaseExpiryMonths(proj?.plan as string | null);
+      if (months !== null) {
+        const expires = new Date();
+        expires.setMonth(expires.getMonth() + months);
+        updateFields.expires_at = expires.toISOString();
+        updateFields.notified_30d_at = null;
+        updateFields.notified_7d_at = null;
+      } else {
+        // launch — clear expiry
+        updateFields.expires_at = null;
+        updateFields.expired_at = null;
+      }
+    }
+
     if (mainImagePath) updateFields.main_image = mainImagePath;
     if (cardImagePath) updateFields.card_image = cardImagePath;
 
@@ -208,11 +232,40 @@ export async function publishShowcase(
 }
 
 // ── unpublish ──
-export async function updateShowcaseStatus(waitlistId: string, showcaseId: string, status: "draft" | "published" | "rejected" | "coming_soon") {
+export async function updateShowcaseStatus(
+  waitlistId: string,
+  showcaseId: string,
+  status: "draft" | "published" | "rejected" | "coming_soon" | "expired",
+) {
   const supabase = await createClient();
+  const admin = createAdminClient();
+
+  const updateFields: Record<string, unknown> = { status };
+
+  // Re-publishing: reset expiry if plan is free
+  if (status === "published" || status === "coming_soon") {
+    const { data: proj } = await admin
+      .from("projects")
+      .select("plan")
+      .eq("id", waitlistId)
+      .maybeSingle();
+    const months = getShowcaseExpiryMonths(proj?.plan as string | null);
+    if (months !== null) {
+      const expires = new Date();
+      expires.setMonth(expires.getMonth() + months);
+      updateFields.expires_at = expires.toISOString();
+      updateFields.expired_at = null;
+      updateFields.notified_30d_at = null;
+      updateFields.notified_7d_at = null;
+    } else {
+      updateFields.expires_at = null;
+      updateFields.expired_at = null;
+    }
+  }
+
   const { error } = await supabase
     .from("showcases")
-    .update({ status })
+    .update(updateFields as any)
     .eq("id", showcaseId);
 
   if (error) return { error: error.message };

@@ -2,38 +2,55 @@
 
 ## Core proposition
 
-A founder pays once and gets a **suite of pre-launch tools** for their project: waitlist, coming-soon page, landing page builder, and more (3-4 tools planned). One-time payment per project, not per tool.
+A founder subscribes once and gets a **suite of pre-launch tools** for their project: showcase/directory, waitlist, and landing page builder. Monthly subscription per project.
 
 ## Business model
 
-- **Per-project pricing**: Free (150 leads), Launch ($29, 500), Grow ($79, 10k)
-- One payment unlocks **all current and future tools** for that project
+- **Per-project subscription**:
+  - **Free** ($0): producto publicado en el directorio por 1 año, hasta 100 emails en la waitlist, page builder básico, widget embebible, export CSV/XLSX
+  - **Launch** ($9/mes): producto publicado sin límite de tiempo, hasta 1.000 emails en la waitlist, acceso a templates de page builder, todo lo de Free
 - A user can have multiple projects, each on its own plan
-- Payments via Paddle (one-time, not subscription)
+- Payments via Paddle (monthly subscription, not one-time)
+- **Showcase expiration (Free)**: el producto se publica al hacer click en "Publicar". En ese momento se setea `expires_at = now() + 1 año`. Un cron diario (pg_cron) flipea el status a `expired` cuando vence. Los datos persisten; al upgradear a Launch el producto vuelve a `published`.
+- **Waitlist overflow (Free)**: la waitlist acepta emails más allá del límite 100, pero los excedentes se guardan con `status = 'pending_unlock'` y no aparecen en el dashboard. Al upgradear a Launch, se hacen `active`.
+- **Emails recordatorios**: 30 días y 7 días antes del vencimiento se envía un email al owner del proyecto. Se enqueuean en `email_queue` y los envía un endpoint cron.
 
 ## Users
 
 - **Founders / indie hackers** building pre-launch hype
-- Currently MVP: single waitlist tool per project, but architecture must support multiple tools
+- Currently MVP: showcase + waitlist per project; architecture must support adding more tools later
 
 ## Key flows
 
-1. **Create project** → gets a waitlist (first tool). More tools added later.
-2. **Share waitlist** → widget embed, hosted page, referral links
-3. **Grow** → subscribers join via referrals, leaderboard, analytics
-4. **Upgrade** → one-time payment per project to unlock higher limits + features
-5. **Manage** → settings (branding, form, notifications), subscriber management
+1. **Create project** → gets a waitlist + showcase (draft state)
+2. **Publish showcase** → sets `expires_at` (free) or clears it (launch)
+3. **Share waitlist** → widget embed, hosted page, referral links
+4. **Grow** → subscribers join via referrals, leaderboard, analytics
+5. **Upgrade** → subscription to Launch; showcases auto-republish if expired, pending subscribers activate
+6. **Manage** → settings (branding, form, notifications), subscriber management
 
 ## Current state
 
 - Core product: **Showcase / Directory** (homepage is the directory, `/product/[slug]`, `/products`, `/launches`, `/coming-soon`)
-- Tools integrated per project: Waitlist, Showcase, Testimonials (phase 1)
+- Tools integrated per project: Waitlist, Showcase (Testimonials paused, see below)
 - Waitlist: hosted page (`/p/[slug]`), widget embed (`/w/e/[publicKey]`), referral system, leaderboard, analytics, export
 - Page Builder: hosted landing page with hero/features/how-it-works/faq/form/media-text sections
-- Testimonials: forms (`/t/[slug]`), manual entry, dashboard management, section on `/product/[slug]` (widget/import/studio are phase 2+)
+- Testimonials: paused (see "Testimonials (temporalmente ocultos)" below)
 - Email validation (MX lookup) + geoIP (Cloudflare CF-IPCountry) on signup
-- DB model: account → project (each project has waitlist + showcase + testimonials)
-- Plan is per-project (free/launch/grow), one-time payment via Paddle
+- DB model: account → project (each project has waitlist + showcase) + subscription
+- Plan is per-project (free/launch), subscription via Paddle
+
+## Testimonials (temporalmente ocultos)
+
+Funcionalidad pausada. Para reactivar:
+
+1. `src/app/(public)/product/[slug]/page.tsx` — descomentar import + render de `ProductTestimonials` (buscar `// HIDDEN: testimonials desactivados`)
+2. `src/components/dashboard/sidebar.tsx` — descomentar:
+   - `testimonialSubNav` (array)
+   - `<SubNavSection label="Testimonials" ... />`
+   - línea `if (pathname.includes("/testimonials/"))` en `expandedSection`
+
+Migración SQL `011_testimonials.sql` y archivos bajo `src/app/dashboard/projects/[id]/testimonials/` no se tocan — siguen intactos.
 
 ## Design principles (draft)
 
@@ -41,3 +58,4 @@ A founder pays once and gets a **suite of pre-launch tools** for their project: 
 - Understated but warm — not minimalist-cold
 - Trustworthy for a paid product
 - Operate mode for dashboard (task completion), Persuade for landing
+

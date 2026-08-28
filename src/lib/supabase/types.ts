@@ -106,7 +106,7 @@ export interface Database {
           name: string;
           slug: string;
           public_key: string;
-          plan: "free" | "launch" | "grow";
+          plan: "free" | "launch";
           submission_limit: number;
           settings: Json;
           status: "active" | "archived";
@@ -118,7 +118,7 @@ export interface Database {
           name: string;
           slug: string;
           public_key?: string;
-          plan?: "free" | "launch" | "grow";
+          plan?: "free" | "launch";
           submission_limit?: number;
           settings?: Json;
           status?: "active" | "archived";
@@ -130,7 +130,7 @@ export interface Database {
           name?: string;
           slug?: string;
           public_key?: string;
-          plan?: "free" | "launch" | "grow";
+          plan?: "free" | "launch";
           submission_limit?: number;
           settings?: Json;
           status?: "active" | "archived";
@@ -154,7 +154,7 @@ export interface Database {
           referred_by: string | null;
           referral_count: number;
           verified: boolean;
-          status: "active" | "hidden" | "blocked";
+          status: "active" | "hidden" | "blocked" | "pending_unlock";
           metadata: Json;
           created_at: string;
           email_status: string | null;
@@ -169,7 +169,7 @@ export interface Database {
           referred_by?: string | null;
           referral_count?: number;
           verified?: boolean;
-          status?: "active" | "hidden" | "blocked";
+          status?: "active" | "hidden" | "blocked" | "pending_unlock";
           metadata?: Json;
           created_at?: string;
           email_status?: string | null;
@@ -184,7 +184,7 @@ export interface Database {
           referred_by?: string | null;
           referral_count?: number;
           verified?: boolean;
-          status?: "active" | "hidden" | "blocked";
+          status?: "active" | "hidden" | "blocked" | "pending_unlock";
           metadata?: Json;
           created_at?: string;
           email_status?: string | null;
@@ -271,12 +271,16 @@ export interface Database {
           main_type: "image" | "video";
           main_image: string | null;
           card_image: string | null;
-          status: "draft" | "published" | "rejected" | "coming_soon";
+          status: "draft" | "published" | "rejected" | "coming_soon" | "expired";
           domain_check_passed: boolean;
           spam_check_passed: boolean;
           last_domain_check: string | null;
           last_spam_check: string | null;
           published_at: string | null;
+          expires_at: string | null;
+          expired_at: string | null;
+          notified_30d_at: string | null;
+          notified_7d_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -301,6 +305,10 @@ export interface Database {
           last_domain_check?: string | null;
           last_spam_check?: string | null;
           published_at?: string | null;
+          expires_at?: string | null;
+          expired_at?: string | null;
+          notified_30d_at?: string | null;
+          notified_7d_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -319,12 +327,16 @@ export interface Database {
           main_type?: "image" | "video";
           main_image?: string | null;
           card_image?: string | null;
-          status?: "draft" | "published" | "rejected" | "coming_soon";
+          status?: "draft" | "published" | "rejected" | "coming_soon" | "expired";
           domain_check_passed?: boolean;
           spam_check_passed?: boolean;
           last_domain_check?: string | null;
           last_spam_check?: string | null;
           published_at?: string | null;
+          expires_at?: string | null;
+          expired_at?: string | null;
+          notified_30d_at?: string | null;
+          notified_7d_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -493,6 +505,97 @@ export interface Database {
           },
         ];
       };
+      subscriptions: {
+        Row: {
+          id: string;
+          account_id: string;
+          project_id: string;
+          paddle_subscription_id: string;
+          plan: "launch";
+          status: "active" | "canceled" | "past_due" | "paused";
+          current_period_end: string;
+          cancel_at_period_end: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          account_id: string;
+          project_id: string;
+          paddle_subscription_id: string;
+          plan?: "launch";
+          status?: "active" | "canceled" | "past_due" | "paused";
+          current_period_end: string;
+          cancel_at_period_end?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          account_id?: string;
+          project_id?: string;
+          paddle_subscription_id?: string;
+          plan?: "launch";
+          status?: "active" | "canceled" | "past_due" | "paused";
+          current_period_end?: string;
+          cancel_at_period_end?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_account_id_fkey";
+            columns: ["account_id"];
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subscriptions_project_id_fkey";
+            columns: ["project_id"];
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      email_queue: {
+        Row: {
+          id: string;
+          to_email: string;
+          subject: string;
+          template: string;
+          payload: Json;
+          status: "pending" | "sent" | "failed";
+          attempts: number;
+          last_error: string | null;
+          created_at: string;
+          sent_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          to_email: string;
+          subject: string;
+          template: string;
+          payload?: Json;
+          status?: "pending" | "sent" | "failed";
+          attempts?: number;
+          last_error?: string | null;
+          created_at?: string;
+          sent_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          to_email?: string;
+          subject?: string;
+          template?: string;
+          payload?: Json;
+          status?: "pending" | "sent" | "failed";
+          attempts?: number;
+          last_error?: string | null;
+          created_at?: string;
+          sent_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -502,6 +605,10 @@ export interface Database {
       };
       increment_referral_count: {
         Args: { p_subscriber_id: string };
+        Returns: undefined;
+      };
+      expire_due_showcases: {
+        Args: Record<string, never>;
         Returns: undefined;
       };
     };

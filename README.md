@@ -1,6 +1,6 @@
 # [PACK]
 
-Suite of pre-launch tools for founders. Pay once per project, get waitlist + showcase/directory + testimonials (and more tools planned).
+Suite of pre-launch tools for founders. Monthly subscription per project. Includes showcase/directory and waitlist (testimonials paused, see PRODUCT.md).
 
 ## Stack
 
@@ -25,7 +25,7 @@ Env vars in `.env.local` (see `.env.example`).
 - **Data model**: `account` → `project` (one project = waitlist + showcase + testimonials). Table `projects` (was `waitlists`, renamed in migration 010).
 - **Auth**: Supabase. `handle_new_user()` trigger auto-creates profile + account.
 - **RLS pattern**: `createClient()` (RLS) for reads, `createAdminClient()` (service role) for writes, always verifying ownership with an RLS read first.
-- **Feature gating**: `src/lib/plans.ts` — `hasFeature(plan, feature)`. Plans are per-project, one-time payment.
+- **Feature gating**: `src/lib/plans.ts` — `hasFeature(plan, feature)`. Plans are per-project, monthly subscription.
 - **Public routes**: `/` (directory), `/product/[slug]`, `/p/[slug]` (waitlist), `/t/[slug]` (testimonial form), `/w/e/[publicKey]` (widget).
 - **Dashboard**: `/dashboard/projects/[id]/...` (waitlist), `/dashboard/showcases/[id]`, `/dashboard/projects/[id]/testimonials/...`
 

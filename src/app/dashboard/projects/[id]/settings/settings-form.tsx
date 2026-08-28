@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import type { Database } from "@/lib/supabase/types";
 import { updateProjectSettings, inviteTeamMember, removeTeamMember } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -208,8 +209,37 @@ function PostSignupEditor({ defaultPostSignup }: { defaultPostSignup: { enabled?
   );
 }
 
+// ── Plan expiry note (free plan only) ──
+function PlanExpiryNote({ expiresAt, projectId }: { expiresAt: string; projectId: string }) {
+  const expiry = new Date(expiresAt);
+  const now = new Date();
+  const daysLeft = Math.max(0, Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+  const formatted = expiry.toLocaleDateString("es", { year: "numeric", month: "long", day: "numeric" });
+  return (
+    <div className="rounded-lg border bg-muted/30 p-3 text-sm flex items-center justify-between gap-4">
+      <span>
+        Plan Free — tu showcase se publica hasta el <strong>{formatted}</strong> ({daysLeft} días).
+        Con Launch ($9/mes) queda publicado sin límite.
+      </span>
+      <Link href={`/dashboard/projects/${projectId}/upgrade`} className="shrink-0 text-primary underline text-xs">
+        Upgradear
+      </Link>
+    </div>
+  );
+}
+
 // ── Main ──
-export function SettingsForm({ project, members, emailFrom }: { project: Project; members: TeamMember[]; emailFrom?: string }) {
+export function SettingsForm({
+  project,
+  showcase,
+  members,
+  emailFrom,
+}: {
+  project: Project;
+  showcase: { id: string; status: string; expires_at: string | null; expired_at: string | null } | null;
+  members: TeamMember[];
+  emailFrom?: string;
+}) {
   const settings = project.settings as Record<string, unknown>;
   const branding = (settings.branding ?? {}) as Record<string, unknown>;
   const hero = (settings.hero ?? {}) as Record<string, unknown>;
@@ -247,6 +277,15 @@ export function SettingsForm({ project, members, emailFrom }: { project: Project
       )}
       {state?.error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{state.error}</div>
+      )}
+
+      {showcase?.status === "expired" && (
+        <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+          Tu showcase venció el {showcase.expired_at ? new Date(showcase.expired_at).toLocaleDateString("es") : "—"} y ya no aparece en el directorio público. Tus datos están guardados — suscribite a Launch para volver a publicarlo.
+        </div>
+      )}
+      {project.plan === "free" && showcase?.expires_at && showcase.status !== "expired" && (
+        <PlanExpiryNote expiresAt={showcase.expires_at} projectId={project.id} />
       )}
 
       {/* Tab selector */}
@@ -401,8 +440,8 @@ export function SettingsForm({ project, members, emailFrom }: { project: Project
               <ToggleRow id="thank_you.show_leaderboard" name="thank_you.show_leaderboard" label="Show leaderboard" defaultChecked={(thankYou.show_leaderboard as boolean) ?? true} />
               <ToggleRow id="thank_you.hide_confetti" name="thank_you.hide_confetti" label="Hide confetti" defaultChecked={(thankYou.hide_confetti as boolean) ?? false} />
               <ToggleRow id="thank_you.hide_referral" name="thank_you.hide_referral" label="Hide referral" defaultChecked={(thankYou.hide_referral as boolean) ?? false} />
-              <ToggleRow id="thank_you.hide_branding" name="thank_you.hide_branding" label="Hide powered by" disabled={project.plan !== "grow"} defaultChecked={(thankYou.hide_branding as boolean) ?? false} />
-              {project.plan !== "grow" && <p className="text-xs text-primary">Upgrade to Grow to hide branding</p>}
+              <ToggleRow id="thank_you.hide_branding" name="thank_you.hide_branding" label="Hide powered by" disabled={project.plan !== "launch"} defaultChecked={(thankYou.hide_branding as boolean) ?? false} />
+              {project.plan !== "launch" && <p className="text-xs text-primary">Upgrade to Launch to hide branding</p>}
               <ToggleRow id="thank_you.hide_until_verified" name="thank_you.hide_until_verified" label="Hide success until verified" defaultChecked={(thankYou.hide_until_verified as boolean) ?? false} />
             </CardContent>
           </Card>

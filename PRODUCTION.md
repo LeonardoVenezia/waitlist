@@ -24,8 +24,8 @@ Copiá de `.env.local` a Vercel. **Ojo**: hay una inconsistencia que arreglar.
 | `RESEND_API_KEY` | Resend → API Keys | |
 | `PADDLE_WEBHOOK_SECRET` | Paddle → Developer Tools → Notifications | Ver Paso 6, crítico |
 | `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` | Paddle → Checkout settings | |
-| `PADDLE_PRICE_LAUNCH` | Paddle → Catálogo | ID del price |
-| `PADDLE_PRICE_GROW` | Paddle → Catálogo | ID del price |
+| `PADDLE_PRICE_LAUNCH` | Paddle → Catálogo | ID del price (tipo **subscription**, no one-time) |
+| `CRON_SECRET` | Generá uno con `openssl rand -hex 32` | Protege `/api/cron/dispatch-emails` |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare → Turnstile | |
 | `TURNSTILE_SECRET_KEY` | Cloudflare → Turnstile | Secreto |
 
@@ -76,14 +76,27 @@ Tenés que setearla en `.env.local` y en Vercel → Settings → Environment Var
 
 ### Paso 6 — Paddle webhook (crítico de seguridad)
 
-Hoy `src/app/api/webhooks/paddle/route.ts` **no verifica la firma** del webhook. Lo dice el comentario en el código. Eso significa que cualquiera puede pegarle a tu endpoint y marcarse un plan pago gratis.
+Hoy `src/app/api/webhooks/paddle/route.ts` **no verifica la firma** del webhook. Lo dice el comentario en el código. Eso significa que cualquiera puede pegarle a tu endpoint y:
+- Activar una suscripción gratis
+- Cancelar la suscripción de otro usuario
 
 Para producción tenés que:
 1. Configurar `PADDLE_WEBHOOK_SECRET` en Vercel
 2. Implementar la verificación ed25519 de la firma `paddle-signature` (o usar el SDK oficial de Paddle)
 3. Configurar el webhook en Paddle para que apunte a `https://tudominio.com/api/webhooks/paddle`
 
-**Si vas a cobrar dinero, esto es innegociable.**
+**Si vas a cobrar suscripciones, esto es innegociable.** (FOLLOW-UP: ya está marcado con TODO en el código del webhook.)
+
+### Paso 6.5 — pg_cron para jobs de expiración
+
+Las migraciones `013_expire_showcases_job.sql` y `014_email_queue.sql` requieren:
+- La extensión `pg_cron` habilitada en tu proyecto Supabase (Supabase Dashboard → Database → Extensions)
+- La función `expire_due_showcases()` corre diariamente a las 03:00 UTC
+- La función `enqueue_expiry_reminders()` corre diariamente a las 03:05 UTC y encola emails 30d/7d antes del vencimiento
+
+**Si pg_cron no está disponible**, el job se puede correr desde Vercel Cron Jobs o cualquier scheduler externo que llame a una RPC expuesta.
+
+El envío de los emails encolados se hace desde el endpoint `/api/cron/dispatch-emails` (protegido con `CRON_SECRET`). Configurá un Vercel Cron Job para llamarlo cada 5-10 minutos.
 
 ### Paso 7 — Cloudflare (dominio + país + captcha)
 
@@ -106,12 +119,14 @@ Turnstile: creá un widget en Cloudflare → Turnstile con tu dominio. Configur�
 ## Checklist mínimo para "funciona"
 
 - [ ] Deploy en Vercel sin errores
-- [ ] Variables de entorno todas seteadas (incluido `NEXT_PUBLIC_SITE_URL`)
-- [ ] Base de datos alineada (script del Paso 3)
+- [ ] Variables de entorno todas seteadas (incluido `NEXT_PUBLIC_SITE_URL` y `CRON_SECRET`)
+- [ ] Base de datos alineada — aplicar migraciones `012`, `013`, `014` además del Paso 3
 - [ ] Bucket `showcase-images` público
 - [ ] Resend con dominio verificado + `from` correcto
 - [ ] Tu waitlist pública carga y recibe signups
 - [ ] Emails de notificación llegan (probá con tu propio mail)
+- [ ] pg_cron habilitado y jobs `expire-showcases-daily` + `enqueue-expiry-reminders-daily` programados
+- [ ] Vercel Cron Job que llame a `/api/cron/dispatch-emails` cada 5-10 min
 
 ## Checklist para "cobrar plata"
 

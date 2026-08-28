@@ -16,7 +16,7 @@ import { renderVerificationEmail } from "@/emails/verify";
 import { renderMilestoneReachedEmail } from "@/emails/milestone-reached";
 import { createVerificationToken } from "@/lib/api/verify-token";
 import { sendSlackNotification } from "@/lib/api/slack";
-import { hasFeature } from "@/lib/plans";
+import { hasFeature, getWaitlistLimit } from "@/lib/plans";
 import { jsonResponse, corsOptionsResponse } from "@/lib/api/cors";
 import { headers } from "next/headers";
 import type { Json } from "@/lib/supabase/types";
@@ -159,10 +159,11 @@ export async function POST(request: Request) {
     );
   }
 
-  // 8. Check submission limit
+  // 8. Check submission limit (per-plan; overflow stored as pending_unlock)
   const currentCount = await getSubscriberCount(waitlist.id);
-  const limit = waitlist.submission_limit;
-  const isOverLimit = limit !== null && limit > 0 && currentCount >= limit;
+  const plan = waitlist.plan as "free" | "launch";
+  const planLimit = getWaitlistLimit(plan);
+  const isOverLimit = currentCount >= planLimit;
 
   // 9. Lookup referrer
   let referredById: string | null = null;
@@ -197,7 +198,7 @@ export async function POST(request: Request) {
       name,
       referral_code: referralCode,
       referred_by: referredById,
-      status: isOverLimit ? "hidden" : "active",
+      status: isOverLimit ? "pending_unlock" : "active",
       email_status: emailQuality,
       country,
       metadata: metadata as unknown as Json,
@@ -265,7 +266,6 @@ export async function POST(request: Request) {
   const pageUrl = `${process.env.NEXT_PUBLIC_APP_URL}/p/${waitlist.slug}`;
 
   // 14. Send emails (fire-and-forget — non-blocking)
-  const plan = waitlist.plan as "free" | "launch" | "grow";
   const doubleOptinActive = hasFeature(plan, "double_optin") && emailSettings.verifyEmail;
   const welcomeLink = `${pageUrl}?ref=${referralCode}`;
 

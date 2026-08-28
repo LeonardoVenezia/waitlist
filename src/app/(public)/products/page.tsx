@@ -41,7 +41,8 @@ export default async function ProductsPage(props: {
   let query = admin
     .from("showcases")
     .select("slug, name, description, category_1, category_2, images, video_url, featured_badge, link, waitlist_id, main_type, main_image, card_image, status")
-    .eq("status", "published");
+    .eq("status", "published")
+    .or("expires_at.is.null,expires_at.gt.now()");
 
   if (search) query = query.ilike("name", `%${search}%`);
   if (category) query = query.or(`category_1.eq.${category},category_2.eq.${category}`);

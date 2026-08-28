@@ -10,18 +10,18 @@
 
 **Startpack** es una suite de herramientas para founders/indie hackers. El núcleo actual es el **showcase / directorio de productos**: la home es el directorio, y cada proyecto puede publicar una ficha de producto con nombre, descripción, categorías, imágenes, video y link.
 
-Sobre ese núcleo se integran dos herramientas más:
+Sobre ese núcleo se integra:
 
 - **Waitlist viral con referidos** (`/p/[slug]` + widget embebible)
-- **Testimonials** (`/t/[formSlug]` + sección en la ficha de producto)
 
-Cada proyecto es una unidad independiente con su propio plan. Los planes son de pago **único por proyecto** vía Paddle:
+**Testimonials** está temporalmente oculta del producto (código comentado en la UI), ver `PRODUCT.md` para los pasos de reactivación.
 
-- **Free** — $0, 150 submissions
-- **Launch** — $29, 500 submissions
-- **Grow** — $79, 10.000 submissions
+Cada proyecto es una unidad independiente con su propio plan. Los planes son de **suscripción mensual por proyecto** vía Paddle:
 
-La idea de negocio es que un fundador paga una vez y desbloquea todas las herramientas actuales y futuras para ese proyecto.
+- **Free** — $0, showcase por 1 año, hasta 100 emails en la waitlist
+- **Launch** — $9/mes, showcase sin límite, hasta 1.000 emails en la waitlist, acceso a templates de page builder
+
+El showcase del plan Free expira al año (`expires_at`); el job diario `expire_due_showcases` lo flipea a `expired` y los datos persisten hasta que el user upgradee. Al upgradear a Launch el producto vuelve a `published` y los subscribers `pending_unlock` se activan.
 
 ---
 
@@ -31,10 +31,11 @@ La idea de negocio es que un fundador paga una vez y desbloquea todas las herram
 |---|---|---|
 | Frontend + Backend | Next.js 16 (App Router, React 19, RSC, Server Actions) | `NEXT_PUBLIC_APP_URL` |
 | UI | shadcn/ui + Tailwind CSS v4 | — |
-| BD + Auth + Storage | Supabase (Postgres) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` |
-| Pagos | Paddle (one-time) | `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`, `PADDLE_API_KEY`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_PRICE_LAUNCH`, `PADDLE_PRICE_GROW` |
+| BD + Auth + Storage | Supabase (Postgres + pg_cron) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` |
+| Pagos | Paddle (suscripción) | `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_PRICE_LAUNCH` |
 | Anti-bot | Cloudflare Turnstile | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` |
 | Email | Resend (API REST directa, sin SDK) | `RESEND_API_KEY`, `EMAIL_FROM` |
+| Cron | Vercel Cron Jobs + Supabase pg_cron | `CRON_SECRET` |
 | Fonts | Geist (body) + Italiana (headings) | — |
 
 ---

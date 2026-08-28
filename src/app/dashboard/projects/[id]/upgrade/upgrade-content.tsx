@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { PLANS } from "@/lib/plans";
+import { PLANS, getPlanInfo, getWaitlistLimit } from "@/lib/plans";
+import Link from "next/link";
 
 type Project = Database["public"]["Tables"]["projects"]["Row"];
 
@@ -28,7 +29,7 @@ export function UpgradeContent({
   priceIds,
 }: {
   project: Project;
-  priceIds: { launch: string; grow: string };
+  priceIds: { launch: string };
 }) {
   const [paddleReady, setPaddleReady] = useState(false);
   const [userEmail, setUserEmail] = useState("");
@@ -51,18 +52,13 @@ export function UpgradeContent({
     return () => clearInterval(check);
   }, []);
 
-  const paidPlans = PLANS.filter((p) => p.id === "launch" || p.id === "grow").map((plan) => ({
-    ...plan,
-    priceId: priceIds[plan.id as keyof typeof priceIds] ?? "",
-  }));
-
   const openCheckout = useCallback(
     (planId: string) => {
-      const plan = paidPlans.find((p) => p.id === planId);
+      const plan = getPlanInfo(planId);
       if (!plan || !window.Paddle) return;
 
       window.Paddle.Checkout.open({
-        items: [{ priceId: plan.priceId, quantity: 1 }],
+        items: [{ priceId: priceIds.launch, quantity: 1 }],
         customer: { email: userEmail },
         customData: {
           account_id: project.account_id,
@@ -71,61 +67,139 @@ export function UpgradeContent({
         },
       });
     },
-    [project.account_id, project.id, userEmail],
+    [project.account_id, project.id, userEmail, priceIds.launch],
   );
 
-  if (project.plan === "grow") {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <p className="text-muted-foreground">You&apos;re already on the highest plan.</p>
-      </div>
-    );
-  }
+  const launch = PLANS.find((p) => p.id === "launch")!;
+  const isCurrent = project.plan === "launch";
+  const freeLimit = getWaitlistLimit("free");
+  const launchLimit = getWaitlistLimit("launch");
+  // `status` belongs to the showcase, not the project; the parent server component
+  // passes it via props in some flows. For now, treat unknown as not-expired.
+  const isExpired = false;
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl">Upgrade plan</h1>
+        <h1 className="text-2xl">Plan</h1>
         <p className="text-sm text-muted-foreground">
-          Current plan: <span className="font-medium capitalize">{project.plan}</span>
+          Plan actual: <span className="font-medium capitalize">{project.plan}</span>
         </p>
+        {isExpired && (
+          <p className="mt-2 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
+            Tu showcase venció. Suscribite para volver a publicar tu producto en el directorio.
+          </p>
+        )}
       </div>
       <div className="grid gap-6 sm:grid-cols-2">
-        {paidPlans.map((plan) => {
-          const isCurrent = project.plan === plan.id;
-          const isDowngrade = project.plan === "grow" && plan.id === "launch";
-          const canBuy = !isCurrent && !isDowngrade && paddleReady;
-
-          return (
-            <Card key={plan.id} className={isCurrent ? "border-muted opacity-60" : ""}>
-              <CardHeader>
-                <CardTitle>{plan.name}</CardTitle>
-                <CardDescription>{plan.limit}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4 text-3xl font-bold">
-                  {plan.price}
-                  <span className="text-sm font-normal text-muted-foreground"> one-time</span>
-                </p>
-                <ul className="space-y-2 text-sm">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2">
-                      <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full" disabled={!canBuy} onClick={() => openCheckout(plan.id)}>
-                  {isCurrent ? "Current plan" : isDowngrade ? "Already on Grow" : !paddleReady ? "Loading..." : `Buy ${plan.name}`}
-                </Button>
-              </CardFooter>
-            </Card>
-          );
-        })}
+        <Card>
+          <CardHeader>
+            <CardTitle>Free</CardTitle>
+            <CardDescription>Para probar y validar</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4 text-3xl font-bold">$0</p>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                Producto publicado por 1 año
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                Hasta {freeLimit} emails en la waitlist
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                Page builder básico
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                Widget embebible
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                Export CSV/XLSX
+              </li>
+            </ul>
+          </CardContent>
+          <CardFooter>
+            <Button className="w-full" variant="outline" disabled>
+              {isCurrent ? "Plan actual" : "Plan Free"}
+            </Button>
+          </CardFooter>
+        </Card>
+        <Card className={isCurrent ? "border-muted opacity-60" : "border-primary shadow-lg"}>
+          <CardHeader>
+            <CardTitle>{launch.name}</CardTitle>
+            <CardDescription>{launch.description}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4 text-3xl font-bold">{launch.price}</p>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                Producto publicado sin límite de tiempo
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                Hasta {launchLimit.toLocaleString()} emails en la waitlist
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                Acceso a templates de page builder
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                Todo lo del plan Free
+              </li>
+            </ul>
+          </CardContent>
+          <CardFooter>
+            {isCurrent ? (
+              <Button className="w-full" variant="outline" disabled>
+                Plan actual
+              </Button>
+            ) : !paddleReady ? (
+              <Button className="w-full" disabled>
+                Cargando...
+              </Button>
+            ) : (
+              <Button
+                className="w-full"
+                onClick={() => openCheckout("launch")}
+                disabled={!priceIds.launch}
+              >
+                {isExpired ? "Reactivar" : "Suscribirme"}
+              </Button>
+            )}
+            {isCurrent && (
+              <p className="mt-3 text-xs text-muted-foreground w-full text-center">
+                Para cancelar, gestioná tu suscripción desde el{" "}
+                <Link href="https://customer.paddle.com" target="_blank" rel="noreferrer" className="underline">
+                  portal de Paddle
+                </Link>.
+              </p>
+            )}
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

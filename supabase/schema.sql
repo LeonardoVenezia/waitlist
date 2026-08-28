@@ -139,7 +139,7 @@ create policy "Account member read subscribers" on subscribers
   );
 
 -- =============================
--- PURCHASES (Paddle transaction audit)
+-- PURCHASES (Paddle transaction audit — legacy one-time, kept for history)
 -- =============================
 create table public.purchases (
   id                    uuid primary key default gen_random_uuid(),
@@ -163,6 +163,58 @@ create policy "Account member read purchases" on purchases
         and user_id = auth.uid()
     )
   );
+
+-- =============================
+-- SUBSCRIPTIONS (Paddle recurring)
+-- =============================
+create table public.subscriptions (
+  id                    uuid primary key default gen_random_uuid(),
+  account_id            uuid not null references public.accounts(id) on delete cascade,
+  project_id            uuid not null references public.waitlists(id) on delete cascade,
+  paddle_subscription_id text not null unique,
+  plan                  text not null check (plan in ('launch')),
+  status                text not null check (status in ('active','canceled','past_due','paused')),
+  current_period_end    timestamptz not null,
+  cancel_at_period_end  boolean not null default false,
+  created_at            timestamptz default now(),
+  updated_at            timestamptz default now()
+);
+
+create index idx_subscriptions_project_id on public.subscriptions(project_id);
+create index idx_subscriptions_status on public.subscriptions(status);
+
+alter table public.subscriptions enable row level security;
+
+create policy "Account member read subscriptions" on subscriptions
+  for select using (
+    exists (
+      select 1 from account_members
+      where account_id = subscriptions.account_id
+        and user_id = auth.uid()
+    )
+  );
+
+-- =============================
+-- EMAIL QUEUE (transactional queue, drained by cron endpoint)
+-- =============================
+create table public.email_queue (
+  id          uuid primary key default gen_random_uuid(),
+  to_email    text not null,
+  subject     text not null,
+  template    text not null,
+  payload     jsonb not null default '{}'::jsonb,
+  status      text not null default 'pending' check (status in ('pending', 'sent', 'failed')),
+  attempts    int not null default 0,
+  last_error  text,
+  created_at  timestamptz default now(),
+  sent_at     timestamptz
+);
+
+create index idx_email_queue_status_created
+  on public.email_queue(status, created_at)
+  where status = 'pending';
+
+alter table public.email_queue enable row level security;
 
 -- =============================
 -- AUTO-CREATE PROFILE + ACCOUNT ON SIGNUP

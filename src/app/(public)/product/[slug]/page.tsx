@@ -4,7 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
 import { PublicHeader } from "@/components/shared/public-header";
 import { BackButton } from "@/components/shared/back-button";
-import { ProductTestimonials } from "./product-testimonials";
+// HIDDEN: testimonials desactivados temporalmente — ver PRODUCT.md
+// import { ProductTestimonials } from "./product-testimonials";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,7 @@ export default async function ProductDetailPage(props: {
     .select("*, projects!inner(public_key, name, slug, status, settings, plan)")
     .eq("slug", slug)
     .in("status", ["published", "coming_soon"])
+    .or("expires_at.is.null,expires_at.gt.now()")
     .maybeSingle();
 
   if (!raw) notFound();
@@ -198,7 +200,8 @@ export default async function ProductDetailPage(props: {
             )}
 
             {/* Testimonials */}
-            <ProductTestimonials projectId={product.waitlist_id} plan={product.plan} />
+            {/* HIDDEN: testimonials desactivados temporalmente — ver PRODUCT.md */}
+            {/* <ProductTestimonials projectId={product.waitlist_id} plan={product.plan} /> */}
           </>
         )}
       </div>

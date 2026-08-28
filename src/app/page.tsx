@@ -33,6 +33,7 @@ export default async function HomePage() {
     .select("slug, name, description, main_image, published_at, waitlist_id")
     .eq("status", "published")
     .not("published_at", "is", null)
+    .or("expires_at.is.null,expires_at.gt.now()")
     .gte("published_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
     .limit(15);
 
@@ -40,7 +41,8 @@ export default async function HomePage() {
   const { data: rows } = await admin
     .from("showcases")
     .select("slug, name, description, category_1, category_2, images, video_url, featured_badge, link, waitlist_id, main_type, main_image, card_image, status")
-    .eq("status", "published");
+    .eq("status", "published")
+    .or("expires_at.is.null,expires_at.gt.now()");
 
   const showcases = (rows ?? []) as ShowcaseRow[];
   const planMap = await buildPlanMap(

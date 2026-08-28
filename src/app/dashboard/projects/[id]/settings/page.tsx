@@ -19,6 +19,13 @@ export default async function SettingsPage(props: { params: Promise<{ id: string
 
   if (!waitlist) notFound();
 
+  // Fetch showcase for expiry info
+  const { data: showcase } = await supabase
+    .from("showcases")
+    .select("id, status, expires_at, expired_at")
+    .eq("waitlist_id", id)
+    .maybeSingle();
+
   // Fetch team members
   const { data: members } = await supabase
     .from("account_members")
@@ -29,6 +36,7 @@ export default async function SettingsPage(props: { params: Promise<{ id: string
   return (
     <SettingsForm
       project={waitlist}
+      showcase={showcase ?? null}
       members={members ?? []}
       emailFrom={process.env.EMAIL_FROM}
     />

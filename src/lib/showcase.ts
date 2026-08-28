@@ -11,9 +11,8 @@ export type ShowcaseCategory = (typeof SHOWCASE_CATEGORIES)[number];
 const PLAN_WEIGHT: Record<Plan, number> = {
   free: 1,
   launch: 2,
-  grow: 3,
 };
 
 export function getPlanWeight(plan: Plan): number {
-  return PLAN_WEIGHT[plan] ?? 1;
+  return PLAN_WEIGHT[plan] ?? 1
 }

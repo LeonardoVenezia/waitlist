@@ -22,7 +22,6 @@ export default async function UpgradePage(props: { params: Promise<{ id: string 
   if (!waitlist) notFound();
 
   const launchPriceId = process.env.PADDLE_PRICE_LAUNCH ?? "";
-  const growPriceId = process.env.PADDLE_PRICE_GROW ?? "";
 
   return (
     <div>
@@ -39,7 +38,6 @@ export default async function UpgradePage(props: { params: Promise<{ id: string 
         project={waitlist}
         priceIds={{
           launch: launchPriceId,
-          grow: growPriceId,
         }}
       />
     </div>

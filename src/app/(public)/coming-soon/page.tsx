@@ -28,7 +28,8 @@ export default async function ComingSoonPage() {
   const { data: rows } = await admin
     .from("showcases")
     .select("slug, name, description, category_1, category_2, images, video_url, featured_badge, link, waitlist_id, main_type, main_image, card_image, status, created_at")
-    .eq("status", "coming_soon");
+    .eq("status", "coming_soon")
+    .or("expires_at.is.null,expires_at.gt.now()");
 
   const showcases = (rows ?? []) as ShowcaseRow[];
   const planMap = await buildPlanMap(

@@ -10,13 +10,13 @@ export default function PricingPage() {
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-3xl sm:text-4xl">
-            Simple, one-time pricing
+            Suscripción simple, sin sorpresas
           </h1>
           <p className="mt-4 text-base text-muted-foreground">
-            Pay once, own it forever. No subscriptions, no hidden fees.
+            Empezás gratis. Upgradéas solo cuando tu producto despega.
           </p>
         </div>
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid gap-6 sm:grid-cols-2">
           {PLANS.map((plan) => (
             <Card
               key={plan.id}
@@ -24,7 +24,7 @@ export default function PricingPage() {
             >
               {plan.popular && (
                 <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                  Most popular
+                  Más popular
                 </Badge>
               )}
               <CardHeader>
@@ -34,11 +34,10 @@ export default function PricingPage() {
               <CardContent className="flex-1 space-y-4">
                 <div>
                   <span className="text-3xl font-bold">{plan.price}</span>
-                  {plan.price !== "Custom" && (
-                    <span className="text-sm text-muted-foreground"> one-time</span>
+                  {plan.interval && (
+                    <span className="text-sm text-muted-foreground"> / {plan.interval === "month" ? "mes" : "año"}</span>
                   )}
                 </div>
-                <p className="text-sm font-medium">{plan.limit}</p>
                 <ul className="space-y-2 text-sm">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-2">
