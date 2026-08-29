@@ -35,7 +35,11 @@ declare global {
   }
 }
 
-export function useWaitlistSubscribe(publicKey: string) {
+export function useWaitlistSubscribe(
+  publicKey: string,
+  options?: { preview?: boolean },
+) {
+  const isPreview = options?.preview ?? false;
   const searchParams = useSearchParams();
   const refCode = searchParams.get("ref") ?? undefined;
   const errorParam = searchParams.get("error");
@@ -50,7 +54,28 @@ export function useWaitlistSubscribe(publicKey: string) {
   const [copied, setCopied] = useState(false);
   const turnstileRef = useRef<HTMLDivElement>(null);
 
+  // ponytail: in preview mode (e.g. dashboard page builder), we short-circuit
+  // the fetch and return a fake "done" state so iterating doesn't pollute
+  // the subscribers table.
+  async function doPreviewSubmit() {
+    await new Promise((r) => setTimeout(r, 600));
+    setResult({
+      id: "preview",
+      email,
+      position: 1,
+      referral_code: "preview",
+      referral_link: "/preview",
+      referral_count: 0,
+    });
+    setStep("done");
+    setLoading(false);
+  }
+
   async function doSubmit(token: string) {
+    if (isPreview) {
+      await doPreviewSubmit();
+      return;
+    }
     try {
       const body: Record<string, string> = {
         public_key: publicKey,

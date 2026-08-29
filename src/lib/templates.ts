@@ -71,10 +71,12 @@ export interface TemplateDefinition {
   id: TemplateId;
   name: string;
   description: string;
-  /** 1-2 letter monogram rendered as the template thumbnail. */
-  thumbnailInitials: string;
-  /** Hint of the thumbnail's background tone: "dark" for neon/carbon, "light" for the rest. */
-  thumbnailTone: "dark" | "light";
+  /**
+   * Thumbnail styling for the dashboard's template picker. `bg` and `text`
+   * are hardcoded Tailwind classes that recreate the template's actual look
+   * at a small size so users can recognize it at a glance.
+   */
+  thumbnail: { bg: string; text: string };
   defaultData: TemplateData;
 }
 
@@ -159,40 +161,50 @@ export const TEMPLATE_DEFINITIONS: Record<TemplateId, TemplateDefinition> = {
     id: "neon",
     name: "Neon",
     description: "Dark focused hero with an embedded email bar and referral dashboard.",
-    thumbnailInitials: "Ne",
-    thumbnailTone: "dark",
+    thumbnail: {
+      bg: "bg-zinc-950",
+      text: "text-emerald-400",
+    },
     defaultData: neonDefaults,
   },
   carbon: {
     id: "carbon",
     name: "Carbon",
     description: "Developer-style product teaser with a macOS mockup window.",
-    thumbnailInitials: "Ca",
-    thumbnailTone: "dark",
+    thumbnail: {
+      bg: "bg-zinc-900",
+      text: "text-emerald-400/80",
+    },
     defaultData: carbonDefaults,
   },
   pastel: {
     id: "pastel",
     name: "Pastel",
     description: "Soft animated gradient with a floating glass card.",
-    thumbnailInitials: "Pa",
-    thumbnailTone: "light",
+    thumbnail: {
+      bg: "bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200",
+      text: "text-zinc-800",
+    },
     defaultData: pastelDefaults,
   },
   editorial: {
     id: "editorial",
     name: "Editorial",
     description: "High-contrast asymmetric layout with a feature grid.",
-    thumbnailInitials: "Ed",
-    thumbnailTone: "light",
+    thumbnail: {
+      bg: "bg-white border-b border-zinc-200",
+      text: "text-zinc-900",
+    },
     defaultData: editorialDefaults,
   },
   split: {
     id: "split",
     name: "Split",
     description: "Sticky benefits column with an interactive tabbed preview.",
-    thumbnailInitials: "Sp",
-    thumbnailTone: "light",
+    thumbnail: {
+      bg: "bg-zinc-100",
+      text: "text-zinc-900",
+    },
     defaultData: splitDefaults,
   },
 };

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useWaitlistSubscribe } from "./use-waitlist-subscribe";
 import type { PastelTemplateData } from "@/lib/templates";
 
@@ -23,11 +22,13 @@ export function PastelTemplate({
   data,
   realCount,
   embedded = false,
+  preview = false,
 }: {
   publicKey: string;
   data: PastelTemplateData;
   realCount: number;
   embedded?: boolean;
+  preview?: boolean;
 }) {
   const {
     email,
@@ -44,22 +45,9 @@ export function PastelTemplate({
     handleSubmit,
     copyReferralLink,
     handleAnswersSubmit,
-  } = useWaitlistSubscribe(publicKey);
+  } = useWaitlistSubscribe(publicKey, { preview });
 
   const socialCount = data.social_count_override || String(realCount);
-
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-
-  function handleParallax(e: React.MouseEvent<HTMLDivElement>) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 4;
-    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 4;
-    setTilt({ x, y });
-  }
-
-  function resetParallax() {
-    setTilt({ x: 0, y: 0 });
-  }
 
   if (step === "questions" && result?.post_signup) {
     return (
@@ -166,11 +154,7 @@ export function PastelTemplate({
         animation: "pastel-shift 12s ease-in-out infinite",
       }}
     >
-      <div
-        className="w-full max-w-md relative"
-        onMouseMove={handleParallax}
-        onMouseLeave={resetParallax}
-      >
+      <div className="w-full max-w-md relative">
         <GlassCard>
           <div className="text-center">
             <h1 className="text-3xl font-bold text-zinc-800 leading-tight">{data.title}</h1>
@@ -215,12 +199,11 @@ export function PastelTemplate({
               return (
                 <span
                   key={i}
-                  className="rounded-full border border-white/40 px-3 py-1 text-xs backdrop-blur-md"
+                  className="rounded-full border border-white/40 px-3 py-1 text-xs backdrop-blur-md animate-float"
                   style={{
                     backgroundColor: tone.bg,
                     color: tone.fg,
-                    transform: `translate(${tilt.x * (i + 1)}px, ${tilt.y * (i + 1)}px)`,
-                    transition: "transform 0.2s ease-out",
+                    animationDelay: `${i * 0.4}s`,
                   }}
                 >
                   {tag}

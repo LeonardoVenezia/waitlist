@@ -12,10 +12,12 @@ export function EditorialTemplate({
   publicKey,
   data,
   realCount,
+  preview = false,
 }: {
   publicKey: string;
   data: EditorialTemplateData;
   realCount: number;
+  preview?: boolean;
 }) {
   const accent = data.accent_color && data.accent_color !== "#2563eb" ? data.accent_color : ACCENT_DEFAULT;
   const {
@@ -33,7 +35,7 @@ export function EditorialTemplate({
     handleSubmit,
     copyReferralLink,
     handleAnswersSubmit,
-  } = useWaitlistSubscribe(publicKey);
+  } = useWaitlistSubscribe(publicKey, { preview });
 
   if (step === "questions" && result?.post_signup) {
     return (

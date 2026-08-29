@@ -14,10 +14,12 @@ export function SplitTemplate({
   publicKey,
   data,
   realCount,
+  preview = false,
 }: {
   publicKey: string;
   data: SplitTemplateData;
   realCount: number;
+  preview?: boolean;
 }) {
   const [activeTab, setActiveTab] = useState(0);
   const {
@@ -35,7 +37,7 @@ export function SplitTemplate({
     handleSubmit,
     copyReferralLink,
     handleAnswersSubmit,
-  } = useWaitlistSubscribe(publicKey);
+  } = useWaitlistSubscribe(publicKey, { preview });
 
   const socialCount = data.social_count_override || String(realCount);
   const active = data.tabs[activeTab];

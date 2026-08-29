@@ -15,10 +15,12 @@ export function NeonTemplate({
   publicKey,
   data,
   realCount,
+  preview = false,
 }: {
   publicKey: string;
   data: NeonTemplateData;
   realCount: number;
+  preview?: boolean;
 }) {
   const {
     email,
@@ -35,7 +37,7 @@ export function NeonTemplate({
     handleSubmit,
     copyReferralLink,
     handleAnswersSubmit,
-  } = useWaitlistSubscribe(publicKey);
+  } = useWaitlistSubscribe(publicKey, { preview });
 
   const socialCount = data.social_count_override || String(realCount);
 

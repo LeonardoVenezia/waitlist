@@ -642,9 +642,9 @@ export function PageBuilderClient({
             <svg className="size-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
             Share
           </Button>
-          <a href={pageUrl} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border rounded-lg hover:bg-muted transition-colors">
+          <a href={pageUrl} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border rounded-lg hover:bg-muted transition-colors" title="Open the live public page in a new tab">
             <svg className="size-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-            Open
+            Open live
           </a>
         </div>
       </div>
@@ -717,16 +717,11 @@ export function PageBuilderClient({
                         }`}
                       >
                         <div
-                          className={`h-16 flex items-center justify-center font-heading text-2xl ${
-                            def.thumbnailTone === "dark"
-                              ? "bg-neutral-900 text-neutral-100"
-                              : "bg-accent text-foreground/60"
-                          }`}
+                          className={`h-20 ${def.thumbnail.bg} ${def.thumbnail.text} flex items-center justify-center px-4`}
                         >
-                          {def.thumbnailInitials}
+                          <span className="font-heading text-lg truncate">{def.name}</span>
                         </div>
                         <div className="px-3 py-2">
-                          <p className="font-medium">{def.name}</p>
                           <p className="text-xs text-muted-foreground">{def.description}</p>
                         </div>
                       </button>
@@ -899,9 +894,9 @@ export function PageBuilderClient({
             <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b">
               <div>
                 <h3 className="text-sm font-semibold">Page preview</h3>
-                <p className="text-xs text-muted-foreground">Updates as you edit</p>
+                <p className="text-xs text-muted-foreground">Updates as you edit · live page: <span className="font-mono">{pageUrl.replace(/^https?:\/\//, "")}</span></p>
               </div>
-              <a href={pageUrl} target="_blank" rel="noopener" className="inline-flex items-center justify-center size-7 rounded-md hover:bg-muted transition-colors" title="Open in new tab">
+              <a href={pageUrl} target="_blank" rel="noopener" className="inline-flex items-center justify-center size-7 rounded-md hover:bg-muted transition-colors" title="Open the live public page in a new tab">
                 <svg className="size-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
               </a>
             </div>
@@ -921,6 +916,7 @@ export function PageBuilderClient({
                     publicKey={publicKey}
                     realCount={realCount}
                     embedded
+                    preview
                   />
                 ) : (
                   <>
