@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 interface WaitlistFormProps {
   publicKey: string;
@@ -196,23 +198,22 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
                 {q.required && <span className="text-red-500 ml-0.5">*</span>}
               </Label>
               {q.type === "select" ? (
-                <select
+                <Select
                   value={answers[q.label] ?? ""}
                   onChange={(e) => setAnswers({ ...answers, [q.label]: e.target.value })}
                   required={q.required}
-                  className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm"
+                  className="h-9"
                 >
                   <option value="" disabled>Select...</option>
                   {(q.options ?? []).map((opt) => (
                     <option key={opt} value={opt}>{opt}</option>
                   ))}
-                </select>
+                </Select>
               ) : q.type === "textarea" ? (
-                <textarea
+                <Textarea
                   value={answers[q.label] ?? ""}
                   onChange={(e) => setAnswers({ ...answers, [q.label]: e.target.value })}
                   required={q.required}
-                  className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm"
                   rows={3}
                 />
               ) : (

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { ProductPlaceholder } from "./product-placeholder";
+import { IconPlay } from "@/components/ui/icon";
 
 interface ShowcaseCardData {
   slug: string;
@@ -50,10 +52,8 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
               className="size-full object-cover"
             />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="size-14 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm">
-                <svg className="size-6 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                </svg>
+              <div className="size-14 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm text-white">
+                <IconPlay className="size-6 ml-0.5" />
               </div>
             </div>
           </>
@@ -64,7 +64,7 @@ export function ShowcaseCard({ data }: { data: ShowcaseCardData }) {
             className="size-full object-cover"
           />
         ) : (
-          <span className="text-5xl opacity-30">{isComingSoon ? "🏗️" : "🖼️"}</span>
+          <ProductPlaceholder name={data.name} size="md" />
         )}
         {isComingSoon && (
           <div className="absolute top-3 left-3">

@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FeatureGate } from "@/components/shared/feature-gate";
@@ -447,57 +450,45 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="cat1">Category 1 <span className="text-red-500">*</span></Label>
-              <select
+              <Select
                 id="cat1"
                 value={cat1}
                 onChange={(e) => setCat1(e.target.value)}
-                className="flex h-8 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm"
               >
                 <option value="">Seleccionar...</option>
                 {SHOWCASE_CATEGORIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="cat2">Category 2 (optional)</Label>
-              <select
+              <Select
                 id="cat2"
                 value={cat2 ?? ""}
                 onChange={(e) => setCat2(e.target.value || null)}
-                className="flex h-8 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm"
               >
                 <option value="">Ninguna</option>
                 {SHOWCASE_CATEGORIES.filter((c) => c !== cat1).map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
 
           {/* Main media: image or video */}
           <div className="space-y-3 pt-2 border-t">
             <Label>Main media</Label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="main_type_local"
-                  checked={mainType === "image"}
-                  onChange={() => setMainType("image")}
-                />
-                <span className="text-sm">Image</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="main_type_local"
-                  checked={mainType === "video"}
-                  onChange={() => setMainType("video")}
-                />
-                <span className="text-sm">Video</span>
-              </label>
-            </div>
+            <RadioGroup
+              name="main_type_local"
+              value={mainType}
+              onChange={(v) => setMainType(v as "image" | "video")}
+              options={[
+                { value: "image", label: "Image" },
+                { value: "video", label: "Video" },
+              ]}
+              orientation="horizontal"
+            />
 
             {mainType === "image" && (
               <div className="space-y-2">
@@ -640,15 +631,11 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
 
           {showcase && (
             <FeatureGate plan={plan} feature="featured_badge" waitlistId={waitlistId}>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={featuredB}
-                  onChange={(e) => setFeaturedB(e.target.checked)}
-                  className="rounded"
-                />
-                Destacar este producto en el directorio
-              </label>
+              <Checkbox
+                checked={featuredB}
+                onChange={(e) => setFeaturedB(e.target.checked)}
+                label="Destacar este producto en el directorio"
+              />
             </FeatureGate>
           )}
         </CardContent>

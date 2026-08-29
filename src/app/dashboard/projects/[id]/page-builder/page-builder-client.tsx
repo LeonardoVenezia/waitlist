@@ -5,6 +5,17 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageUpload } from "@/components/shared/image-upload";
+import {
+  IconHero,
+  IconFeatures,
+  IconSteps,
+  IconQuestion,
+  IconForm,
+  IconMedia,
+  IconPalette,
+  IconPage,
+  IconSparkles,
+} from "@/components/ui/icon";
 import type { Section, GlobalSettings } from "./page";
 import { savePageSections, selectTemplate, saveTemplateData } from "./actions";
 import {
@@ -17,13 +28,16 @@ import { TemplateRenderer } from "@/components/templates/template-renderer";
 import { TemplateEditor } from "@/components/templates/template-editor";
 
 // ── Section icons & labels ──
-const SECTION_META: Record<string, { emoji: string; label: string }> = {
-  hero: { emoji: "🦸", label: "Hero" },
-  features: { emoji: "✨", label: "Features" },
-  how_it_works: { emoji: "📋", label: "How It Works" },
-  faq: { emoji: "❓", label: "FAQ" },
-  form: { emoji: "📝", label: "Waitlist Form" },
-  media_text: { emoji: "🖼️", label: "Media + Text" },
+// ponytail: the icon shown for each section type is fixed by the type.
+// The `item.icon` field stored per-section is kept in the DB for a future
+// per-item icon selector, but currently always derives from the section type.
+const SECTION_META: Record<string, { icon: React.ReactNode; label: string }> = {
+  hero: { icon: <IconHero />, label: "Hero" },
+  features: { icon: <IconFeatures />, label: "Features" },
+  how_it_works: { icon: <IconSteps />, label: "How It Works" },
+  faq: { icon: <IconQuestion />, label: "FAQ" },
+  form: { icon: <IconForm />, label: "Waitlist Form" },
+  media_text: { icon: <IconMedia />, label: "Media + Text" },
 };
 
 function makeSection(type: Section["type"], order: number): Section {
@@ -40,10 +54,10 @@ function makeSection(type: Section["type"], order: number): Section {
       base.settings = { title: "", subtitle: "", cta_label: "Join the waitlist", bg_image: "" };
       break;
     case "features":
-      base.settings = { title: "Features", items: [{ icon: "✨", title: "Feature", description: "" }] };
+      base.settings = { title: "Features", items: [{ icon: "", title: "Feature", description: "" }] };
       break;
     case "how_it_works":
-      base.settings = { title: "How It Works", steps: [{ icon: "1️⃣", title: "Step 1", description: "" }] };
+      base.settings = { title: "How It Works", steps: [{ icon: "", title: "Step 1", description: "" }] };
       break;
     case "faq":
       base.settings = { title: "FAQ", questions: [{ question: "", answer: "" }] };
@@ -149,7 +163,7 @@ function SectionEditor({ section, onChange }: { section: Section; onChange: (s: 
           </div>
         ))}
         <Button variant="outline" size="sm" onClick={() => {
-          onChange({ ...section, settings: { ...s, items: [...items, { icon: "✨", title: "", description: "" }] } });
+          onChange({ ...section, settings: { ...s, items: [...items, { icon: "", title: "", description: "" }] } });
         }}>Add feature</Button>
       </div>
     );
@@ -186,7 +200,7 @@ function SectionEditor({ section, onChange }: { section: Section; onChange: (s: 
           </div>
         ))}
         <Button variant="outline" size="sm" onClick={() => {
-          onChange({ ...section, settings: { ...s, steps: [...steps, { icon: "1️⃣", title: "", description: "" }] } });
+          onChange({ ...section, settings: { ...s, steps: [...steps, { icon: "", title: "", description: "" }] } });
         }}>Add step</Button>
       </div>
     );
@@ -322,12 +336,12 @@ function SectionListItem({
   onMove: (id: string, dir: -1 | 1) => void;
   onUpdate: (s: Section) => void;
 }) {
-  const meta = SECTION_META[section.type] ?? { emoji: "📄", label: section.type };
+  const meta = SECTION_META[section.type] ?? { icon: <IconPage />, label: section.type };
 
   return (
     <div className={`border rounded-xl overflow-hidden ${!section.visible ? "opacity-60" : ""}`}>
       <div className="flex items-center gap-2 px-3 py-2.5 bg-card hover:bg-muted/50 cursor-pointer select-none" onClick={onToggleOpen}>
-        <span className="text-base flex-shrink-0">{meta.emoji}</span>
+        <span className="text-base flex-shrink-0 text-muted-foreground">{meta.icon}</span>
         <span className="flex-1 text-sm font-medium truncate">{meta.label}</span>
         <div className="flex items-center gap-0.5 ml-auto" onClick={(e) => e.stopPropagation()}>
           <button onClick={() => onMove(section.id, -1)} disabled={idx === 0} className="p-1 rounded transition-colors disabled:opacity-30" title="Move up">
@@ -395,7 +409,7 @@ function renderPreviewSection(section: Section, s: Record<string, unknown>, glob
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {items.map((item, i) => (
             <div key={i} className="text-center p-4 rounded-xl bg-card border">
-              <div className="text-2xl mb-2">{item.icon || "✨"}</div>
+              <div className="text-2xl mb-2 text-foreground/50">{item.icon || <IconSparkles />}</div>
               <h3 className="font-semibold">{item.title || "Feature"}</h3>
               {item.description && <p className="text-xs text-muted-foreground mt-1">{item.description}</p>}
             </div>
@@ -413,7 +427,7 @@ function renderPreviewSection(section: Section, s: Record<string, unknown>, glob
         <div className="space-y-4">
           {steps.map((step, i) => (
             <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-card border">
-              <div className="text-2xl flex-shrink-0">{step.icon || "1️⃣"}</div>
+              <div className="text-2xl flex-shrink-0 text-foreground/50 font-heading">{step.icon || (i + 1)}</div>
               <div>
                 <h3 className="font-semibold">{step.title || `Step ${i + 1}`}</h3>
                 {step.description && <p className="text-sm text-muted-foreground mt-0.5">{step.description}</p>}
@@ -663,7 +677,7 @@ export function PageBuilderClient({
               className="flex items-center justify-between w-full px-4 py-3 bg-card hover:bg-muted/50 transition-colors text-left"
             >
               <div className="flex items-center gap-2">
-                <span className="text-base">🎨</span>
+                <span className="text-foreground/70"><IconPalette /></span>
                 <span className="text-sm font-semibold">Template</span>
               </div>
               <svg
@@ -698,12 +712,23 @@ export function PageBuilderClient({
                         type="button"
                         onClick={() => handlePickTemplate(def.id)}
                         disabled={locked}
-                        className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition disabled:cursor-not-allowed ${
+                        className={`w-full rounded-lg border text-left text-sm transition disabled:cursor-not-allowed overflow-hidden ${
                           active ? "border-primary bg-primary/5" : locked ? "opacity-50" : "hover:bg-muted"
                         }`}
                       >
-                        <span className="font-medium">{def.thumbnail} {def.name}</span>
-                        <span className="block text-xs text-muted-foreground">{def.description}</span>
+                        <div
+                          className={`h-16 flex items-center justify-center font-heading text-2xl ${
+                            def.thumbnailTone === "dark"
+                              ? "bg-neutral-900 text-neutral-100"
+                              : "bg-accent text-foreground/60"
+                          }`}
+                        >
+                          {def.thumbnailInitials}
+                        </div>
+                        <div className="px-3 py-2">
+                          <p className="font-medium">{def.name}</p>
+                          <p className="text-xs text-muted-foreground">{def.description}</p>
+                        </div>
                       </button>
                       {locked && (
                         <a
@@ -750,8 +775,8 @@ export function PageBuilderClient({
               {addSectionOpen && (
                 <div className="absolute right-0 mt-1 w-52 bg-card border rounded-xl shadow-lg py-1 z-20">
                   {Object.entries(SECTION_META).map(([type, meta]) => (
-                    <button key={type} onClick={() => addSection(type as Section["type"])} className="w-full flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-muted transition-colors">
-                      <span>{meta.emoji}</span> {meta.label}
+                    <button key={type} onClick={() => addSection(type as Section["type"])} className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors">
+                      <span className="text-muted-foreground">{meta.icon}</span> {meta.label}
                     </button>
                   ))}
                 </div>

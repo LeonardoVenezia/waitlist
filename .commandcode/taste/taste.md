@@ -5,7 +5,8 @@
 # communication
 - Communicate in Spanish (user's native language). Confidence: 0.85
 - Agent should proactively ask for needed information (reference material, clarifications) rather than making assumptions or proceeding with incomplete context. Confidence: 0.75
-- When the user shares external advice/content (blog posts, Reddit threads), they want a critical, contextualized verdict on what actually applies to their stack and stage — separating relevant points from generic or irrelevant ones — rather than blanket acceptance of the advice. Confidence: 0.60
+- When the user shares external advice/content (blog posts, Reddit threads, AI design reviews), they want a critical, contextualized verdict on what actually applies to their stack and stage — separating relevant points from generic or irrelevant ones — rather than blanket acceptance of the advice. Confidence: 0.60
+- When the user shares a long external report (e.g., a multi-page design review), the agent should treat it as input to evaluate, not as a task list to execute verbatim — should map each finding against the actual codebase, agree/disagree with judgment, and surface real decisions back to the user. Confidence: 0.80
 # user-expertise
 - User is stronger at frontend than database/backend; provide detailed, step-by-step explanations for database and infrastructure tasks. Confidence: 0.75
 # debugging

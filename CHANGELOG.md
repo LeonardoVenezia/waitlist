@@ -123,3 +123,12 @@ NEXT_PUBLIC_TURNSTILE_SITE_KEY=
 TURNSTILE_SECRET_KEY=
 RESEND_API_KEY=
 ```
+
+## Milestone 10 — Design system refinement
+
+- **Icon system**: 22 inline SVG icons in `src/components/ui/icon.tsx` (stroke 1.5, currentColor, no library dependency). Replaces ~35 native emoji used as UI chrome across the sidebar, page builder, integration tabs, integration card, public form, and analytics empty state.
+- **Form controls**: `Select`, `Textarea`, `Checkbox`, `RadioGroup` plus an `Input` with optional `leftIcon`/`rightIcon` slot. Migrated all 14 raw `<select>`, 4 `<input type="date">`, 7 `<input type="checkbox">`, and 2 `<input type="radio">` across the dashboard and public pages. iOS Safari keeps the native arrow on `<select>` (known limitation).
+- **Shared chrome**: `ActiveLink` unifies the active-state pattern between the dashboard sidebar and the public header. `ProductPlaceholder` replaces the three different emoji placeholders (`🖼️`, `🚀`, `null`) with initials in Instrument Serif over the muted surface.
+- **Page builder**: section types now render line-icon SVGs (Hero / Features / Steps / Question / Form / Media). Template thumbnails use initials + a dark/light tone hint instead of emoji. Default `bg_color` and `button_color` for the Custom builder switched to the cream/bordeaux palette (`#fbf8f3` / `#7a3325`); existing projects that saved the legacy defaults are auto-migrated on render.
+- **Landing templates**: all 5 templates (editorial, split, neon, carbon, pastel) switched to the design tokens (`text-foreground`, `text-muted-foreground`, `bg-primary`, `border-border`, `bg-card`, `bg-muted`). Headlines use `font-heading` (Instrument Serif). Primary buttons use `bg-primary` instead of `violet-500` / `bg-white` / `emerald-500` / `bg-neutral-900` depending on the template. Editorial's default `accent_color` is now `#7a3325` (was `#2563eb`); legacy values are auto-detected and treated as unset.
+- **Documentation**: `DESIGN.md` updated with the new component guidance, the no-emoji-as-UI-chrome rule, and the design-token-only rule for templates.

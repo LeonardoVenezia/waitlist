@@ -58,8 +58,15 @@
 # branding
 - Avoids copying a competitor's brand name when building an inspired-by product ("no les voy a robar el nombre"); defers the real naming decision to later (using a temporary placeholder like "LaunchList"), and has now settled on "Startpack" as the product name. Confidence: 0.80
 - Uses the product's official brand name "Startpack" consistently; treats leftover competitor/placeholder branding (e.g., `launchlist-widget`) as a bug to rename. Confidence: 0.65
-empty/dead columns in data tables; for fields with no data source, prefers either wiring them up properly (e.g., geoIP for Country) or removing them entirely rather than leaving them perpetually blank. Confidence: 0.70
+- The product's visual identity is "editorial/galería" — Instrument Serif italics for headings, warm cream/bordeaux palette, refined linear icons. Values a strong, differentiated design direction over generic SaaS defaults. Confidence: 0.85
+- Templates and themes (even paid ones) must inherit the system's typography and button palette, not hard-code brand-breaking colors (e.g., blue CTAs in a warm-brown system). Variety in templates is allowed through character (dark/glass/light) but not through off-palette colors. Confidence: 0.80
+# design-system-coverage
+- Rejects emojis as UI chrome (sidebar items, tabs, status pills, placeholders, page-builder section icons) because they break the editorial tone, vary across OS/browsers, and look informal. Keeps emojis only in copy/onboarding content (empty states, "Your project is ready 🚀") where they add warmth rather than serving as functional icons. Confidence: 0.85
+- Native browser form controls (`<select>`, `<input type="date">`, checkboxes, radios) must be replaced with custom-styled components that inherit the design system (borders, typography, focus rings). Native controls are a major consistency break. Confidence: 0.80
+- Prefers inline SVG icons (using `currentColor` and consistent stroke-width like 1.5) over installing an icon library (lucide-react, react-icons); values a small fixed set of hand-rolled icons over a generic icon set that doesn't match the bespoke aesthetic. Confidence: 0.75
+- Product placeholders without images should be typographic (initials in serif on the cream background), not emoji or generic gray boxes. Confidence: 0.75
+- Unifies tag/badge treatments under a single component with semantic variants (neutral, success, warning, brand) rather than letting each surface invent its own pill styling. Confidence: 0.70
+- Identifies design inconsistency as a "coverage" problem, not a "direction" problem — preserves the existing identity while expanding its reach across all surfaces. Confidence: 0.75
 # typography
 - Prefers an elegant, high-contrast serif for headings and iterates on it until it feels right — moved from Instrument Serif to Playfair Display and rejected it ("No quedó tan bien como pensé"), settling on Italiana, paired with Geist sans for body text. Confidence: 0.70
-f for headings and iterates on it until it feels right — moved from Instrument Serif to Playfair Display and rejected it ("No quedó tan bien como pensé"), settling on Italiana, paired with Geist sans for body text. Confidence: 0.70
-om Instrument Serif to Playfair Display and rejected it ("No quedó tan bien como pensé"), settling on Italiana, paired with Geist sans for body text. Confidence: 0.70
+- Headlines across all surfaces (including paid templates) should use the system serif (Instrument Serif/Italiana) at `font-normal` weight, not sans-serif `font-bold` — bold sans-serif headlines in a serif system break the visual identity. Confidence: 0.75

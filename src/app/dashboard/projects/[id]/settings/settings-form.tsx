@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Project = Database["public"]["Tables"]["projects"]["Row"];
@@ -147,10 +149,11 @@ function PostSignupEditor({ defaultPostSignup }: { defaultPostSignup: { enabled?
   return (
     <div className="space-y-4">
       <input type="hidden" name="post_signup" value={serialized} />
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="rounded" />
-        Enable post-signup questions
-      </label>
+      <Checkbox
+        checked={enabled}
+        onChange={(e) => setEnabled(e.target.checked)}
+        label="Enable post-signup questions"
+      />
       {enabled && (
         <>
           <div className="space-y-1">
@@ -162,15 +165,16 @@ function PostSignupEditor({ defaultPostSignup }: { defaultPostSignup: { enabled?
             {questions.map((q, i) => (
               <div key={i} className="rounded-lg border p-3 space-y-2">
                 <div className="flex items-start gap-2">
-                  <select
+                  <Select
                     value={q.type}
                     onChange={(e) => updateQuestion(i, { type: e.target.value as PostSignupQuestion["type"], options: e.target.value === "select" ? q.options : [] })}
-                    className="w-24 rounded-lg border border-input bg-transparent px-2 py-1 text-xs"
+                    className="w-24 h-7 text-xs"
                   >
                     <option value="text">Text</option>
-                    <option value="textarea">Textarea</option>
+                    <option value="email">Email</option>
+                    <option value="textarea">Long text</option>
                     <option value="select">Select</option>
-                  </select>
+                  </Select>
                   <input
                     type="text"
                     value={q.label}
@@ -178,10 +182,12 @@ function PostSignupEditor({ defaultPostSignup }: { defaultPostSignup: { enabled?
                     className="flex-1 rounded-lg border border-input bg-transparent px-2 py-1 text-xs"
                     placeholder="What's your role?"
                   />
-                  <label className="flex items-center gap-1 text-xs whitespace-nowrap">
-                    <input type="checkbox" checked={q.required} onChange={(e) => updateQuestion(i, { required: e.target.checked })} className="rounded" />
-                    Required
-                  </label>
+                  <Checkbox
+                    checked={q.required}
+                    onChange={(e) => updateQuestion(i, { required: e.target.checked })}
+                    label="Required"
+                    className="text-xs"
+                  />
                   <button type="button" onClick={() => setQuestions(questions.filter((_, j) => j !== i))} className="text-xs text-destructive hover:underline shrink-0">✕</button>
                 </div>
                 {q.type === "select" && (
@@ -395,10 +401,13 @@ export function SettingsForm({
                 <Label>Social share buttons</Label>
                 <div className="grid grid-cols-3 gap-2 mt-2">
                   {["twitter", "threads", "whatsapp", "facebook", "linkedin", "reddit", "telegram", "vk", "email"].map((s) => (
-                    <label key={s} className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" name="thank_you.social_buttons" value={s} defaultChecked={((thankYou.social_buttons as string[]) ?? []).includes(s)} />
-                      {s.charAt(0).toUpperCase() + s.slice(1)}
-                    </label>
+                    <Checkbox
+                      key={s}
+                      name="thank_you.social_buttons"
+                      value={s}
+                      defaultChecked={((thankYou.social_buttons as string[]) ?? []).includes(s)}
+                      label={s.charAt(0).toUpperCase() + s.slice(1)}
+                    />
                   ))}
                 </div>
               </div>
@@ -582,10 +591,10 @@ export function SettingsForm({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="team-role">Role</Label>
-                  <select id="team-role" name="role" defaultValue="member" className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm">
+                  <Select id="team-role" name="role" defaultValue="member" className="h-9">
                     <option value="admin">Admin</option>
                     <option value="member">Member</option>
-                  </select>
+                  </Select>
                 </div>
                 <Button type="submit" disabled={teamPending}>{teamPending ? "Inviting..." : "Invite"}</Button>
               </form>
@@ -644,13 +653,13 @@ export function SettingsForm({
             <CardDescription>Choose the language for your waitlist page.</CardDescription>
           </CardHeader>
           <CardContent>
-            <select id="language" name="language" defaultValue={(settings.language as string) ?? "en"} className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm">
+            <Select id="language" name="language" defaultValue={(settings.language as string) ?? "en"} className="h-9">
               <option value="en">English</option>
               <option value="es">Spanish</option>
               <option value="pt">Portuguese</option>
               <option value="fr">French</option>
               <option value="de">German</option>
-            </select>
+            </Select>
           </CardContent>
         </Card>
       )}

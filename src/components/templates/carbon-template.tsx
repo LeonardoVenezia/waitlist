@@ -98,7 +98,7 @@ export function CarbonTemplate({
             <button
               type="submit"
               disabled={savingAnswers}
-              className="w-full rounded-lg bg-white hover:bg-zinc-200 text-black font-semibold px-4 py-2.5 transition disabled:opacity-50"
+              className="w-full rounded-lg bg-primary hover:bg-primary-80 text-primary-foreground font-medium px-4 py-2.5 transition disabled:opacity-50"
             >
               {savingAnswers ? "Saving..." : "Continue"}
             </button>
@@ -113,8 +113,8 @@ export function CarbonTemplate({
       <div className="w-full max-w-2xl mx-auto">
         <CarbonCard>
           <div className="space-y-6 text-left">
-            <p className="font-mono text-xs text-emerald-400">ACCESS GRANTED</p>
-            <h2 className="text-2xl font-bold text-zinc-100">You&apos;re on the list.</h2>
+            <p className="font-mono text-xs text-primary">ACCESS GRANTED</p>
+            <h2 className="text-2xl font-heading text-zinc-100">You&apos;re on the list.</h2>
             <p className="text-zinc-400">
               You&apos;re <span className="text-zinc-100 font-mono">#{result.position ?? "?"}</span> in
               line.
@@ -130,7 +130,7 @@ export function CarbonTemplate({
                 />
                 <button
                   onClick={copyReferralLink}
-                  className="rounded-lg bg-white hover:bg-zinc-200 text-black font-semibold px-3 text-sm transition"
+                  className="rounded-lg bg-primary hover:bg-primary-80 text-primary-foreground font-medium px-3 text-sm transition"
                 >
                   {copied ? "Copied!" : "Copy link"}
                 </button>
@@ -149,12 +149,12 @@ export function CarbonTemplate({
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="text-left">
-        <p className="font-mono text-xs tracking-widest text-emerald-400 mb-4">{data.eyebrow}</p>
-        <h1 className="text-4xl font-bold text-zinc-50 leading-tight">
+        <p className="font-mono text-xs tracking-widest text-primary mb-4">{data.eyebrow}</p>
+        <h1 className="text-4xl font-heading text-zinc-50 leading-tight">
           {titleParts.length > 1 ? (
             <>
               {titleParts[0]}
-              <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 {data.emphasis}
               </span>
               {titleParts[1]}
@@ -174,12 +174,12 @@ export function CarbonTemplate({
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg bg-zinc-900 border border-zinc-800 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-emerald-400/70 focus:shadow-[0_0_0_3px_rgba(16,185,129,0.12)] transition"
+            className="w-full rounded-lg bg-zinc-900 border border-zinc-800 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-primary/70 focus:shadow-[0_0_0_3px_rgba(122,51,37,0.18)] transition"
           />
           <button
             type="submit"
             disabled={loading}
-            className="mt-3 w-full rounded-lg bg-white hover:bg-zinc-200 text-black font-semibold px-4 py-3 text-sm transition disabled:opacity-50"
+            className="mt-3 w-full rounded-lg bg-primary hover:bg-primary-80 text-primary-foreground font-medium px-4 py-3 text-sm transition disabled:opacity-50"
           >
             {loading ? "Requesting..." : data.cta_label}
           </button>

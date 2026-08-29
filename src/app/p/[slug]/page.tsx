@@ -106,7 +106,13 @@ export default async function HostedPage(props: {
   }) ?? {};
 
   const sections = pageSections.sections ?? [];
-  const global = pageSections.global ?? ({} as PageGlobal);
+  const rawGlobal = pageSections.global ?? ({} as PageGlobal);
+  // ponytail: migrate legacy default colors to the new cream/bordeaux palette.
+  const global: PageGlobal = {
+    ...rawGlobal,
+    bg_color: rawGlobal.bg_color && rawGlobal.bg_color !== "#f9fafb" ? rawGlobal.bg_color : "#fbf8f3",
+    button_color: rawGlobal.button_color && rawGlobal.button_color !== "#0ea5e9" ? rawGlobal.button_color : "#7a3325",
+  };
 
   // If page is explicitly disabled, 404
   if (global.page_enabled === false) notFound();

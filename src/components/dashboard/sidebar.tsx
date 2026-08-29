@@ -4,6 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { ActiveLink } from "@/components/ui/active-link";
+import {
+  IconPackage,
+  IconChart,
+  IconMail,
+  IconPage,
+  IconPlug,
+  IconTrending,
+  IconDownload,
+  IconSettings,
+  IconTarget,
+} from "@/components/ui/icon";
 
 interface ProjectSummary {
   id: string;
@@ -12,38 +24,38 @@ interface ProjectSummary {
   plan: string;
 }
 
-const productSubNav = [
-  { label: "Overview", href: (id: string) => `/dashboard/showcases/${id}`, icon: "📦" },
+type SubNavItem = { label: string; href: (id: string) => string; icon: React.ReactNode };
+
+const productSubNav: SubNavItem[] = [
+  { label: "Overview", href: (id) => `/dashboard/showcases/${id}`, icon: <IconPackage /> },
 ];
 
-const waitlistSubNav = [
-  { label: "Overview", href: (id: string) => `/dashboard/projects/${id}`, icon: "📊" },
-  { label: "Submissions", href: (id: string) => `/dashboard/projects/${id}/subscribers`, icon: "📧" },
-  { label: "Page Builder", href: (id: string) => `/dashboard/projects/${id}/page-builder`, icon: "📄" },
-  { label: "Integration", href: (id: string) => `/dashboard/projects/${id}/integration`, icon: "🔌" },
-  { label: "Analytics", href: (id: string) => `/dashboard/projects/${id}/analytics`, icon: "📈" },
-  { label: "Export", href: (id: string) => `/dashboard/projects/${id}/export`, icon: "📦" },
-  { label: "Settings", href: (id: string) => `/dashboard/projects/${id}/settings`, icon: "⚙️" },
+const waitlistSubNav: SubNavItem[] = [
+  { label: "Overview", href: (id) => `/dashboard/projects/${id}`, icon: <IconChart /> },
+  { label: "Submissions", href: (id) => `/dashboard/projects/${id}/subscribers`, icon: <IconMail /> },
+  { label: "Page Builder", href: (id) => `/dashboard/projects/${id}/page-builder`, icon: <IconPage /> },
+  { label: "Integration", href: (id) => `/dashboard/projects/${id}/integration`, icon: <IconPlug /> },
+  { label: "Analytics", href: (id) => `/dashboard/projects/${id}/analytics`, icon: <IconTrending /> },
+  { label: "Export", href: (id) => `/dashboard/projects/${id}/export`, icon: <IconDownload /> },
+  { label: "Settings", href: (id) => `/dashboard/projects/${id}/settings`, icon: <IconSettings /> },
 ];
 
 // HIDDEN: testimonials desactivados temporalmente — ver PRODUCT.md
-// const testimonialSubNav = [
-//   { label: "Testimonials", href: (id: string) => `/dashboard/projects/${id}/testimonials`, icon: "💬" },
-//   { label: "Forms", href: (id: string) => `/dashboard/projects/${id}/testimonials/forms`, icon: "📝" },
+// const testimonialSubNav: SubNavItem[] = [
+//   { label: "Testimonials", href: (id) => `/dashboard/projects/${id}/testimonials`, icon: <IconChat /> },
+//   { label: "Forms", href: (id) => `/dashboard/projects/${id}/testimonials/forms`, icon: <IconList /> },
 // ];
 
 function SubNavSection({
   label,
   items,
   currentId,
-  pathname,
   isExpanded,
   onToggle,
 }: {
   label: string;
-  items: Array<{ label: string; href: (id: string) => string; icon: string }>;
+  items: SubNavItem[];
   currentId: string;
-  pathname: string;
   isExpanded: boolean;
   onToggle: () => void;
 }) {
@@ -67,22 +79,16 @@ function SubNavSection({
       {isExpanded && (
         <nav className="space-y-0.5">
           {items.map((item) => {
-            const href = item.href(currentId);
-            const isActive = item.label === "Overview" ? pathname === href : pathname.startsWith(href);
+            const match = item.label === "Overview" ? "exact" : "prefix";
             return (
-              <Link
+              <ActiveLink
                 key={item.label}
-                href={href}
-                className={cn(
-                  "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
-                  isActive
-                    ? "bg-accent text-accent-foreground font-medium"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                )}
+                href={item.href(currentId)}
+                match={match}
+                leftIcon={<span className="shrink-0">{item.icon}</span>}
               >
-                <span className="text-sm shrink-0">{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
+                {item.label}
+              </ActiveLink>
             );
           })}
         </nav>
@@ -146,7 +152,9 @@ export function Sidebar({
                     : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
                 )}
               >
-                <span className="text-base shrink-0">🎯</span>
+                <span className="shrink-0 text-foreground/60">
+                  <IconTarget />
+                </span>
                 <span className="truncate">{wl.name}</span>
                 {wl.plan !== "free" && (
                   <span className="ml-auto text-[10px] font-medium uppercase tracking-widest text-primary">
@@ -166,7 +174,6 @@ export function Sidebar({
             label="Product"
             items={productSubNav}
             currentId={currentId}
-            pathname={pathname}
             isExpanded={expandedSection === "product"}
             onToggle={() => toggleSection("product")}
           />
@@ -175,7 +182,6 @@ export function Sidebar({
             label="Testimonials"
             items={testimonialSubNav}
             currentId={currentId}
-            pathname={pathname}
             isExpanded={expandedSection === "testimonials"}
             onToggle={() => toggleSection("testimonials")}
           /> */}
@@ -183,7 +189,6 @@ export function Sidebar({
             label="Waitlist"
             items={waitlistSubNav}
             currentId={currentId}
-            pathname={pathname}
             isExpanded={expandedSection === "waitlist"}
             onToggle={() => toggleSection("waitlist")}
           />

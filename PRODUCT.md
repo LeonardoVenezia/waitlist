@@ -34,7 +34,7 @@ A founder subscribes once and gets a **suite of pre-launch tools** for their pro
 - Core product: **Showcase / Directory** (homepage is the directory, `/product/[slug]`, `/products`, `/launches`, `/coming-soon`)
 - Tools integrated per project: Waitlist, Showcase (Testimonials paused, see below)
 - Waitlist: hosted page (`/p/[slug]`), widget embed (`/w/e/[publicKey]`), referral system, leaderboard, analytics, export
-- Page Builder: hosted landing page with hero/features/how-it-works/faq/form/media-text sections
+- Page Builder: hosted landing page with hero/features/how-it-works/faq/form/media-text sections. Default colors are cream (`#fbf8f3` background) + bordeaux (`#7a3325` button), matching the design system. Five alternative templates (neon, carbon, pastel, editorial, split) are gated to paid plans.
 - Testimonials: paused (see "Testimonials (temporalmente ocultos)" below)
 - Email validation (MX lookup) + geoIP (Cloudflare CF-IPCountry) on signup
 - DB model: account → project (each project has waitlist + showcase) + subscription

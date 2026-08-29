@@ -4,6 +4,8 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { IconPalette, IconCode, IconTrophy } from "@/components/ui/icon";
 import { updateWidgetSettings, updateLeaderboardSettings } from "./actions";
 import { saveTemplateData } from "../page-builder/actions";
 import { getTemplateDefinition, hasTemplateAccess, type TemplateId } from "@/lib/templates";
@@ -314,11 +316,8 @@ async function joinWaitlist(e) {
       {/* Tab selector */}
       <div className="inline-flex items-center gap-0.5 p-1 bg-card border rounded-full">
         {(["design", "install", "leaderboard"] as Tab[]).map((t) => {
-          const icons: Record<Tab, string> = {
-            design: "🎨",
-            install: "📦",
-            leaderboard: "🏆",
-          };
+          const Icon =
+            t === "design" ? IconPalette : t === "install" ? IconCode : IconTrophy;
           return (
             <button
               key={t}
@@ -328,7 +327,7 @@ async function joinWaitlist(e) {
                 tab === t ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {icons[t]} {t.charAt(0).toUpperCase() + t.slice(1)}
+              <Icon /> {t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
           );
         })}
@@ -415,15 +414,15 @@ async function joinWaitlist(e) {
                 <section className="grid grid-cols-2 gap-5 pt-5">
                   <label className="block">
                     <span className="text-xs font-semibold tracking-wide uppercase">Font size</span>
-                    <select value={wLayout.font_size} onChange={(e) => setWLayout({ ...wLayout, font_size: Number(e.target.value) })} className="block w-full mt-2 px-3 py-2 text-sm bg-muted border-0 rounded-lg focus:bg-card focus:ring-2 focus:ring-primary/30">
+                    <Select value={wLayout.font_size} onChange={(e) => setWLayout({ ...wLayout, font_size: Number(e.target.value) })} className="mt-2 bg-muted border-0 focus:bg-card">
                       {[12,13,14,15,16,17,18,19,20,21,22,23].map((s) => <option key={s} value={s}>{s}px</option>)}
-                    </select>
+                    </Select>
                   </label>
                   <label className="block">
                     <span className="text-xs font-semibold tracking-wide uppercase">Border width</span>
-                    <select value={wLayout.border_width} onChange={(e) => setWLayout({ ...wLayout, border_width: Number(e.target.value) })} className="block w-full mt-2 px-3 py-2 text-sm bg-muted border-0 rounded-lg focus:bg-card focus:ring-2 focus:ring-primary/30">
+                    <Select value={wLayout.border_width} onChange={(e) => setWLayout({ ...wLayout, border_width: Number(e.target.value) })} className="mt-2 bg-muted border-0 focus:bg-card">
                       {[1,2,3,4,5,6].map((b) => <option key={b} value={b}>{b}px</option>)}
-                    </select>
+                    </Select>
                   </label>
                 </section>
               </div>
@@ -630,10 +629,10 @@ async function joinWaitlist(e) {
               <div className="pt-4 space-y-4">
                 <label className="block">
                   <span className="text-sm font-medium">Type</span>
-                  <select value={lbContent.type} onChange={(e) => setLbContent({ ...lbContent, type: e.target.value as "top-positions" | "top-referrals" })} className="block w-full mt-1 px-3 py-2 text-sm bg-muted border-0 rounded-lg focus:bg-card focus:ring-2 focus:ring-primary/30">
-                    <option value="top-positions">Top users by position</option>
-                    <option value="top-referrals">Top users by referrals</option>
-                  </select>
+                  <Select value={lbContent.type} onChange={(e) => setLbContent({ ...lbContent, type: e.target.value as "top-positions" | "top-referrals" })} className="mt-1 bg-muted border-0 focus:bg-card">
+                    <option value="top-positions">Top positions</option>
+                    <option value="top-referrals">Top referrals</option>
+                  </Select>
                 </label>
                 <div className="flex items-center justify-between">
                   <div>

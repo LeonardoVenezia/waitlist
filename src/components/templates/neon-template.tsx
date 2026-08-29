@@ -87,7 +87,7 @@ export function NeonTemplate({
             <button
               type="submit"
               disabled={savingAnswers}
-              className="w-full rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold px-4 py-2.5 transition disabled:opacity-50"
+              className="w-full rounded-lg bg-primary hover:bg-primary/80 text-primary-foreground font-medium px-4 py-2.5 transition disabled:opacity-50"
             >
               {savingAnswers ? "Saving..." : "Continue"}
             </button>
@@ -104,8 +104,8 @@ export function NeonTemplate({
         <NeonCard>
           <div className="space-y-6 text-left">
             <div>
-              <h2 className="text-2xl font-bold text-white">You&apos;re on the list!</h2>
-              <p className="mt-2 text-emerald-400 font-mono">
+              <h2 className="text-2xl font-heading text-white">You&apos;re on the list!</h2>
+              <p className="mt-2 text-primary font-mono">
                 You&apos;re #{result.position ?? "?"} in line
               </p>
             </div>
@@ -120,7 +120,7 @@ export function NeonTemplate({
                 />
                 <button
                   onClick={copyReferralLink}
-                  className="rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold px-3 text-sm transition"
+                  className="rounded-lg bg-primary hover:bg-primary/80 text-primary-foreground font-medium px-3 text-sm transition"
                 >
                   {copied ? "Copied!" : "Copy link"}
                 </button>
@@ -130,14 +130,14 @@ export function NeonTemplate({
             <div>
               <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all"
+                  className="h-full bg-gradient-to-r from-primary to-primary/60 transition-all"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <ul className="mt-3 space-y-1 text-sm text-zinc-400">
+              <ul className="mt-3 space-y-1 text-sm text-zinc-300">
                 {milestoneLabels.map((m) => (
                   <li key={m.at}>
-                    <span className="text-emerald-400 font-mono">{m.at}</span> · {m.label}
+                    <span className="text-primary font-mono">{m.at}</span> · {m.label}
                   </li>
                 ))}
               </ul>
@@ -152,22 +152,22 @@ export function NeonTemplate({
     <div className="w-full max-w-md mx-auto">
       <NeonCard>
         <div className="mb-6">
-          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-300">
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/80/10 px-3 py-1 text-xs font-medium text-primary">
             <span className="relative flex size-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/80 opacity-75" />
+              <span className="relative inline-flex size-2 rounded-full bg-primary/80" />
             </span>
             {data.badge_text}
           </span>
         </div>
 
-        <h1 className="text-3xl font-bold text-white leading-tight">{data.title}</h1>
-        {data.subtitle && <p className="mt-3 text-zinc-400">{data.subtitle}</p>}
+        <h1 className="text-3xl font-heading text-white leading-tight">{data.title}</h1>
+        {data.subtitle && <p className="mt-3 text-zinc-300">{data.subtitle}</p>}
 
         {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
 
         <form onSubmit={handleSubmit} className="mt-8">
-          <div className="flex rounded-xl border border-zinc-700 bg-zinc-900 p-1.5 focus-within:border-emerald-400/60">
+          <div className="flex rounded-xl border border-zinc-700 bg-zinc-900 p-1.5 focus-within:border-primary/60">
             <input
               type="email"
               required
@@ -179,7 +179,7 @@ export function NeonTemplate({
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold px-4 text-sm transition disabled:opacity-50"
+              className="rounded-lg bg-primary hover:bg-primary/80 text-primary-foreground font-medium px-4 text-sm transition disabled:opacity-50"
             >
               {loading ? "Joining..." : data.cta_label}
             </button>
@@ -201,7 +201,7 @@ export function NeonTemplate({
                 </span>
               ))}
             </div>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-zinc-300">
               Join <span className="text-zinc-200 font-medium">{socialCount}</span> members
             </p>
           </div>

@@ -71,7 +71,10 @@ export interface TemplateDefinition {
   id: TemplateId;
   name: string;
   description: string;
-  thumbnail: string;
+  /** 1-2 letter monogram rendered as the template thumbnail. */
+  thumbnailInitials: string;
+  /** Hint of the thumbnail's background tone: "dark" for neon/carbon, "light" for the rest. */
+  thumbnailTone: "dark" | "light";
   defaultData: TemplateData;
 }
 
@@ -156,35 +159,40 @@ export const TEMPLATE_DEFINITIONS: Record<TemplateId, TemplateDefinition> = {
     id: "neon",
     name: "Neon",
     description: "Dark focused hero with an embedded email bar and referral dashboard.",
-    thumbnail: "⬛",
+    thumbnailInitials: "Ne",
+    thumbnailTone: "dark",
     defaultData: neonDefaults,
   },
   carbon: {
     id: "carbon",
     name: "Carbon",
     description: "Developer-style product teaser with a macOS mockup window.",
-    thumbnail: "🖥️",
+    thumbnailInitials: "Ca",
+    thumbnailTone: "dark",
     defaultData: carbonDefaults,
   },
   pastel: {
     id: "pastel",
     name: "Pastel",
     description: "Soft animated gradient with a floating glass card.",
-    thumbnail: "🌸",
+    thumbnailInitials: "Pa",
+    thumbnailTone: "light",
     defaultData: pastelDefaults,
   },
   editorial: {
     id: "editorial",
     name: "Editorial",
     description: "High-contrast asymmetric layout with a feature grid.",
-    thumbnail: "📰",
+    thumbnailInitials: "Ed",
+    thumbnailTone: "light",
     defaultData: editorialDefaults,
   },
   split: {
     id: "split",
     name: "Split",
     description: "Sticky benefits column with an interactive tabbed preview.",
-    thumbnail: "🧩",
+    thumbnailInitials: "Sp",
+    thumbnailTone: "light",
     defaultData: splitDefaults,
   },
 };

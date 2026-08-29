@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { IconChart } from "@/components/ui/icon";
 
 interface Stats {
   total: number;
@@ -32,7 +33,9 @@ export function AnalyticsClient({ stats, chartData }: { stats: Stats; chartData:
 
       {!hasData ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center text-lg mb-4">📊</div>
+          <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center mb-4 text-foreground/70">
+            <IconChart className="size-5" />
+          </div>
           <p className="text-sm text-muted-foreground max-w-xs">
             No data yet. Analytics will appear here once subscribers start signing up.
           </p>

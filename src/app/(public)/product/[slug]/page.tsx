@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { PublicHeader } from "@/components/shared/public-header";
 import { BackButton } from "@/components/shared/back-button";
+import { ProductPlaceholder } from "@/components/shared/product-placeholder";
 import { ClaimButton, type ClaimStatus } from "./claim-button";
 // HIDDEN: testimonials desactivados temporalmente — ver PRODUCT.md
 // import { ProductTestimonials } from "./product-testimonials";
@@ -152,7 +153,11 @@ export default async function ProductDetailPage(props: {
             className="w-full h-full object-cover max-h-[50vh]"
           />
         </div>
-      ) : null}
+      ) : (
+        <div className="w-full max-h-[50vh] overflow-hidden bg-muted">
+          <ProductPlaceholder name={product.name} size="md" className="!aspect-auto h-[40vh]" />
+        </div>
+      )}
 
       <div className="mx-auto max-w-5xl px-6 py-14">
         <p className="text-sm text-muted-foreground mb-6">

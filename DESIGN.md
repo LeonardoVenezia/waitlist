@@ -96,13 +96,17 @@ A project page has its own sub-navigation (tabs or side links) for the tools/sec
 
 - **Cards**: No ring/shadow. Just a subtle `background` difference from the page. If a card needs elevation, use a very subtle shadow `0 1px 3px rgba(0,0,0,0.04)`.
 - **Buttons**: Keep the `active:translate-y-px` micro-interaction. Primary uses the bordeaux. Secondary uses the warm beige background.
-- **Inputs**: Keep current style but use warm border colors.
+- **Inputs**: Use the `Input` component (with optional `leftIcon`/`rightIcon` slot). For selects use `Select`, for checkboxes use `Checkbox`, for radios use `RadioGroup`, for textareas use `Textarea`. All share the same warm border colors and focus state.
 - **Tables**: Remove `hover:bg-muted/50` — use a more subtle `hover:bg-muted/30` instead. Keep `border-b` rows.
+- **Icons**: Always use the SVG `Icon` components from `@/components/ui/icon`. Stroke 1.5, currentColor. Never use native emoji as UI chrome.
+- **Placeholders for products without images**: Use `ProductPlaceholder` (initials in `font-heading` over the muted background) — both `sm` (40×40) and `md` (16:9) sizes.
 
 ## Anti-patterns (do not)
 
 - No `ring-1 ring-foreground/10` on cards (too sharp for elegant)
 - No hard-hover backgrounds on table rows (too aggressive)
 - No `shadow-lg` or large shadows — keep shadows minimal
-- No emoji as primary icon — use simple SVG or character-based markers
+- **No emoji as UI chrome** (sidebar, page builder, tabs, status pills, placeholders, form labels). Emojis may appear in copy/onboarding copy where they add warmth, but never as icons or status indicators.
 - No `bg-green-50 text-green-800` alert style — use a softer, more refined semantic palette
+- No raw `<select>`, `<input type="checkbox">`, `<input type="radio">`, or `<input type="date">` in the dashboard or public pages — use the `Select`, `Checkbox`, `RadioGroup`, `Input` components.
+- No `text-neutral-900` / `text-zinc-*` / `bg-zinc-*` / `bg-violet-*` / `bg-emerald-*` etc. in templates — they should all use the design tokens (`text-foreground`, `text-muted-foreground`, `bg-primary`, `border-border`, `bg-card`, `bg-muted`).

@@ -32,7 +32,7 @@ export default async function PageBuilderPage(props: {
       realCount={realCount}
       plan={waitlist.plan as Plan}
       initialSections={(pageSections.sections as Section[]) ?? []}
-      initialGlobal={(pageSections.global as GlobalSettings) ?? defaultGlobal}
+      initialGlobal={migrateGlobal(pageSections.global as Partial<GlobalSettings>)}
       initialTemplateId={(pageSections.template_id as string | null) ?? null}
       initialTemplateData={pageSections.template_data}
     />
@@ -61,10 +61,16 @@ export interface GlobalSettings {
   page_enabled: boolean;
 }
 
-const defaultGlobal: GlobalSettings = {
-  bg_color: "#f9fafb",
-  button_color: "#0ea5e9",
-  button_text_color: "#ffffff",
+// ponytail: migrate defaults from old cream/blue to new cream/bordeaux
+// on first render. Covers users who already saved with the old defaults
+// (bg #f9fafb / button #0ea5e9) — those values are treated as "unset".
+const LEGACY_BG = "#f9fafb";
+const LEGACY_BUTTON = "#0ea5e9";
+
+export const defaultGlobal: GlobalSettings = {
+  bg_color: "#fbf8f3",
+  button_color: "#7a3325",
+  button_text_color: "#fffaf3",
   show_count: true,
   show_leaderboard: true,
   show_social_links: false,
@@ -74,3 +80,10 @@ const defaultGlobal: GlobalSettings = {
   seo_indexable: true,
   page_enabled: true,
 };
+
+export function migrateGlobal(stored: Partial<GlobalSettings> | null | undefined): GlobalSettings {
+  const g = { ...defaultGlobal, ...(stored ?? {}) };
+  if (g.bg_color === LEGACY_BG) g.bg_color = defaultGlobal.bg_color;
+  if (g.button_color === LEGACY_BUTTON) g.button_color = defaultGlobal.button_color;
+  return g;
+}

@@ -7,6 +7,9 @@ import type { Database } from "@/lib/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { IconSearch } from "@/components/ui/icon";
 import {
   Table,
   TableBody,
@@ -220,52 +223,38 @@ export function SubscribersTable({
 
       {/* Search + Filter toolbar */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <svg
-            className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+        <div className="flex-1 min-w-[200px] max-w-sm">
           <Input
             type="search"
             placeholder="Search emails..."
-            className="pl-8"
+            leftIcon={<IconSearch />}
             value={searchValue}
             onChange={(e) => handleSearch(e.target.value)}
           />
         </div>
 
-        <select
-          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+        <Select
+          className="w-auto"
           value={filters.verified}
           onChange={(e) => router.push(buildUrl({ verified: e.target.value }))}
         >
           <option value="">All emails</option>
           <option value="verified">Verified</option>
           <option value="unverified">Unverified</option>
-        </select>
+        </Select>
 
-        <input
+        <Input
           type="date"
-          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+          className="w-auto"
           value={filters.dateFrom}
           onChange={(e) =>
             router.push(buildUrl({ dateFrom: e.target.value }))
           }
           title="From date"
         />
-        <input
+        <Input
           type="date"
-          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+          className="w-auto"
           value={filters.dateUntil}
           onChange={(e) =>
             router.push(buildUrl({ dateUntil: e.target.value }))
@@ -273,8 +262,8 @@ export function SubscribersTable({
           title="Until date"
         />
 
-        <select
-          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+        <Select
+          className="w-auto"
           value={filters.emailStatus}
           onChange={(e) =>
             router.push(buildUrl({ emailStatus: e.target.value }))
@@ -285,7 +274,7 @@ export function SubscribersTable({
           <option value="risky">Risky</option>
           <option value="undeliverable">Undeliverable</option>
           <option value="unknown">Unknown</option>
-        </select>
+        </Select>
 
         {hasFilters && (
           <Button variant="ghost" size="sm" onClick={resetFilters}>
@@ -338,9 +327,7 @@ export function SubscribersTable({
           <TableHeader>
             <TableRow>
               <TableHead className="w-10">
-                <input
-                  type="checkbox"
-                  className="size-3.5 rounded"
+                <Checkbox
                   checked={allSelected}
                   onChange={toggleSelectAll}
                 />
@@ -377,9 +364,7 @@ export function SubscribersTable({
                     className={isSel ? "bg-muted/50" : undefined}
                   >
                     <TableCell>
-                      <input
-                        type="checkbox"
-                        className="size-3.5 rounded"
+                      <Checkbox
                         checked={isSel}
                         onChange={() => toggleSelect(sub.id)}
                       />
