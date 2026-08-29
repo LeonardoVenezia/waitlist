@@ -59,14 +59,13 @@ export function TemplateRenderer({
   if (templateId === "pastel") {
     const data = normalizeTemplateData("pastel", templateData) as PastelTemplateData;
     return (
-      <div
-        className={`${shell} flex items-center justify-center px-4 py-16`}
-        style={{
-          background:
-            "linear-gradient(120deg, rgba(244,114,182,0.18), rgba(168,85,247,0.18), rgba(96,165,250,0.18))",
-        }}
-      >
-        <PastelTemplate publicKey={publicKey} data={data} realCount={realCount} />
+      <div className={shell}>
+        <PastelTemplate
+          publicKey={publicKey}
+          data={data}
+          realCount={realCount}
+          embedded={embedded}
+        />
       </div>
     );
   }

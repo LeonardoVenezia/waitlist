@@ -37,6 +37,7 @@
 - Prefers generous vertical spacing between stacked hero elements (title, subtitle, form input); flags cramped spacing and asks for extra margin rather than accepting the default. Confidence: 0.55
 - Prefers subtle visual distinction for status flags (e.g., a "featured" product) — a border or background color tint — over an explicit text badge/tag label; the cue should stay understated. Confidence: 0.75
 - Prefers global/contextual actions (e.g., Upgrade, Upgrade plan) to live in the dashboard header so they're always visible across all subpages, rather than being duplicated on each subpage's local header; the same action should never appear in multiple places within the same navigation scope. Confidence: 0.85
+- Nested wrappers must not each apply the same visual property (background, gradient, blur) — only one component in the stack should own the background. When a `TemplateRenderer` wrapper paints a gradient AND a child template also paints its own gradient (or a `GlassCard` adds another tinted layer on top), the result is a visible "box around a box" that the user flags as broken. Each layer in a render tree should have exactly one background-bearing element. Confidence: 0.85
 
 # feature-design
 - When a feature doesn't work end-to-end (saved but never rendered, toggle that doesn't affect output), user prefers removing it entirely rather than leaving dead code in the UI that confuses users. Confidence: 0.75

@@ -22,10 +22,12 @@ export function PastelTemplate({
   publicKey,
   data,
   realCount,
+  embedded = false,
 }: {
   publicKey: string;
   data: PastelTemplateData;
   realCount: number;
+  embedded?: boolean;
 }) {
   const {
     email,
@@ -153,16 +155,22 @@ export function PastelTemplate({
 
   return (
     <div
-      className="w-full max-w-md mx-auto relative overflow-hidden rounded-3xl p-6"
+      className={
+        embedded
+          ? "w-full px-4 py-6"
+          : "min-h-screen w-full flex flex-col items-center justify-center px-4 py-12"
+      }
       style={{
         backgroundImage: "linear-gradient(120deg, #fbcfe8 0%, #e9d5ff 35%, #c7d2fe 70%, #bfdbfe 100%)",
         backgroundSize: "200% 200%",
         animation: "pastel-shift 12s ease-in-out infinite",
       }}
-      onMouseMove={handleParallax}
-      onMouseLeave={resetParallax}
     >
-      <div className="relative">
+      <div
+        className="w-full max-w-md relative"
+        onMouseMove={handleParallax}
+        onMouseLeave={resetParallax}
+      >
         <GlassCard>
           <div className="text-center">
             <h1 className="text-3xl font-bold text-zinc-800 leading-tight">{data.title}</h1>
