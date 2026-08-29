@@ -538,6 +538,7 @@ export function PageBuilderClient({
         JSON.stringify({
           templateId,
           templateData,
+          sections,
           global,
           projectId: waitlistId,
           publicKey,
@@ -547,7 +548,7 @@ export function PageBuilderClient({
     } catch {
       // Ignore quota / private-mode errors — the page builder still works.
     }
-  }, [templateId, templateData, global, slug, waitlistId, publicKey, realCount]);
+  }, [templateId, templateData, sections, global, slug, waitlistId, publicKey, realCount]);
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -916,22 +917,11 @@ export function PageBuilderClient({
             <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b">
               <div>
                 <h3 className="text-sm font-semibold">Page preview</h3>
-                <p className="text-xs text-muted-foreground">Updates as you edit · live page: <span className="font-mono">{pageUrl.replace(/^https?:\/\//, "")}</span></p>
+                <p className="text-xs text-muted-foreground">Updates as you edit</p>
               </div>
-              <div className="flex items-center gap-1">
-                <a
-                  href={`/preview/${slug}`}
-                  target="_blank"
-                  rel="noopener"
-                  className="inline-flex items-center justify-center size-7 rounded-md hover:bg-muted transition-colors"
-                  title="Open a full-page preview (won't subscribe)"
-                >
-                  <svg className="size-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
-                </a>
-                <a href={pageUrl} target="_blank" rel="noopener" className="inline-flex items-center justify-center size-7 rounded-md hover:bg-muted transition-colors" title="Open the live public page in a new tab">
-                  <svg className="size-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                </a>
-              </div>
+              <a href={`/preview/${slug}`} target="_blank" rel="noopener" className="inline-flex items-center justify-center size-7 rounded-md hover:bg-muted transition-colors" title="Open full-page preview (won't subscribe)">
+                <svg className="size-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+              </a>
             </div>
             <div className="flex items-center px-4 py-2 bg-muted/50 border-b">
               <span className="size-2.5 rounded-full bg-red-400/70 mr-1.5" />
