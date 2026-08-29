@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -527,6 +527,28 @@ export function PageBuilderClient({
   const [templateData, setTemplateData] = useState<Record<string, unknown>>(
     (initialTemplateData as Record<string, unknown>) ?? {},
   );
+
+  // Persist the in-progress draft to localStorage so /preview/[slug] can
+  // render exactly what the user is editing right now, without having to
+  // apply the changes first. The full-page preview reads this key on mount.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        `preview-draft-${slug}`,
+        JSON.stringify({
+          templateId,
+          templateData,
+          global,
+          projectId: waitlistId,
+          publicKey,
+          realCount,
+        }),
+      );
+    } catch {
+      // Ignore quota / private-mode errors — the page builder still works.
+    }
+  }, [templateId, templateData, global, slug, waitlistId, publicKey, realCount]);
+
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
