@@ -178,22 +178,11 @@ export function SplitTemplate({
           {data.show_social_proof && (
             <p className="mt-4 text-xs text-neutral-500">{socialCount} people already joined</p>
           )}
-
-          {data.testimonials.length > 0 && (
-            <div className="mt-10 space-y-3">
-              {data.testimonials.map((t, i) => (
-                <div key={i} className="rounded-lg border border-neutral-200 bg-white p-3.5">
-                  <p className="text-sm text-neutral-700">&ldquo;{t.quote}&rdquo;</p>
-                  <p className="mt-1.5 text-xs text-neutral-400">{t.author}</p>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Right: interactive tabbed preview */}
         <div className="py-6 lg:py-0">
-          <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <div className="h-full rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm flex flex-col">
             <div className="flex gap-1 border-b border-neutral-100 pb-3">
               {data.tabs.map((tab, i) => (
                 <button
@@ -211,7 +200,7 @@ export function SplitTemplate({
               ))}
             </div>
             {active && (
-              <div key={activeTab} className="animate-in fade-in pt-5 min-h-[280px]">
+              <div key={activeTab} className="animate-in fade-in pt-5 flex-1">
                 <div className="flex aspect-video items-center justify-center rounded-xl bg-neutral-100">
                   <span className="font-heading text-7xl text-neutral-400/60">
                     {activeTab === 0 ? "L" : activeTab === 1 ? "A" : "R"}
@@ -224,6 +213,17 @@ export function SplitTemplate({
           </div>
         </div>
       </div>
+
+      {data.testimonials.length > 0 && (
+        <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {data.testimonials.map((t, i) => (
+            <div key={i} className="rounded-lg border border-neutral-200 bg-white p-4">
+              <p className="text-sm text-neutral-700">&ldquo;{t.quote}&rdquo;</p>
+              <p className="mt-2 text-xs text-neutral-400">{t.author}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

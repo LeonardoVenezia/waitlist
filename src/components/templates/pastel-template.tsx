@@ -153,7 +153,7 @@ export function PastelTemplate({
 
   return (
     <div
-      className="w-full max-w-md mx-auto relative overflow-hidden rounded-3xl"
+      className="w-full max-w-md mx-auto relative overflow-hidden rounded-3xl p-6"
       style={{
         backgroundImage: "linear-gradient(120deg, #fbcfe8 0%, #e9d5ff 35%, #c7d2fe 70%, #bfdbfe 100%)",
         backgroundSize: "200% 200%",
@@ -162,7 +162,7 @@ export function PastelTemplate({
       onMouseMove={handleParallax}
       onMouseLeave={resetParallax}
     >
-      <div className="relative p-8">
+      <div className="relative">
         <GlassCard>
           <div className="text-center">
             <h1 className="text-3xl font-bold text-zinc-800 leading-tight">{data.title}</h1>
@@ -171,19 +171,19 @@ export function PastelTemplate({
             {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
 
             <form onSubmit={handleSubmit} className="mt-8 text-left">
-              <div className="flex items-center rounded-full bg-white/80 border border-white/50 shadow-inner p-1.5">
+              <div className="flex items-center rounded-full bg-white/80 border border-white/50 shadow-inner p-1">
                 <input
                   type="email"
                   required
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 bg-transparent px-3 py-2 text-sm text-zinc-800 placeholder:text-zinc-400 outline-none"
+                  className="min-w-0 flex-1 bg-transparent px-3 py-1.5 text-sm text-zinc-800 placeholder:text-zinc-400 outline-none"
                 />
                 <button
                   type="submit"
                   disabled={loading}
-                  className="rounded-full font-semibold px-4 py-2 text-sm text-white transition hover:opacity-90 disabled:opacity-50"
+                  className="shrink-0 rounded-full font-semibold px-4 py-1.5 text-sm text-white transition hover:opacity-90 disabled:opacity-50 whitespace-nowrap"
                   style={{ backgroundColor: ACCENT }}
                 >
                   {loading ? "Joining..." : data.cta_label}
@@ -229,8 +229,8 @@ export function PastelTemplate({
 function GlassCard({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="rounded-3xl border border-white/30 p-8 shadow-xl backdrop-blur-xl"
-      style={{ backgroundColor: "rgba(255,255,255,0.55)" }}
+      className="rounded-3xl border border-white/15 p-8 shadow-xl backdrop-blur-xl"
+      style={{ backgroundColor: "rgba(255,255,255,0.35)" }}
     >
       {children}
     </div>
