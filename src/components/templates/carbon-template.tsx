@@ -4,6 +4,15 @@ import { useState } from "react";
 import { useWaitlistSubscribe } from "./use-waitlist-subscribe";
 import type { CarbonTemplateData } from "@/lib/templates";
 
+// The carbon template is a developer-style product teaser with a macOS
+// mockup. Its identity is a near-black background, monospace eyebrow,
+// white CTA, and a subtle emerald→cyan gradient on the emphasized word.
+// It deliberately does NOT use the host app's tokens.
+
+const ACCENT = "#10b981";
+const ACCENT_2 = "#22d3ee";
+const ACCENT_RGBA = "rgba(16,185,129,0.7)";
+
 export function CarbonTemplate({
   publicKey,
   data,
@@ -98,7 +107,7 @@ export function CarbonTemplate({
             <button
               type="submit"
               disabled={savingAnswers}
-              className="w-full rounded-lg bg-primary hover:bg-primary-80 text-primary-foreground font-medium px-4 py-2.5 transition disabled:opacity-50"
+              className="w-full rounded-lg bg-white hover:bg-zinc-200 text-zinc-900 font-semibold px-4 py-2.5 transition disabled:opacity-50"
             >
               {savingAnswers ? "Saving..." : "Continue"}
             </button>
@@ -113,8 +122,8 @@ export function CarbonTemplate({
       <div className="w-full max-w-2xl mx-auto">
         <CarbonCard>
           <div className="space-y-6 text-left">
-            <p className="font-mono text-xs text-primary">ACCESS GRANTED</p>
-            <h2 className="text-2xl font-heading text-zinc-100">You&apos;re on the list.</h2>
+            <p className="font-mono text-xs" style={{ color: ACCENT }}>ACCESS GRANTED</p>
+            <h2 className="text-2xl font-bold text-zinc-100">You&apos;re on the list.</h2>
             <p className="text-zinc-400">
               You&apos;re <span className="text-zinc-100 font-mono">#{result.position ?? "?"}</span> in
               line.
@@ -130,7 +139,7 @@ export function CarbonTemplate({
                 />
                 <button
                   onClick={copyReferralLink}
-                  className="rounded-lg bg-primary hover:bg-primary-80 text-primary-foreground font-medium px-3 text-sm transition"
+                  className="rounded-lg bg-white hover:bg-zinc-200 text-zinc-900 font-semibold px-3 text-sm transition"
                 >
                   {copied ? "Copied!" : "Copy link"}
                 </button>
@@ -149,12 +158,15 @@ export function CarbonTemplate({
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="text-left">
-        <p className="font-mono text-xs tracking-widest text-primary mb-4">{data.eyebrow}</p>
-        <h1 className="text-4xl font-heading text-zinc-50 leading-tight">
+        <p className="font-mono text-xs tracking-widest mb-4" style={{ color: ACCENT }}>{data.eyebrow}</p>
+        <h1 className="text-4xl font-bold text-zinc-50 leading-tight">
           {titleParts.length > 1 ? (
             <>
               {titleParts[0]}
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <span
+                className="bg-clip-text text-transparent"
+                style={{ backgroundImage: `linear-gradient(to right, ${ACCENT}, ${ACCENT_2})` }}
+              >
                 {data.emphasis}
               </span>
               {titleParts[1]}
@@ -174,12 +186,19 @@ export function CarbonTemplate({
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg bg-zinc-900 border border-zinc-800 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-primary/70 focus:shadow-[0_0_0_3px_rgba(122,51,37,0.18)] transition"
+            className="w-full rounded-lg bg-zinc-900 border border-zinc-800 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-emerald-500/70 focus:shadow-[0_0_0_3px_rgba(16,185,129,0.12)] transition"
+            style={{ boxShadow: "0 0 0 0 transparent" }}
+            onFocus={(e) => {
+              e.currentTarget.style.boxShadow = `0 0 0 3px ${ACCENT_RGBA.replace("0.7", "0.18")}`;
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.boxShadow = "0 0 0 0 transparent";
+            }}
           />
           <button
             type="submit"
             disabled={loading}
-            className="mt-3 w-full rounded-lg bg-primary hover:bg-primary-80 text-primary-foreground font-medium px-4 py-3 text-sm transition disabled:opacity-50"
+            className="mt-3 w-full rounded-lg bg-white hover:bg-zinc-200 text-zinc-900 font-semibold px-4 py-3 text-sm transition disabled:opacity-50"
           >
             {loading ? "Requesting..." : data.cta_label}
           </button>
@@ -196,8 +215,9 @@ export function CarbonTemplate({
       <div
         onMouseMove={handleTilt}
         onMouseLeave={resetTilt}
-        className="mt-12 rounded-xl border border-zinc-800 bg-[#111318] shadow-2xl"
+        className="mt-12 rounded-xl border border-zinc-800 shadow-2xl"
         style={{
+          backgroundColor: "#111318",
           transform: `perspective(1000px) rotateX(${-tilt.y}deg) rotateY(${tilt.x}deg)`,
           transition: "transform 0.15s ease-out",
         }}
@@ -224,6 +244,6 @@ export function CarbonTemplate({
 
 function CarbonCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-[#111318] p-8">{children}</div>
+    <div className="rounded-xl border border-zinc-800 p-8" style={{ backgroundColor: "#111318" }}>{children}</div>
   );
 }

@@ -103,3 +103,8 @@
     @apply font-heading tracking-tight;
   }
 }
+
+@keyframes pastel-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
