@@ -158,3 +158,28 @@ export async function rejectClaim(
   revalidatePath("/admin/claims");
   return { success: true };
 }
+
+export async function setShowcaseClaimable(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requireAdmin();
+  const showcaseId = formData.get("showcase_id") as string | null;
+  if (!showcaseId) return { error: "Missing showcase id" };
+
+  const raw = formData.get("claimable");
+  const claimable = raw === "true" || raw === "on";
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("showcases")
+    .update({ claimable })
+    .eq("id", showcaseId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin/claims");
+  revalidatePath("/");
+  revalidatePath("/product", "layout");
+  return { success: true };
+}
