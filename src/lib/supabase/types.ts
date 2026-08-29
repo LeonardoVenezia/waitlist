@@ -272,6 +272,7 @@ export interface Database {
           main_image: string | null;
           card_image: string | null;
           status: "draft" | "published" | "rejected" | "coming_soon" | "expired";
+          claimable: boolean;
           domain_check_passed: boolean;
           spam_check_passed: boolean;
           last_domain_check: string | null;
@@ -300,6 +301,7 @@ export interface Database {
           main_image?: string | null;
           card_image?: string | null;
           status?: "draft" | "published" | "rejected" | "coming_soon";
+          claimable?: boolean;
           domain_check_passed?: boolean;
           spam_check_passed?: boolean;
           last_domain_check?: string | null;
@@ -328,6 +330,7 @@ export interface Database {
           main_image?: string | null;
           card_image?: string | null;
           status?: "draft" | "published" | "rejected" | "coming_soon" | "expired";
+          claimable?: boolean;
           domain_check_passed?: boolean;
           spam_check_passed?: boolean;
           last_domain_check?: string | null;
@@ -553,6 +556,55 @@ export interface Database {
             foreignKeyName: "subscriptions_project_id_fkey";
             columns: ["project_id"];
             referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_claims: {
+        Row: {
+          id: string;
+          showcase_id: string;
+          claimant_user_id: string;
+          status: "pending" | "approved" | "rejected";
+          message: string | null;
+          rejected_reason: string | null;
+          created_at: string;
+          resolved_at: string | null;
+          resolved_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          showcase_id: string;
+          claimant_user_id: string;
+          status?: "pending" | "approved" | "rejected";
+          message?: string | null;
+          rejected_reason?: string | null;
+          created_at?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          showcase_id?: string;
+          claimant_user_id?: string;
+          status?: "pending" | "approved" | "rejected";
+          message?: string | null;
+          rejected_reason?: string | null;
+          created_at?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_claims_showcase_id_fkey";
+            columns: ["showcase_id"];
+            referencedRelation: "showcases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_claims_claimant_user_id_fkey";
+            columns: ["claimant_user_id"];
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];

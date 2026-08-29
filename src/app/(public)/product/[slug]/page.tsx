@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { PublicHeader } from "@/components/shared/public-header";
 import { BackButton } from "@/components/shared/back-button";
+import { ClaimButton, type ClaimStatus } from "./claim-button";
 // HIDDEN: testimonials desactivados temporalmente — ver PRODUCT.md
 // import { ProductTestimonials } from "./product-testimonials";
 
@@ -26,6 +28,7 @@ interface ProductDetail {
   main_type: string;
   main_image: string | null;
   status: string;
+  claimable: boolean;
   plan: string;
   waitlist?: {
     public_key: string;
@@ -90,12 +93,38 @@ export default async function ProductDetailPage(props: {
     main_type: row.main_type as string,
     main_image: row.main_image as string | null,
     status: row.status as string,
+    claimable: row.claimable as boolean,
     plan: (projectsData?.plan as string) ?? "free",
     waitlist: (projectsData ? projectsData as ProductDetail["waitlist"] : null),
   };
   const images = Array.isArray(product.images) ? product.images : [];
   const isVideo = product.main_type === "video" && product.video_url;
   const ytId = isVideo ? extractYouTubeId(product.video_url) : null;
+
+  // Claim status: only relevant for products the admin marked as claimable.
+  // Skip the lookup entirely otherwise to avoid a wasted round-trip.
+  const userClient = await createClient();
+  const {
+    data: { user },
+  } = await userClient.auth.getUser();
+
+  let claimStatus: ClaimStatus = "none";
+  let claimReason: string | null = null;
+  if (product.claimable && user) {
+    const { data: claim } = await userClient
+      .from("project_claims")
+      .select("status, rejected_reason")
+      .eq("showcase_id", product.id)
+      .eq("claimant_user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (claim) {
+      claimStatus = claim.status as ClaimStatus;
+      claimReason = (claim.rejected_reason as string | null) ?? null;
+    }
+  }
   const mainImg = product.main_image;
   const gallery = images;
 
@@ -203,6 +232,28 @@ export default async function ProductDetailPage(props: {
             {/* HIDDEN: testimonials desactivados temporalmente — ver PRODUCT.md */}
             {/* <ProductTestimonials projectId={product.waitlist_id} plan={product.plan} /> */}
           </>
+        )}
+
+        {/* Claim this product — only shown for products the admin marked as claimable */}
+        {product.claimable && (
+          <div className="mt-12 border-t pt-8">
+            <h2 className="font-heading text-lg font-semibold mb-2">
+              Is this your product?
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              If you&apos;re the founder of {product.name}, claim it and we&apos;ll
+              transfer ownership to your account so you can manage the waitlist,
+              page builder, and analytics.
+            </p>
+            <ClaimButton
+              showcaseId={product.id}
+              showcaseSlug={product.slug}
+              isAuthed={!!user}
+              claimStatus={claimStatus}
+              claimReason={claimReason}
+              dashboardPath={`/dashboard/projects/${product.waitlist_id}`}
+            />
+          </div>
         )}
       </div>
     </div>

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email";
 import { renderShowcaseExpiryEmail } from "@/emails/showcase-expiry";
+import { renderClaimNotificationEmail } from "@/emails/claim-notification";
+import { renderClaimResultEmail } from "@/emails/claim-result";
 
 const BATCH_SIZE = 50;
 
@@ -43,6 +45,12 @@ export async function POST(request: Request) {
       showcase_name?: string;
       project_id?: string;
       expires_at?: string;
+      claimant_email?: string;
+      message?: string | null;
+      claim_url?: string;
+      result?: "approved" | "rejected";
+      reason?: string | null;
+      dashboard_url?: string;
     };
 
     let html = "";
@@ -54,6 +62,21 @@ export async function POST(request: Request) {
         upgradeUrl: payload.project_id
           ? `${appUrl}/dashboard/projects/${payload.project_id}/upgrade`
           : `${appUrl}/dashboard`,
+      });
+    } else if (row.template === "admin-new-claim") {
+      html = renderClaimNotificationEmail({
+        showcaseName: payload.showcase_name ?? "a product",
+        claimantEmail: payload.claimant_email ?? "unknown",
+        message: payload.message ?? null,
+        claimUrl: payload.claim_url ?? `${appUrl}/admin/claims`,
+      });
+    } else if (row.template === "claim-result") {
+      const result = payload.result === "approved" ? "approved" : "rejected";
+      html = renderClaimResultEmail({
+        result,
+        showcaseName: payload.showcase_name ?? "a product",
+        dashboardUrl: payload.dashboard_url,
+        reason: payload.reason ?? null,
       });
     } else {
       html = `<p>${row.subject}</p>`;

@@ -75,6 +75,16 @@ EMAIL_FROM="LaunchList <hola@leovenezia.dev>"
 
 Tenés que setearla en `.env.local` y en Vercel → Settings → Environment Variables. Sin `EMAIL_FROM`, `sendEmail` no envía nada. No hace falta registrar la parte antes del `@` (ej. `hola`) por separado: con el dominio verificado, cualquier dirección de ese dominio es válida.
 
+### Paso 5.5 — Admin gate (project claims)
+
+Si vas a usar el panel de aprobación de claims en `/admin/claims`, definí la lista de emails admin:
+
+```bash
+ADMIN_EMAILS=hi@leovenezia.dev
+```
+
+Acepta múltiples emails separados por coma. Solo esos emails pueden ver `/admin/*`; cualquier otro user autenticado se redirige a `/dashboard`.
+
 ### Paso 6 — Paddle webhook (crítico de seguridad)
 
 Hoy `src/app/api/webhooks/paddle/route.ts` **no verifica la firma** del webhook. Lo dice el comentario en el código. Eso significa que cualquiera puede pegarle a tu endpoint y:

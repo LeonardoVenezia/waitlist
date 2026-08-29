@@ -9,7 +9,13 @@ import { GoogleIcon } from "@/components/shared/google-icon";
 
 type State = { error: string } | null;
 
-export function LoginForm() {
+export function LoginForm({
+  next,
+  claim,
+}: {
+  next: string | null;
+  claim: string | null;
+}) {
   const [state, formAction, pending] = useActionState<State, FormData>(
     async (_prev, formData) => signIn(null, formData),
     null,
@@ -18,6 +24,8 @@ export function LoginForm() {
   return (
     <div className="space-y-4">
       <form action={formAction} className="space-y-4">
+        {next && <input type="hidden" name="next" value={next} />}
+        {claim && <input type="hidden" name="claim" value={claim} />}
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input id="email" name="email" type="email" required placeholder="you@example.com" />
