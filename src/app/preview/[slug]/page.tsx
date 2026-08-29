@@ -202,17 +202,35 @@ function SectionBlock({
   const s = section.settings as Record<string, unknown>;
 
   switch (section.type) {
-    case "hero":
+    case "hero": {
+      const title = (s.title as string) || "";
+      const subtitle = (s.subtitle as string) || "";
       return (
-        <section className="text-center py-12">
-          <h1 className="font-heading text-5xl tracking-tight text-foreground">
-            {(s.title as string) || ""}
-          </h1>
-          {Boolean(s.subtitle) && (
-            <p className="mt-4 text-lg text-muted-foreground">{s.subtitle as string}</p>
+        <section className="text-center py-16">
+          {title ? (
+            <h1 className="font-heading text-5xl tracking-tight text-foreground">
+              {title}
+            </h1>
+          ) : (
+            <h1 className="font-heading text-3xl tracking-tight text-muted-foreground/50 italic">
+              Your hero title
+            </h1>
+          )}
+          {subtitle ? (
+            <p className="mt-4 text-lg text-muted-foreground max-w-xl mx-auto">
+              {subtitle}
+            </p>
+          ) : (
+            <p className="mt-4 text-sm text-muted-foreground/50 italic">
+              Your hero subtitle
+            </p>
+          )}
+          {Boolean(s.bg_image) && (
+            <div className="mt-8 mx-auto max-w-3xl aspect-video rounded-xl bg-muted bg-cover bg-center border" style={{ backgroundImage: `url(${s.bg_image})` }} />
           )}
         </section>
       );
+    }
     case "features":
       return (
         <section className="py-10">
@@ -284,22 +302,39 @@ function SectionBlock({
         </section>
       );
     case "form": {
-      // The custom builder has no form component (the public page uses the
-      // PublicWaitlistForm for that, which we don't mount in preview to avoid
-      // a Turnstile render). Render a CTA banner with the configured colors.
+      // Render a static email + submit pill that looks like the real
+      // PublicWaitlistForm. Turnstile is intentionally not mounted (no
+      // third-party widget in preview); the button has no submit handler
+      // and shows a "Preview" note on click is fine to skip — the user
+      // gets the visual.
       const buttonColor = global.button_color;
       const buttonText = global.button_text_color;
       const label = (s.cta_label as string) || (s.title as string) || "Join the waitlist";
+      const title = (s.title as string) || "";
+      const subtitle = (s.subtitle as string) || "";
       return (
-        <section className="py-10">
+        <section className="py-12 text-center">
+          {title && (
+            <h2 className="font-heading text-3xl text-foreground mb-3">{title}</h2>
+          )}
+          {subtitle && (
+            <p className="text-muted-foreground mb-8 max-w-md mx-auto">{subtitle}</p>
+          )}
           <div
-            className="rounded-xl p-8 text-center"
+            className="mx-auto flex items-center rounded-full p-1.5 max-w-md"
             style={{ backgroundColor: buttonColor, color: buttonText }}
           >
-            <p className="font-heading text-2xl">{label}</p>
-            {Boolean(s.subtitle) && (
-              <p className="mt-2 opacity-80 text-sm">{s.subtitle as string}</p>
-            )}
+            <span
+              className="flex-1 bg-transparent px-4 py-1.5 text-sm text-left opacity-80"
+            >
+              you@example.com
+            </span>
+            <span
+              className="rounded-full font-medium px-5 py-1.5 text-sm"
+              style={{ backgroundColor: buttonText, color: buttonColor }}
+            >
+              {label}
+            </span>
           </div>
         </section>
       );

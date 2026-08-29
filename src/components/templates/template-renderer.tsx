@@ -33,9 +33,11 @@ export function TemplateRenderer({
   // POSTing to /api/public/subscribe.
   preview?: boolean;
 }) {
-  const shell = embedded
-    ? "min-h-[520px] rounded-xl overflow-hidden"
-    : "min-h-screen";
+  // ponytail: when embedded, the host (page builder preview, widget) controls
+  // its own sizing and clipping. The template should just fill the space
+  // without imposing its own min-height or rounded corners — otherwise the
+  // layered `overflow-hidden` rules produce a misaligned inner card.
+  const shell = embedded ? "" : "min-h-screen";
 
   if (templateId === "neon") {
     const data = normalizeTemplateData("neon", templateData) as NeonTemplateData;
