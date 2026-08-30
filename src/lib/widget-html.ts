@@ -75,6 +75,7 @@ export function buildWidgetHtml(params: {
       var thankPositionText = ${JSON.stringify(thankPositionText)};
       var thankShowPosition = ${thankShowPosition};
       var thankShowReferral = ${thankShowReferral};
+      var isPreview = ${JSON.stringify(preview)};
 
       function escapeHtml(str) {
         var div = document.createElement("div");
@@ -135,6 +136,19 @@ export function buildWidgetHtml(params: {
         if (!email) { showMsg("Please enter your email", "error"); return; }
         btn.disabled = true;
         btn.textContent = "Joining...";
+
+        // ponytail: in preview mode (inside the dashboard) we never POST to
+        // /api/public/subscribe — we return a fake result so iterating on
+        // the widget doesn't pollute the subscribers table.
+        if (isPreview) {
+          await new Promise(function (r) { setTimeout(r, 500); });
+          renderSuccess({
+            position: 1,
+            referral_link: location.origin + "/preview",
+          });
+          return;
+        }
+
         try {
           var body = { public_key: PK, email: email };
           if (collectName && nameEl) body.name = nameEl.value.trim();

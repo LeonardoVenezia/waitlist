@@ -9,9 +9,20 @@ import { IconPalette, IconCode, IconTrophy } from "@/components/ui/icon";
 import { updateWidgetSettings, updateLeaderboardSettings } from "./actions";
 import { saveTemplateData } from "../page-builder/actions";
 import { getTemplateDefinition, hasTemplateAccess, type TemplateId } from "@/lib/templates";
-import { TemplateRenderer } from "@/components/templates/template-renderer";
 import { TemplateEditor } from "@/components/templates/template-editor";
 import { buildWidgetHtml } from "@/lib/widget-html";
+
+// ponytail: when a template is selected in the integration tab, the preview
+// renders a widget form (not the full template) so the user sees what
+// visitors will see when they embed it. The accent color is the template's
+// own, not editable from this tab.
+const TEMPLATE_ACCENT_COLOR: Record<TemplateId, string> = {
+  neon: "#22c563",
+  carbon: "#10b981",
+  pastel: "#8b5cf6",
+  editorial: "#1a1a1a",
+  split: "#111111",
+};
 
 // ── Types ──────────────────────────────────────────────
 
@@ -519,12 +530,33 @@ async function joinWaitlist(e) {
                     style={{ width: "100%", height: "auto", minHeight: 320, border: "none" }}
                   />
                 ) : activeTemplateId ? (
-                  <TemplateRenderer
-                    templateId={activeTemplateId}
-                    templateData={templateData}
-                    publicKey={publicKey}
-                    realCount={0}
-                    embedded
+                  <iframe
+                    title="Widget preview"
+                    srcDoc={buildWidgetHtml({
+                      publicKey,
+                      appUrl,
+                      plan,
+                      widget: {
+                        mode: "custom",
+                        collect_name: false,
+                        layout: { corner_radius: 10, font_size: 15, border_width: 1 },
+                        input: {
+                          border_color: "#e5e7eb",
+                          background_color: "#ffffff",
+                          text_color: "#111827",
+                          placeholder_color: "#9ca3af",
+                        },
+                        button: {
+                          label: (templateData.cta_label as string) || "Join the waitlist",
+                          background_color: TEMPLATE_ACCENT_COLOR[activeTemplateId],
+                          text_color: "#ffffff",
+                          border_color: TEMPLATE_ACCENT_COLOR[activeTemplateId],
+                        },
+                      },
+                      thankYou: (settings.thank_you ?? {}) as Record<string, unknown>,
+                      preview: true,
+                    })}
+                    style={{ width: "100%", height: "auto", minHeight: 320, border: "none" }}
                   />
                 ) : (
                   <div className="flex items-center justify-center min-h-[300px] text-sm text-muted-foreground">
