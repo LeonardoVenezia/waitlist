@@ -145,7 +145,7 @@ export function PastelTemplate({
     <div
       className={
         embedded
-          ? "w-full px-4 py-6"
+          ? "w-full px-4 py-6 flex justify-center"
           : "min-h-screen w-full flex flex-col items-center justify-center px-4 py-12"
       }
       style={{
