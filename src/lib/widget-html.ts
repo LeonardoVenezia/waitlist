@@ -21,9 +21,9 @@ export function buildWidgetHtml(params: {
   const inputText = (input.text_color as string) ?? "#374151";
   const placeholderColor = (input.placeholder_color as string) ?? "#999999";
   const buttonLabel = (button.label as string) || "Sign Up";
-  const buttonBg = (button.background_color as string) ?? "#0ea5e9";
+  const buttonBg = (button.background_color as string) ?? "#7a3325";
   const buttonText = (button.text_color as string) ?? "#ffffff";
-  const buttonBorder = (button.border_color as string) ?? "#0ea5e9";
+  const buttonBorder = (button.border_color as string) ?? "#7a3325";
 
   const thankTitle = (thankYou.title as string) || "";
   const thankSubtitle = (thankYou.subtitle as string) || "";

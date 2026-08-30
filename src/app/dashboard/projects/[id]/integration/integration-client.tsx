@@ -171,7 +171,7 @@ export function IntegrationClient({
   const [wCollectName, setWCollectName] = useState(widget.collect_name ?? false);
   const [wLayout, setWLayout] = useState(widget.layout ?? { corner_radius: 10, font_size: 15, border_width: 1 });
   const [wInput, setWInput] = useState(widget.input ?? { border_color: "#cccccc", background_color: "#ffffff", text_color: "#374151", placeholder_color: "#999999" });
-  const [wButton, setWButton] = useState(widget.button ?? { label: "Sign Up", background_color: "#0ea5e9", text_color: "#ffffff", border_color: "#0ea5e9" });
+  const [wButton, setWButton] = useState(widget.button ?? { label: "Sign Up", background_color: "#7a3325", text_color: "#ffffff", border_color: "#7a3325" });
 
   // ── Leaderboard state ──
   const [lbContent, setLbContent] = useState({
