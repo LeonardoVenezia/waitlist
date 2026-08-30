@@ -69,7 +69,7 @@ const LEGACY_BUTTON = "#0ea5e9";
 
 export const defaultGlobal: GlobalSettings = {
   bg_color: "#fbf8f3",
-  button_color: "#7a3325",
+  button_color: "oklch(0.48 0.19 70)", // keep in sync with --primary in globals.css
   button_text_color: "#fffaf3",
   show_count: true,
   show_leaderboard: true,

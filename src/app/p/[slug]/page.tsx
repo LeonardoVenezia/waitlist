@@ -111,7 +111,7 @@ export default async function HostedPage(props: {
   const global: PageGlobal = {
     ...rawGlobal,
     bg_color: rawGlobal.bg_color && rawGlobal.bg_color !== "#f9fafb" ? rawGlobal.bg_color : "#fbf8f3",
-    button_color: rawGlobal.button_color && rawGlobal.button_color !== "#0ea5e9" ? rawGlobal.button_color : "#7a3325",
+    button_color: rawGlobal.button_color && rawGlobal.button_color !== "#0ea5e9" ? rawGlobal.button_color : "oklch(0.48 0.19 70)",
   };
 
   // If page is explicitly disabled, 404

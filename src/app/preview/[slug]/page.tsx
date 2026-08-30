@@ -87,7 +87,7 @@ export default function PreviewPage() {
           button_color:
             rawGlobal.button_color && rawGlobal.button_color !== "#0ea5e9"
               ? rawGlobal.button_color
-              : "#7a3325",
+              : "oklch(0.48 0.19 70)", // keep in sync with --primary in globals.css,
           button_text_color: rawGlobal.button_text_color ?? "#fffaf3",
           show_count: rawGlobal.show_count ?? true,
           show_leaderboard: rawGlobal.show_leaderboard ?? true,
