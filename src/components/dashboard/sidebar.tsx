@@ -80,7 +80,11 @@ function SubNavSection({
       {isExpanded && (
         <nav className="space-y-0.5">
           {items.map((item) => {
-            const match = item.label === "Overview" ? "exact" : "prefix";
+            // Exact match for parent routes that have children under them
+            // (e.g. /testimonials vs /testimonials/forms), prefix for the rest.
+            const match = item.label === "Overview" || item.label === "Testimonials"
+              ? "exact"
+              : "prefix";
             return (
               <ActiveLink
                 key={item.label}
@@ -167,7 +171,7 @@ export function Sidebar({
         )}
       </nav>
 
-      {/* Product, Testimonials and Waitlist sections */}
+      {/* Product, Waitlist and Testimonials sections */}
       {currentId && (
         <>
           <SubNavSection
@@ -178,18 +182,18 @@ export function Sidebar({
             onToggle={() => toggleSection("product")}
           />
           <SubNavSection
-            label="Testimonials"
-            items={testimonialSubNav}
-            currentId={currentId}
-            isExpanded={expandedSection === "testimonials"}
-            onToggle={() => toggleSection("testimonials")}
-          />
-          <SubNavSection
             label="Waitlist"
             items={waitlistSubNav}
             currentId={currentId}
             isExpanded={expandedSection === "waitlist"}
             onToggle={() => toggleSection("waitlist")}
+          />
+          <SubNavSection
+            label="Testimonials"
+            items={testimonialSubNav}
+            currentId={currentId}
+            isExpanded={expandedSection === "testimonials"}
+            onToggle={() => toggleSection("testimonials")}
           />
         </>
       )}

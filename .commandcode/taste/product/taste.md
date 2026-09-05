@@ -17,6 +17,8 @@
 - The product has exactly three plan tiers: Free, Launch, and Grow. Scale is discontinued and must not exist anywhere — not in pricing, upgrade flow, code, types, DB, or docs; any residual Scale reference is a bug to eliminate, not an option to support. The user actively notices and pushes back when the upgrade page or model drops a tier (e.g., reduced to 2 plans). Confidence: 0.90
 # navigation
 - Back buttons should use browser history (`router.back()`) with a fallback to home (`/`) for users arriving from external sites with no history. Confidence: 0.80
+- Dashboard sidebar tool sections are ordered Product → Waitlist → Testimonials: Waitlist ranks above Testimonials (user explicitly requested this reordering when Testimonials was reactivated). Confidence: 0.70
+- Active-state highlighting in nav lists must be mutually exclusive — only the most specific matching item is highlighted. Parent links whose routes are prefixes of child routes (e.g., `/testimonials` vs `/testimonials/forms`) must match exactly so the parent doesn't stay highlighted on a child page; the user flagged the double highlight as a bug. Confidence: 0.70
 # architecture
 - Prefers keeping distinct product features as separate, independent pages/routes (e.g., product detail page vs. waitlist landing) rather than merging them into a unified page; values giving end-users multiple, composable options instead of a single monolithic experience. Confidence: 0.65
 # feature-design
