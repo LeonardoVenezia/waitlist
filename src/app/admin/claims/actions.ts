@@ -17,6 +17,7 @@ async function requireAdmin() {
 }
 
 type ActionState = { error?: string; success?: boolean } | null;
+type CreateProductState = { error?: string; success?: boolean; slug?: string } | null;
 
 export async function approveClaim(
   _prev: ActionState,
@@ -182,4 +183,79 @@ export async function setShowcaseClaimable(
   revalidatePath("/");
   revalidatePath("/product", "layout");
   return { success: true };
+}
+
+export async function createAdminProduct(
+  _prev: CreateProductState,
+  formData: FormData,
+): Promise<CreateProductState> {
+  const adminUser = await requireAdmin();
+
+  const name = (formData.get("name") as string | null)?.trim() ?? "";
+  const rawSlug = (formData.get("slug") as string | null)?.trim() ?? "";
+  const slug = rawSlug.toLowerCase().replace(/[^a-z0-9-]/g, "");
+  const link = ((formData.get("link") as string | null) ?? "").trim();
+  const description = ((formData.get("description") as string | null) ?? "").trim();
+  const category1 = (formData.get("category_1") as string | null) ?? "";
+  const category2 = ((formData.get("category_2") as string | null) ?? "").trim() || null;
+  const claimable = formData.get("claimable") !== null;
+
+  if (!name || !slug || !description || !category1) {
+    return { error: "Name, slug, description and category 1 are required." };
+  }
+  if (description.length < 200) {
+    return { error: `Description must be at least 200 characters (${description.length}/200).` };
+  }
+
+  const admin = createAdminClient();
+
+  // The admin account owns seeded products until a founder claims one, at
+  // which point approveClaim transfers project.account_id to the founder.
+  const { data: adminAccount } = await admin
+    .from("accounts")
+    .select("id")
+    .eq("owner_id", adminUser.id)
+    .maybeSingle();
+
+  if (!adminAccount) {
+    return { error: "Your admin account has no account row. Sign in once via the dashboard to create it." };
+  }
+
+  const { data: project, error: projErr } = await admin
+    .from("projects")
+    .insert({ account_id: adminAccount.id, name, slug })
+    .select("id")
+    .single();
+
+  if (projErr) {
+    if (projErr.code === "23505") return { error: "This slug is already taken." };
+    return { error: projErr.message };
+  }
+
+  const { error: scErr } = await admin.from("showcases").insert({
+    waitlist_id: project.id,
+    name,
+    slug,
+    link,
+    description,
+    category_1: category1,
+    category_2: category2,
+    main_type: "image",
+    status: "published",
+    published_at: new Date().toISOString(),
+    claimable,
+  });
+
+  if (scErr) {
+    // Roll back the orphan project so a retry with a fixed slug works.
+    await admin.from("projects").delete().eq("id", project.id);
+    if (scErr.code === "23505") return { error: "This slug is already taken." };
+    return { error: scErr.message };
+  }
+
+  revalidatePath("/admin/claims");
+  revalidatePath("/");
+  revalidatePath("/products");
+  revalidatePath(`/product/${slug}`);
+  return { success: true, slug };
 }

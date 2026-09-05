@@ -2,16 +2,19 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ClaimActions } from "./claim-actions";
 import { ClaimableToggle } from "./claimable-toggle";
+import { NewProductForm } from "./new-product-form";
 
 export const dynamic = "force-dynamic";
 
-type Tab = "pending" | "history" | "showcases";
+type Tab = "pending" | "history" | "showcases" | "new";
 type SearchParams = Promise<{ tab?: string }>;
 
 export default async function ClaimsPage(props: { searchParams: SearchParams }) {
   const sp = await props.searchParams;
   const tab: Tab =
-    sp.tab === "history" || sp.tab === "showcases" ? sp.tab : "pending";
+    sp.tab === "history" || sp.tab === "showcases" || sp.tab === "new"
+      ? sp.tab
+      : "pending";
 
   const admin = createAdminClient();
 
@@ -64,11 +67,13 @@ export default async function ClaimsPage(props: { searchParams: SearchParams }) 
           label="Showcases"
           count={showcasesCount ?? 0}
         />
+        <TabLink current={tab} value="new" label="New product" />
       </div>
 
       {tab === "pending" && <PendingTab />}
       {tab === "history" && <HistoryTab />}
       {tab === "showcases" && <ShowcasesTab />}
+      {tab === "new" && <NewProductForm />}
     </div>
   );
 }
