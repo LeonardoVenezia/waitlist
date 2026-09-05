@@ -32,25 +32,13 @@ A founder subscribes once and gets a **suite of pre-launch tools** for their pro
 ## Current state
 
 - Core product: **Showcase / Directory** (homepage is the directory, `/product/[slug]`, `/products`, `/launches`, `/coming-soon`)
-- Tools integrated per project: Waitlist, Showcase (Testimonials paused, see below)
+- Tools integrated per project: Waitlist, Showcase, Testimonials
 - Waitlist: hosted page (`/p/[slug]`), widget embed (`/w/e/[publicKey]`), referral system, leaderboard, analytics, export
 - Page Builder: hosted landing page with hero/features/how-it-works/faq/form/media-text sections. Default colors are cream (`#fbf8f3` background) + bordeaux (`#7a3325` button), matching the design system. Five alternative templates (neon, carbon, pastel, editorial, split) are gated to paid plans.
-- Testimonials: paused (see "Testimonials (temporalmente ocultos)" below)
+- Testimonials: embeddable forms (`/t/[formSlug]`), dashboard moderation by the project owner (pending → approve/reject, or auto-publish per form), custom questions persisted as answers, public render on `/product/[slug]` (carousel for paid, grid for free)
 - Email validation (MX lookup) + geoIP (Cloudflare CF-IPCountry) on signup
 - DB model: account → project (each project has waitlist + showcase) + subscription
 - Plan is per-project (free/launch), subscription via Paddle
-
-## Testimonials (temporalmente ocultos)
-
-Funcionalidad pausada. Para reactivar:
-
-1. `src/app/(public)/product/[slug]/page.tsx` — descomentar import + render de `ProductTestimonials` (buscar `// HIDDEN: testimonials desactivados`)
-2. `src/components/dashboard/sidebar.tsx` — descomentar:
-   - `testimonialSubNav` (array)
-   - `<SubNavSection label="Testimonials" ... />`
-   - línea `if (pathname.includes("/testimonials/"))` en `expandedSection`
-
-Migración SQL `011_testimonials.sql` y archivos bajo `src/app/dashboard/projects/[id]/testimonials/` no se tocan — siguen intactos.
 
 ## Design principles (draft)
 

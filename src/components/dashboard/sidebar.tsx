@@ -15,6 +15,8 @@ import {
   IconDownload,
   IconSettings,
   IconTarget,
+  IconChat,
+  IconForm,
 } from "@/components/ui/icon";
 
 interface ProjectSummary {
@@ -40,11 +42,10 @@ const waitlistSubNav: SubNavItem[] = [
   { label: "Settings", href: (id) => `/dashboard/projects/${id}/settings`, icon: <IconSettings /> },
 ];
 
-// HIDDEN: testimonials desactivados temporalmente — ver PRODUCT.md
-// const testimonialSubNav: SubNavItem[] = [
-//   { label: "Testimonials", href: (id) => `/dashboard/projects/${id}/testimonials`, icon: <IconChat /> },
-//   { label: "Forms", href: (id) => `/dashboard/projects/${id}/testimonials/forms`, icon: <IconList /> },
-// ];
+const testimonialSubNav: SubNavItem[] = [
+  { label: "Testimonials", href: (id) => `/dashboard/projects/${id}/testimonials`, icon: <IconChat /> },
+  { label: "Forms", href: (id) => `/dashboard/projects/${id}/testimonials/forms`, icon: <IconForm /> },
+];
 
 function SubNavSection({
   label,
@@ -106,8 +107,7 @@ export function Sidebar({
   const currentId = pathname.match(/\/(?:projects|showcases)\/([^/]+)/)?.[1] ?? null;
   const [expandedSection, setExpandedSection] = useState<string | null>(() => {
     if (pathname.includes("/showcases/")) return "product";
-    // HIDDEN: testimonials desactivados temporalmente — ver PRODUCT.md
-    // if (pathname.includes("/testimonials/")) return "testimonials";
+    if (pathname.includes("/testimonials/")) return "testimonials";
     if (pathname.includes("/projects/")) return "waitlist";
     return null;
   });
@@ -177,14 +177,13 @@ export function Sidebar({
             isExpanded={expandedSection === "product"}
             onToggle={() => toggleSection("product")}
           />
-          {/* HIDDEN: testimonials desactivados temporalmente — ver PRODUCT.md */}
-          {/* <SubNavSection
+          <SubNavSection
             label="Testimonials"
             items={testimonialSubNav}
             currentId={currentId}
             isExpanded={expandedSection === "testimonials"}
             onToggle={() => toggleSection("testimonials")}
-          /> */}
+          />
           <SubNavSection
             label="Waitlist"
             items={waitlistSubNav}

@@ -37,7 +37,7 @@ export async function createForm(
 
 export async function updateForm(
   id: string,
-  data: Partial<Pick<TestimonialFormRow, "name" | "slug" | "description" | "fields" | "questions" | "redirect_url" | "design">>,
+  data: Partial<Pick<TestimonialFormRow, "name" | "slug" | "description" | "fields" | "questions" | "redirect_url" | "design" | "moderation">>,
 ) {
   const supabase = await createClient();
   const { error } = await supabase.from("testimonial_forms").update(data).eq("id", id);

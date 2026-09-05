@@ -42,7 +42,7 @@
 
 # feature-design
 - When a feature doesn't work end-to-end (saved but never rendered, toggle that doesn't affect output), user prefers removing it entirely rather than leaving dead code in the UI that confuses users. Confidence: 0.75
-- When a settings/UI feature exists but isn't actually wired to its effect (disconnected config), the user prefers connecting it so it works end-to-end rather than leaving it dead — removal is the fallback for features not worth wiring up. Confidence: 0.60
+- When a settings/UI feature exists but isn't actually wired to its effect (disconnected config), the user prefers connecting it so it works end-to-end rather than leaving it dead — removal is the fallback for features not worth wiring up. Given the explicit choice for the testimonials form's custom questions (rendered but never persisted), the user chose persisting them as stored answers over stripping them from the form. Confidence: 0.65
 - For simple embeddable widgets, prefers minimal configuration surface; rejects over-engineering with options (width, arrangement) that the embedder can control via their own container/CSS. The widget should do one thing well. Confidence: 0.70
 - When a product offers multiple integration/embed methods and one is broken (e.g., a legacy cross-origin snippet), prefers deleting the broken method and exposing only the working option(s), while still wanting to hear about any additional viable alternatives rather than a single-method-only answer. Confidence: 0.70
 - When a template/theme is selected, it overrides the custom builder and locks structure — the user can only edit content (text, images), and the page builder does nothing while the template is active (clear separation of content vs. layout). Confidence: 0.65
@@ -83,4 +83,6 @@ her than letting each surface invent its own pill styling. Confidence: 0.70
 - Identifies design inconsistency as a "coverage" problem, not a "direction" problem — preserves the existing identity while expanding its reach across all surfaces. Confidence: 0.75
 # typography
 - Prefers an elegant, high-contrast serif for headings and iterates on it until it feels right — moved from Instrument Serif to Playfair Display and rejected it ("No quedó tan bien como pensé"), settling on Italiana, paired with Geist sans for body text. Confidence: 0.70
+- Headlines across all surfaces (including paid templates) should use the system serif (Instrument Serif/Italiana) at `font-normal` weight, not sans-serif `font-bold` — bold sans-serif headlines in a serif system break the visual identity. Confidence: 0.75
+t until it feels right — moved from Instrument Serif to Playfair Display and rejected it ("No quedó tan bien como pensé"), settling on Italiana, paired with Geist sans for body text. Confidence: 0.70
 - Headlines across all surfaces (including paid templates) should use the system serif (Instrument Serif/Italiana) at `font-normal` weight, not sans-serif `font-bold` — bold sans-serif headlines in a serif system break the visual identity. Confidence: 0.75

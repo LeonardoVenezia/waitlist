@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { validateTurnstileToken } from "@/lib/api/validate-turnstile";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 
+const MAX_ANSWER_LENGTH = 1000;
+
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 
@@ -34,8 +36,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  // Verify Turnstile
-  if (turnstile_token && typeof turnstile_token === "string") {
+  // Turnstile is mandatory whenever the server-side secret is configured.
+  const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+  if (turnstileSecret) {
+    if (typeof turnstile_token !== "string" || !turnstile_token) {
+      return NextResponse.json({ error: "Verification required" }, { status: 400 });
+    }
     const valid = await validateTurnstileToken(turnstile_token);
     if (!valid) {
       return NextResponse.json({ error: "Verification failed" }, { status: 400 });
@@ -44,16 +50,34 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  // Verify form exists and is published
+  // Verify form exists, is published, and matches the project. Also read its
+  // moderation setting and questions (to map `question_<i>` keys to labels).
   const { data: form } = await admin
     .from("testimonial_forms")
-    .select("id, project_id")
+    .select("id, project_id, moderation, questions")
     .eq("id", form_id as string)
     .eq("status", "published")
     .maybeSingle();
 
   if (!form || form.project_id !== project_id) {
     return NextResponse.json({ error: "Invalid form" }, { status: 400 });
+  }
+
+  // Collect answers to the form's custom questions (keys `question_<i>`) and
+  // store them keyed by the question's label for readable display. Values are
+  // validated server-side: string, trimmed, capped length.
+  const questions = Array.isArray(form.questions)
+    ? (form.questions as Array<{ label?: string }>)
+    : [];
+  const answers: Record<string, string> = {};
+  for (const [key, value] of Object.entries(body)) {
+    if (!key.startsWith("question_")) continue;
+    if (typeof value !== "string") continue;
+    const trimmed = value.trim();
+    if (!trimmed) continue;
+    const index = Number(key.slice("question_".length));
+    const label = questions[index]?.label ?? key;
+    answers[label] = trimmed.slice(0, MAX_ANSWER_LENGTH);
   }
 
   const { error } = await admin.from("testimonials").insert({
@@ -66,7 +90,9 @@ export async function POST(req: NextRequest) {
     message: message as string,
     rating: typeof rating === "number" ? rating : 5,
     source: "form",
-    status: "approved",
+    // Manual moderation (default): hold for owner approval. Auto: publish.
+    status: form.moderation === "auto" ? "approved" : "pending",
+    answers,
   });
 
   if (error) {

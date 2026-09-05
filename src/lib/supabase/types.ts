@@ -391,6 +391,7 @@ export interface Database {
           fields: Json;
           redirect_url: string | null;
           design: Json;
+          moderation: "manual" | "auto";
           status: "draft" | "published" | "archived";
           created_at: string;
           updated_at: string;
@@ -405,6 +406,7 @@ export interface Database {
           fields?: Json;
           redirect_url?: string | null;
           design?: Json;
+          moderation?: "manual" | "auto";
           status?: "draft" | "published" | "archived";
           created_at?: string;
           updated_at?: string;
@@ -419,6 +421,7 @@ export interface Database {
           fields?: Json;
           redirect_url?: string | null;
           design?: Json;
+          moderation?: "manual" | "auto";
           status?: "draft" | "published" | "archived";
           created_at?: string;
           updated_at?: string;
@@ -449,6 +452,7 @@ export interface Database {
           source: "form" | "manual" | "import";
           tags: string[] | null;
           is_featured: boolean;
+          answers: Json;
           status: "pending" | "approved" | "rejected";
           created_at: string;
           updated_at: string;
@@ -469,6 +473,7 @@ export interface Database {
           source?: "form" | "manual" | "import";
           tags?: string[] | null;
           is_featured?: boolean;
+          answers?: Json;
           status?: "pending" | "approved" | "rejected";
           created_at?: string;
           updated_at?: string;
@@ -489,6 +494,7 @@ export interface Database {
           source?: "form" | "manual" | "import";
           tags?: string[] | null;
           is_featured?: boolean;
+          answers?: Json;
           status?: "pending" | "approved" | "rejected";
           created_at?: string;
           updated_at?: string;

@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { StarRating } from "@/components/ui/star-rating";
-import { toggleFormStatus, deleteForm } from "@/lib/testimonials/actions";
+import { toggleFormStatus, deleteForm, updateForm } from "@/lib/testimonials/actions";
 import type { Database } from "@/lib/supabase/types";
 
 type FormRow = Database["public"]["Tables"]["testimonial_forms"]["Row"];
@@ -20,7 +21,7 @@ const AVAILABLE_FIELDS = [
 
 export function FormEditor({ form, projectId }: { form: FormRow; projectId: string }) {
   const router = useRouter();
-  const [, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
   const [status, setStatus] = useState(form.status);
   const fields: string[] = Array.isArray(form.fields) ? form.fields as string[] : [];
 
@@ -68,6 +69,28 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
               Archived
             </Button>
           </div>
+        </div>
+
+        <div className="rounded-xl border bg-card p-5">
+          <h3 className="font-medium text-sm mb-4">Moderation</h3>
+          <Select
+            value={form.moderation}
+            onChange={(e) => {
+              const next = e.target.value as "manual" | "auto";
+              startTransition(async () => {
+                await updateForm(form.id, { moderation: next });
+              });
+            }}
+            disabled={pending}
+          >
+            <option value="manual">Approve each testimonial manually</option>
+            <option value="auto">Publish automatically</option>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-2">
+            {form.moderation === "auto"
+              ? "New submissions appear on your public page immediately."
+              : "New submissions wait for your approval in the dashboard."}
+          </p>
         </div>
 
         <div className="rounded-xl border bg-card p-5">

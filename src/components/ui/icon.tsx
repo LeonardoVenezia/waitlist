@@ -232,3 +232,12 @@ export function IconPlay(props: IconProps) {
     </Svg>
   );
 }
+
+export function IconChat(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z" />
+      <path d="M8.5 12h.01M12 12h.01M15.5 12h.01" />
+    </Svg>
+  );
+}

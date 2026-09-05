@@ -9,6 +9,8 @@ interface TestimonialCardProps {
   avatarUrl?: string | null;
   date?: string | null;
   compact?: boolean;
+  /** Responses to the form's custom questions (label → answer). */
+  answers?: Record<string, string> | null;
 }
 
 function getInitials(name: string) {
@@ -42,7 +44,9 @@ export function TestimonialCard({
   avatarUrl,
   date,
   compact = false,
+  answers,
 }: TestimonialCardProps) {
+  const answerEntries = answers ? Object.entries(answers).filter(([, v]) => v) : [];
   return (
     <div className="rounded-xl border bg-card p-5 flex flex-col gap-3">
       <div className="flex items-center gap-3">
@@ -75,6 +79,22 @@ export function TestimonialCard({
       >
         {message}
       </p>
+
+      {answerEntries.length > 0 && (
+        <details className="text-sm">
+          <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground select-none">
+            {answerEntries.length} question{answerEntries.length === 1 ? "" : "s"} answered
+          </summary>
+          <dl className="mt-2 space-y-1.5">
+            {answerEntries.map(([q, a]) => (
+              <div key={q}>
+                <dt className="text-xs font-medium text-foreground">{q}</dt>
+                <dd className="text-xs text-muted-foreground">{a}</dd>
+              </div>
+            ))}
+          </dl>
+        </details>
+      )}
 
       {date && (
         <p className="text-xs text-muted-foreground/60">

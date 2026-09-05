@@ -7,8 +7,7 @@ import { PublicHeader } from "@/components/shared/public-header";
 import { BackButton } from "@/components/shared/back-button";
 import { ProductPlaceholder } from "@/components/shared/product-placeholder";
 import { ClaimButton, type ClaimStatus } from "./claim-button";
-// HIDDEN: testimonials desactivados temporalmente — ver PRODUCT.md
-// import { ProductTestimonials } from "./product-testimonials";
+import { ProductTestimonials } from "./product-testimonials";
 
 export const dynamic = "force-dynamic";
 
@@ -234,8 +233,7 @@ export default async function ProductDetailPage(props: {
             )}
 
             {/* Testimonials */}
-            {/* HIDDEN: testimonials desactivados temporalmente — ver PRODUCT.md */}
-            {/* <ProductTestimonials projectId={product.waitlist_id} plan={product.plan} /> */}
+            <ProductTestimonials projectId={product.waitlist_id} plan={product.plan} />
           </>
         )}
 
