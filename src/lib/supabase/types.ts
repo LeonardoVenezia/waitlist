@@ -654,6 +654,86 @@ export interface Database {
         };
         Relationships: [];
       };
+      testimonial_form_visits: {
+        Row: {
+          id: string;
+          form_id: string;
+          visitor_hash: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          form_id: string;
+          visitor_hash: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          form_id?: string;
+          visitor_hash?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "testimonial_form_visits_form_id_fkey";
+            columns: ["form_id"];
+            referencedRelation: "testimonial_forms";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      testimonial_invites: {
+        Row: {
+          id: string;
+          form_id: string;
+          project_id: string;
+          email: string;
+          token: string;
+          status: "queued" | "sent" | "opened" | "submitted";
+          sent_at: string | null;
+          opened_at: string | null;
+          submitted_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          form_id: string;
+          project_id: string;
+          email: string;
+          token?: string;
+          status?: "queued" | "sent" | "opened" | "submitted";
+          sent_at?: string | null;
+          opened_at?: string | null;
+          submitted_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          form_id?: string;
+          project_id?: string;
+          email?: string;
+          token?: string;
+          status?: "queued" | "sent" | "opened" | "submitted";
+          sent_at?: string | null;
+          opened_at?: string | null;
+          submitted_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "testimonial_invites_form_id_fkey";
+            columns: ["form_id"];
+            referencedRelation: "testimonial_forms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "testimonial_invites_project_id_fkey";
+            columns: ["project_id"];
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {

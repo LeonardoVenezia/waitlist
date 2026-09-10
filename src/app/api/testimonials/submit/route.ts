@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
     message,
     rating,
     turnstile_token,
+    invite_token,
   } = body;
 
   if (!form_id || !project_id || !name || !message) {
@@ -97,6 +98,15 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Mark the invite as submitted (best-effort — the testimonial is already in).
+  if (typeof invite_token === "string" && invite_token) {
+    await admin
+      .from("testimonial_invites")
+      .update({ status: "submitted", submitted_at: new Date().toISOString() })
+      .eq("token", invite_token)
+      .in("status", ["queued", "sent", "opened"]);
   }
 
   return NextResponse.json({ success: true });

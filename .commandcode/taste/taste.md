@@ -7,6 +7,7 @@
 - Agent should proactively ask for needed information (reference material, clarifications) rather than making assumptions or proceeding with incomplete context. Confidence: 0.75
 - When the user shares external advice/content (blog posts, Reddit threads, AI design reviews), they want a critical, contextualized verdict on what actually applies to their stack and stage — separating relevant points from generic or irrelevant ones — rather than blanket acceptance of the advice. Confidence: 0.60
 - When the user shares a long external report (e.g., a multi-page design review), the agent should treat it as input to evaluate, not as a task list to execute verbatim — should map each finding against the actual codebase, agree/disagree with judgment, and surface real decisions back to the user. Confidence: 0.80
+- When the user asks for a feature description to hand off to an external tool (e.g., "una IA de negocio" for business analysis), the agent's output is used as raw paste material elsewhere: write it self-contained and business-oriented — how the feature works from the founder/end-user perspective (flow, moderation rules, plan limits), current status, and pending future items — with no internal implementation details (file paths, migration names, code identifiers). Confidence: 0.65
 # user-expertise
 - User is stronger at frontend than database/backend; provide detailed, step-by-step explanations for database and infrastructure tasks. Confidence: 0.75
 # debugging

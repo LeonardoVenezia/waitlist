@@ -35,7 +35,7 @@ A founder subscribes once and gets a **suite of pre-launch tools** for their pro
 - Tools integrated per project: Waitlist, Showcase, Testimonials
 - Waitlist: hosted page (`/p/[slug]`), widget embed (`/w/e/[publicKey]`), referral system, leaderboard, analytics, export
 - Page Builder: hosted landing page with hero/features/how-it-works/faq/form/media-text sections. Default colors are cream (`#fbf8f3` background) + bordeaux (`#7a3325` button), matching the design system. Five alternative templates (neon, carbon, pastel, editorial, split) are gated to paid plans.
-- Testimonials: embeddable forms (`/t/[formSlug]`), dashboard moderation by the project owner (pending → approve/reject, or auto-publish per form), custom questions persisted as answers, public render on `/product/[slug]` (carousel for paid, grid for free)
+- Testimonials: embeddable forms (`/t/[formSlug]` + iframe embed), dashboard moderation by the project owner (pending → approve/reject, or auto-publish per form), custom questions persisted as answers, email invites with per-recipient tracking (queued → sent → opened → submitted), form stats (unique visits, response rate), public render on `/product/[slug]` (carousel for paid, grid for free)
 - Email validation (MX lookup) + geoIP (Cloudflare CF-IPCountry) on signup
 - DB model: account → project (each project has waitlist + showcase) + subscription
 - Plan is per-project (free/launch), subscription via Paddle

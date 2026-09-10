@@ -38,6 +38,7 @@ function RadioGroup({
   const isControlled = value !== undefined;
   const [internal, setInternal] = React.useState(defaultValue ?? "");
   const current = isControlled ? value : internal;
+  const groupId = React.useId();
 
   return (
     <div
@@ -49,7 +50,7 @@ function RadioGroup({
       role="radiogroup"
     >
       {options.map((opt) => {
-        const id = React.useId();
+        const id = `${groupId}-${opt.value}`;
         const checked = current === opt.value;
         return (
           <label

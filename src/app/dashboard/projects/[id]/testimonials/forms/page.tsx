@@ -1,14 +1,21 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
 import { getFormLimit } from "@/lib/plans";
+import { CopyLinkPill } from "@/components/testimonials/copy-link-pill";
+import { FormMiniPreview } from "@/components/testimonials/form-mini-preview";
 import type { Database } from "@/lib/supabase/types";
 import { FormRowActions } from "./row-actions";
 
 type FormRow = Database["public"]["Tables"]["testimonial_forms"]["Row"];
 
 export const dynamic = "force-dynamic";
+
+const STATUS_DOT: Record<string, string> = {
+  published: "bg-emerald-500",
+  draft: "bg-muted-foreground/40",
+  archived: "bg-amber-500",
+};
 
 export default async function FormsPage(props: {
   params: Promise<{ id: string }>;
@@ -39,29 +46,40 @@ export default async function FormsPage(props: {
     .select("*", { count: "exact", head: true })
     .eq("project_id", id);
 
-  // Get per-form counts
-  const formCounts = new Map<string, number>();
-  if (forms) {
-    const { data: counts } = await supabase
-      .from("testimonials")
-      .select("form_id")
-      .eq("project_id", id)
-      .not("form_id", "is", null);
+  const formIds = (forms ?? []).map((f: FormRow) => f.id);
 
-    counts?.forEach((t: { form_id: string }) => {
-      formCounts.set(t.form_id, (formCounts.get(t.form_id) ?? 0) + 1);
-    });
+  // Per-form stats: testimonials collected, unique visits, invites.
+  // Visits are already deduped by the (form_id, visitor_hash) unique index,
+  // so one row = one unique visitor.
+  const testimonialCounts = new Map<string, number>();
+  const visitCounts = new Map<string, number>();
+  const inviteCounts = new Map<string, number>();
+
+  if (formIds.length > 0) {
+    const [{ data: tRows }, { data: vRows }, { data: iRows }] = await Promise.all([
+      supabase.from("testimonials").select("form_id").in("form_id", formIds),
+      supabase.from("testimonial_form_visits").select("form_id").in("form_id", formIds),
+      supabase.from("testimonial_invites").select("form_id").in("form_id", formIds),
+    ]);
+    for (const row of tRows ?? []) {
+      if (!row.form_id) continue;
+      testimonialCounts.set(row.form_id, (testimonialCounts.get(row.form_id) ?? 0) + 1);
+    }
+    for (const row of vRows ?? []) {
+      if (!row.form_id) continue;
+      visitCounts.set(row.form_id, (visitCounts.get(row.form_id) ?? 0) + 1);
+    }
+    for (const row of iRows ?? []) {
+      if (!row.form_id) continue;
+      inviteCounts.set(row.form_id, (inviteCounts.get(row.form_id) ?? 0) + 1);
+    }
   }
 
   const plan = project.plan as "free" | "launch" | "grow";
   const formLimit = getFormLimit(plan);
   const canCreate = !formLimit || (forms?.length ?? 0) < formLimit;
 
-  const statusVariant: Record<string, "default" | "secondary" | "outline"> = {
-    published: "default",
-    draft: "secondary",
-    archived: "outline",
-  };
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
   return (
     <div>
@@ -87,9 +105,12 @@ export default async function FormsPage(props: {
               Create form
             </Link>
           ) : (
-            <span className="inline-flex shrink-0 items-center justify-center rounded-lg border border-border bg-background text-sm font-medium h-8 gap-1.5 px-2.5 opacity-50 cursor-not-allowed">
+            <Link
+              href={`/dashboard/projects/${id}/upgrade`}
+              className="inline-flex shrink-0 items-center justify-center rounded-lg border border-border bg-background text-sm font-medium h-8 gap-1.5 px-2.5 opacity-70 hover:opacity-100 transition-opacity"
+            >
               Create form (upgrade)
-            </span>
+            </Link>
           )}
         </div>
       </div>
@@ -122,36 +143,129 @@ export default async function FormsPage(props: {
           )}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {forms.map((form: FormRow) => (
-            <div key={form.id} className="rounded-xl border bg-card p-5 flex flex-col gap-3 relative group">
-              <div className="flex items-start justify-between">
-                <div className="min-w-0">
+        <div className="flex flex-col gap-4">
+          {forms.map((form: FormRow) => {
+            const rawQuestions = form.questions as unknown;
+            const questions = Array.isArray(rawQuestions)
+              ? (rawQuestions as Array<{ label?: string }>).filter(
+                  (q): q is { label: string } => typeof q?.label === "string",
+                )
+              : [];
+            const fields = Array.isArray(form.fields) ? (form.fields as string[]) : [];
+
+            const visits = visitCounts.get(form.id) ?? 0;
+            const collected = testimonialCounts.get(form.id) ?? 0;
+            const rate = visits > 0 ? `${((collected / visits) * 100).toFixed(1)}%` : "—";
+            const publicUrl = `${appUrl}/t/${form.slug}`;
+
+            return (
+              <div
+                key={form.id}
+                className="relative block overflow-hidden rounded-xl border bg-card"
+              >
+                <div className="flex items-stretch">
                   <Link
-                    href={`/dashboard/projects/${id}/testimonials/forms/${form.id}`}
-                    className="font-medium text-sm hover:text-primary transition-colors"
+                    href={`/t/${form.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Open ${form.name} in a new tab`}
                   >
-                    {form.name}
+                    <FormMiniPreview
+                      name={form.name}
+                      description={form.description}
+                      fields={fields}
+                      questions={questions}
+                    />
                   </Link>
-                  {form.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{form.description}</p>
-                  )}
+
+                  <div className="flex min-w-0 flex-grow flex-col gap-4 px-5 py-5">
+                    <div>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Link
+                          href={`/dashboard/projects/${id}/testimonials/forms/${form.id}`}
+                          className="truncate font-medium text-base hover:text-primary transition-colors"
+                        >
+                          {form.name}
+                        </Link>
+                        <span
+                          className={`size-2 rounded-full shrink-0 ${STATUS_DOT[form.status] ?? "bg-muted-foreground/40"}`}
+                          title={form.status}
+                        />
+                      </div>
+                      {form.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                          {form.description}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Stats */}
+                    <div className="flex items-center gap-6 text-center">
+                      <div>
+                        <p className="text-sm font-semibold">{inviteCounts.get(form.id) ?? 0}</p>
+                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                          invites
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">{visits}</p>
+                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                          visits
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">{collected}</p>
+                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                          testimonials
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">{rate}</p>
+                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                          response rate
+                        </p>
+                      </div>
+                    </div>
+
+                    {form.status === "published" ? (
+                      <div>
+                        <CopyLinkPill url={publicUrl} compact />
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Draft — publish to share the link.
+                      </p>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Link
+                        href={`/dashboard/projects/${id}/testimonials/forms/${form.id}`}
+                        className="inline-flex items-center rounded-lg border border-border bg-background text-xs font-medium h-7 px-2.5 hover:bg-muted hover:text-foreground transition-all"
+                      >
+                        Edit
+                      </Link>
+                      <Link
+                        href={`/dashboard/projects/${id}/testimonials/forms/${form.id}/invites`}
+                        className="inline-flex items-center rounded-lg border border-border bg-background text-xs font-medium h-7 px-2.5 hover:bg-muted hover:text-foreground transition-all"
+                      >
+                        Invites
+                      </Link>
+                      <Link
+                        href={`/dashboard/projects/${id}/testimonials?form=${form.id}`}
+                        className="inline-flex items-center rounded-lg border border-border bg-background text-xs font-medium h-7 px-2.5 hover:bg-muted hover:text-foreground transition-all"
+                      >
+                        Testimonials
+                      </Link>
+                      <div className="ml-auto">
+                        <FormRowActions id={form.id} projectId={id} status={form.status} />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <Badge variant={statusVariant[form.status] ?? "secondary"} className="shrink-0 capitalize">
-                  {form.status}
-                </Badge>
               </div>
-
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span>/{form.slug}</span>
-                <span>{formCounts.get(form.id) ?? 0} submissions</span>
-              </div>
-
-              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                <FormRowActions id={form.id} projectId={id} status={form.status} />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

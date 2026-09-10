@@ -21,9 +21,11 @@ interface TestimonialFormProps {
   fields: string[];
   questions: Record<string, unknown>[];
   redirectUrl: string | null;
+  thankYouMessage?: string | null;
+  inviteToken?: string | null;
 }
 
-export function TestimonialForm({ formId, projectId, fields, questions, redirectUrl }: TestimonialFormProps) {
+export function TestimonialForm({ formId, projectId, fields, questions, redirectUrl, thankYouMessage, inviteToken }: TestimonialFormProps) {
   const [loading, setLoading] = useState(false);
   const [rating, setRating] = useState(5);
   const [submitted, setSubmitted] = useState(false);
@@ -71,6 +73,8 @@ export function TestimonialForm({ formId, projectId, fields, questions, redirect
       turnstile_token: turnstileToken,
     };
 
+    if (inviteToken) body.invite_token = inviteToken;
+
     fields.forEach((f) => {
       const val = fd.get(f);
       if (val) body[f] = val;
@@ -116,7 +120,9 @@ export function TestimonialForm({ formId, projectId, fields, questions, redirect
           </svg>
         </div>
         <h3 className="font-heading text-lg font-semibold mb-1">Thank you!</h3>
-        <p className="text-sm text-muted-foreground">Your testimonial has been submitted.</p>
+        <p className="text-sm text-muted-foreground">
+          {thankYouMessage || "Your testimonial has been submitted."}
+        </p>
         {redirectUrl && (
           <p className="text-xs text-muted-foreground mt-2">Redirecting...</p>
         )}

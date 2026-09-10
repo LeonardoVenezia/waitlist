@@ -4,6 +4,7 @@ import { sendEmail } from "@/lib/email";
 import { renderShowcaseExpiryEmail } from "@/emails/showcase-expiry";
 import { renderClaimNotificationEmail } from "@/emails/claim-notification";
 import { renderClaimResultEmail } from "@/emails/claim-result";
+import { renderTestimonialInviteEmail } from "@/emails/testimonial-invite";
 
 const BATCH_SIZE = 50;
 
@@ -51,6 +52,11 @@ export async function POST(request: Request) {
       result?: "approved" | "rejected";
       reason?: string | null;
       dashboard_url?: string;
+      invite_id?: string;
+      form_name?: string;
+      product_name?: string;
+      form_url?: string;
+      sender_name?: string | null;
     };
 
     let html = "";
@@ -78,6 +84,12 @@ export async function POST(request: Request) {
         dashboardUrl: payload.dashboard_url,
         reason: payload.reason ?? null,
       });
+    } else if (row.template === "testimonial-invite") {
+      html = renderTestimonialInviteEmail({
+        productName: payload.product_name ?? "este producto",
+        formUrl: payload.form_url ?? "",
+        senderName: payload.sender_name ?? null,
+      });
     } else {
       html = `<p>${row.subject}</p>`;
     }
@@ -97,6 +109,15 @@ export async function POST(request: Request) {
         })
         .eq("id", row.id);
       sent += 1;
+
+      // Track the corresponding invite as sent.
+      if (row.template === "testimonial-invite" && payload.invite_id) {
+        await supabase
+          .from("testimonial_invites")
+          .update({ status: "sent", sent_at: new Date().toISOString() })
+          .eq("id", payload.invite_id)
+          .in("status", ["queued"]);
+      }
     } else {
       await supabase
         .from("email_queue")

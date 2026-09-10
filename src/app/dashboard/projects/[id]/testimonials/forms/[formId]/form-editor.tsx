@@ -4,8 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
-import { StarRating } from "@/components/ui/star-rating";
 import { toggleFormStatus, deleteForm, updateForm } from "@/lib/testimonials/actions";
+import { QuestionsEditor, type FormQuestion } from "./questions-editor";
 import type { Database } from "@/lib/supabase/types";
 
 type FormRow = Database["public"]["Tables"]["testimonial_forms"]["Row"];
@@ -19,21 +19,69 @@ const AVAILABLE_FIELDS = [
   { key: "rating", label: "Rating" },
 ];
 
+function parseQuestions(raw: unknown): FormQuestion[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(
+    (q): q is FormQuestion =>
+      typeof q === "object" &&
+      q !== null &&
+      typeof (q as FormQuestion).label === "string",
+  );
+}
+
 export function FormEditor({ form, projectId }: { form: FormRow; projectId: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [status, setStatus] = useState(form.status);
-  const fields: string[] = Array.isArray(form.fields) ? form.fields as string[] : [];
+
+  // Fields
+  const fields: string[] = Array.isArray(form.fields) ? (form.fields as string[]) : [];
+  const [activeFields, setActiveFields] = useState<string[]>(fields);
+  const [fieldsSaved, setFieldsSaved] = useState<string[]>(fields);
+  const fieldsDirty = JSON.stringify([...activeFields].sort()) !== JSON.stringify([...fieldsSaved].sort());
+
+  // Thank-you & redirect
+  const design = (form.design ?? {}) as { thank_you_message?: string };
+  const [thankYou, setThankYou] = useState(design.thank_you_message ?? "");
+  const [redirectUrl, setRedirectUrl] = useState(form.redirect_url ?? "");
+  const [closingSaved, setClosingSaved] = useState({
+    thank: design.thank_you_message ?? "",
+    redirect: form.redirect_url ?? "",
+  });
+  const closingDirty = thankYou !== closingSaved.thank || redirectUrl !== closingSaved.redirect;
+
+  const [error, setError] = useState<string | null>(null);
 
   function handleStatus(next: "draft" | "published" | "archived") {
     startTransition(async () => {
       await toggleFormStatus(form.id, next);
-      setStatus(next);
     });
   }
 
+  async function saveFields(next: string[]) {
+    setError(null);
+    try {
+      await updateForm(form.id, { fields: next });
+      setFieldsSaved(next);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save");
+    }
+  }
+
+  async function saveClosing() {
+    setError(null);
+    try {
+      await updateForm(form.id, {
+        redirect_url: redirectUrl.trim() || null,
+        design: { ...design, thank_you_message: thankYou.trim() || undefined },
+      });
+      setClosingSaved({ thank: thankYou.trim(), redirect: redirectUrl.trim() });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save");
+    }
+  }
+
   function handleDelete() {
-    if (!confirm("Delete this form? All associated submissions will be kept.")) return;
+    if (!confirm("Delete this form? Collected testimonials are kept.")) return;
     startTransition(async () => {
       await deleteForm(form.id);
       router.push(`/dashboard/projects/${projectId}/testimonials/forms`);
@@ -41,136 +89,157 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      {/* Config */}
-      <div className="space-y-5">
-        <div className="rounded-xl border bg-card p-5">
-          <h3 className="font-medium text-sm mb-4">Status</h3>
-          <div className="flex gap-2">
-            <Button
-              variant={status === "draft" ? "default" : "outline"}
-              onClick={() => handleStatus("draft")}
-              size="sm"
-            >
-              Draft
+    <div className="space-y-5">
+      <QuestionsEditor formId={form.id} initialQuestions={parseQuestions(form.questions)} />
+
+      {/* Fields */}
+      <div className="rounded-xl border bg-card p-5">
+        <h3 className="font-medium text-sm mb-1">Fields</h3>
+        <p className="text-xs text-muted-foreground mb-3">
+          Name and Message are always required.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {AVAILABLE_FIELDS.map((f) => {
+            const active = activeFields.includes(f.key);
+            const locked = f.key === "name" || f.key === "message";
+            return (
+              <button
+                key={f.key}
+                type="button"
+                disabled={locked}
+                onClick={() => {
+                  const next = active
+                    ? activeFields.filter((k) => k !== f.key)
+                    : [...activeFields, f.key];
+                  setActiveFields(next);
+                }}
+                className={`px-3 py-1.5 rounded-lg border text-sm transition-colors select-none ${
+                  active
+                    ? "border-primary bg-primary/5 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-accent"
+                } ${locked ? "opacity-60 cursor-default" : "cursor-pointer"}`}
+                title={locked ? "Always included" : undefined}
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+        {fieldsDirty && (
+          <div className="flex items-center gap-3 mt-3">
+            <Button size="sm" onClick={() => saveFields(activeFields)} disabled={pending}>
+              Save fields
             </Button>
-            <Button
-              variant={status === "published" ? "default" : "outline"}
-              onClick={() => handleStatus("published")}
-              size="sm"
+            <button
+              type="button"
+              onClick={() => setActiveFields(fieldsSaved)}
+              className="text-sm text-muted-foreground hover:text-foreground"
             >
-              Published
-            </Button>
-            <Button
-              variant={status === "archived" ? "default" : "outline"}
-              onClick={() => handleStatus("archived")}
-              size="sm"
-            >
-              Archived
-            </Button>
+              Discard
+            </button>
           </div>
-        </div>
-
-        <div className="rounded-xl border bg-card p-5">
-          <h3 className="font-medium text-sm mb-4">Moderation</h3>
-          <Select
-            value={form.moderation}
-            onChange={(e) => {
-              const next = e.target.value as "manual" | "auto";
-              startTransition(async () => {
-                await updateForm(form.id, { moderation: next });
-              });
-            }}
-            disabled={pending}
-          >
-            <option value="manual">Approve each testimonial manually</option>
-            <option value="auto">Publish automatically</option>
-          </Select>
-          <p className="text-xs text-muted-foreground mt-2">
-            {form.moderation === "auto"
-              ? "New submissions appear on your public page immediately."
-              : "New submissions wait for your approval in the dashboard."}
-          </p>
-        </div>
-
-        <div className="rounded-xl border bg-card p-5">
-          <h3 className="font-medium text-sm mb-3">Active fields</h3>
-          <div className="flex flex-wrap gap-2">
-            {AVAILABLE_FIELDS.map((f) => {
-              const active = fields.includes(f.key);
-              return (
-                <span
-                  key={f.key}
-                  className={`px-2.5 py-1 rounded-md text-xs border ${
-                    active ? "bg-primary/5 border-primary text-primary" : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {f.label}
-                </span>
-              );
-            })}
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleDelete}
-          className="text-sm text-red-600 hover:underline"
-        >
-          Delete form
-        </button>
+        )}
       </div>
 
-      {/* Preview */}
-      <div>
-        <p className="text-xs text-muted-foreground mb-3 uppercase tracking-wider">Preview</p>
-        <div className="rounded-xl border bg-card p-6">
-          <h3 className="font-heading text-lg font-semibold text-center mb-1">{form.name}</h3>
-          {form.description && (
-            <p className="text-sm text-muted-foreground text-center mb-5">{form.description}</p>
-          )}
-          <div className="space-y-4">
-            {fields.includes("name") && (
-              <div>
-                <label className="text-sm font-medium">Name *</label>
-                <div className="mt-1.5 h-9 rounded-md border bg-muted/50" />
-              </div>
-            )}
-            {fields.includes("email") && (
-              <div>
-                <label className="text-sm font-medium">Email</label>
-                <div className="mt-1.5 h-9 rounded-md border bg-muted/50" />
-              </div>
-            )}
-            {fields.includes("company") && (
-              <div>
-                <label className="text-sm font-medium">Company</label>
-                <div className="mt-1.5 h-9 rounded-md border bg-muted/50" />
-              </div>
-            )}
-            {fields.includes("role") && (
-              <div>
-                <label className="text-sm font-medium">Role</label>
-                <div className="mt-1.5 h-9 rounded-md border bg-muted/50" />
-              </div>
-            )}
-            {fields.includes("rating") && (
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Rating</label>
-                <StarRating value={5} readonly size="lg" />
-              </div>
-            )}
-            {fields.includes("message") && (
-              <div>
-                <label className="text-sm font-medium">Message *</label>
-                <div className="mt-1.5 h-24 rounded-md border bg-muted/50" />
-              </div>
-            )}
-            <Button className="w-full" disabled>
-              Submit testimonial
-            </Button>
+      {/* Moderation */}
+      <div className="rounded-xl border bg-card p-5">
+        <h3 className="font-medium text-sm mb-4">Moderation</h3>
+        <Select
+          value={form.moderation}
+          onChange={(e) => {
+            const next = e.target.value as "manual" | "auto";
+            startTransition(async () => {
+              await updateForm(form.id, { moderation: next });
+            });
+          }}
+          disabled={pending}
+        >
+          <option value="manual">Approve each testimonial manually</option>
+          <option value="auto">Publish automatically</option>
+        </Select>
+        <p className="text-xs text-muted-foreground mt-2">
+          {form.moderation === "auto"
+            ? "New submissions appear on your public page immediately."
+            : "New submissions wait for your approval in the dashboard."}
+        </p>
+      </div>
+
+      {/* Thank-you & redirect */}
+      <div className="rounded-xl border bg-card p-5">
+        <h3 className="font-medium text-sm mb-1">After submitting</h3>
+        <p className="text-xs text-muted-foreground mb-3">
+          What people see when they finish. Redirect overrides the thank-you screen.
+        </p>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs text-muted-foreground">Thank-you message</label>
+            <textarea
+              value={thankYou}
+              onChange={(e) => setThankYou(e.target.value)}
+              rows={2}
+              placeholder="Thanks! Your testimonial was received."
+              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary resize-y"
+            />
           </div>
+          <div>
+            <label className="text-xs text-muted-foreground">Redirect URL (optional)</label>
+            <input
+              value={redirectUrl}
+              onChange={(e) => setRedirectUrl(e.target.value)}
+              type="url"
+              placeholder="https://tusitio.com/gracias"
+              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
+            />
+          </div>
+          {closingDirty && (
+            <div className="flex items-center gap-3">
+              <Button size="sm" onClick={saveClosing} disabled={pending}>
+                Save
+              </Button>
+              <button
+                type="button"
+                onClick={() => {
+                  setThankYou(closingSaved.thank);
+                  setRedirectUrl(closingSaved.redirect);
+                }}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                Discard
+              </button>
+            </div>
+          )}
         </div>
+      </div>
+
+      {error && <p className="text-xs text-red-600">{error}</p>}
+
+      {/* Status */}
+      <div className="rounded-xl border bg-card p-5">
+        <h3 className="font-medium text-sm mb-4">Status</h3>
+        <div className="flex gap-2">
+          {(["draft", "published", "archived"] as const).map((s) => (
+            <Button
+              key={s}
+              variant={form.status === s ? "default" : "outline"}
+              onClick={() => handleStatus(s)}
+              size="sm"
+              disabled={pending}
+            >
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Danger zone */}
+      <div className="rounded-xl border border-red-200 bg-red-50/50 p-5">
+        <h3 className="font-medium text-sm mb-1 text-red-900">Danger zone</h3>
+        <p className="text-xs text-red-700/70 mb-3">
+          Deleting the form does not delete collected testimonials.
+        </p>
+        <Button variant="outline" size="sm" onClick={handleDelete} disabled={pending}>
+          Delete form
+        </Button>
       </div>
     </div>
   );

@@ -5,49 +5,34 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createForm } from "@/lib/testimonials/actions";
 
+function generateSlug(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export function NewForm({ projectId }: { projectId: string }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  const [slug, setSlug] = useState("");
-  const [fields, setFields] = useState<string[]>(["name", "email", "message", "rating"]);
-
-  const availableFields = [
-    { key: "name", label: "Name" },
-    { key: "email", label: "Email" },
-    { key: "company", label: "Company" },
-    { key: "role", label: "Role" },
-    { key: "message", label: "Message" },
-    { key: "rating", label: "Rating" },
-  ];
-
-  function generateSlug(name: string) {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-  }
-
-  function toggleField(key: string) {
-    setFields((prev) => (prev.includes(key) ? prev.filter((f) => f !== key) : [...prev, key]));
-  }
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
+    setError(null);
     const fd = new FormData(e.currentTarget);
-    const nameVal = fd.get("name") as string;
-    const finalSlug = slug || generateSlug(nameVal);
+    const nameVal = (fd.get("name") as string).trim();
 
     try {
-      await createForm(projectId, {
+      const form = await createForm(projectId, {
         name: nameVal,
-        slug: finalSlug,
+        slug: generateSlug(nameVal),
         description: (fd.get("description") as string) || undefined,
-        fields,
       });
-      router.push(`/dashboard/projects/${projectId}/testimonials/forms`);
-    } catch (e) {
-      console.error(e);
+      router.push(`/dashboard/projects/${projectId}/testimonials/forms/${form.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create form");
       setSaving(false);
     }
   }
@@ -59,59 +44,22 @@ export function NewForm({ projectId }: { projectId: string }) {
         <input
           name="name"
           required
-          onChange={(e) => setSlug(generateSlug(e.target.value))}
+          autoFocus
+          placeholder="e.g. Product feedback"
           className="mt-1.5 block w-full rounded-md border bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
         />
-      </div>
-
-      <div>
-        <label className="text-sm font-medium">Slug *</label>
-        <div className="flex items-center mt-1.5">
-          <span className="text-xs text-muted-foreground mr-1">/t/</span>
-          <input
-            name="slug"
-            required
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            className="block w-full rounded-md border bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
-          />
-        </div>
       </div>
 
       <div>
         <label className="text-sm font-medium">Description</label>
         <input
           name="description"
+          placeholder="Shown at the top of your form"
           className="mt-1.5 block w-full rounded-md border bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
         />
       </div>
 
-      <div>
-        <label className="text-sm font-medium mb-3 block">Fields to include</label>
-        <div className="flex flex-wrap gap-2">
-          {availableFields.map((f) => {
-            const active = fields.includes(f.key);
-            return (
-              <label
-                key={f.key}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm cursor-pointer transition-colors select-none ${
-                  active
-                    ? "border-primary bg-primary/5 text-primary font-medium"
-                    : "hover:bg-accent"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={active}
-                  onChange={() => toggleField(f.key)}
-                  className="sr-only"
-                />
-                {f.label}
-              </label>
-            );
-          })}
-        </div>
-      </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
 
       <div className="flex items-center gap-3 pt-4 border-t">
         <Button type="submit" disabled={saving}>
@@ -128,4 +76,3 @@ export function NewForm({ projectId }: { projectId: string }) {
     </form>
   );
 }
-

@@ -1,28 +1,20 @@
-import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import { TestimonialForm } from "./testimonial-form";
+import { getPublicForm, parseFormFields, parseThankYouMessage, trackFormVisit, markInviteOpened } from "./form-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function PublicFormPage(props: {
   params: Promise<{ formSlug: string }>;
+  searchParams: Promise<{ i?: string }>;
 }) {
   const { formSlug } = await props.params;
-  const admin = createAdminClient();
+  const { i: inviteToken } = await props.searchParams;
 
-  const { data: form } = await admin
-    .from("testimonial_forms")
-    .select("*, projects!inner(name)")
-    .eq("slug", formSlug)
-    .eq("status", "published")
-    .maybeSingle();
-
+  const form = await getPublicForm(formSlug);
   if (!form) notFound();
 
-  const rawFields = form.fields as unknown;
-  const fields: string[] = Array.isArray(rawFields)
-    ? (rawFields as Array<unknown>).filter((f): f is string => typeof f === "string")
-    : [];
+  await Promise.all([trackFormVisit(form.id), markInviteOpened(inviteToken)]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
@@ -38,9 +30,11 @@ export default async function PublicFormPage(props: {
           <TestimonialForm
             formId={form.id}
             projectId={form.project_id}
-            fields={fields}
+            fields={parseFormFields(form)}
             questions={form.questions as Record<string, unknown>[]}
             redirectUrl={form.redirect_url}
+            thankYouMessage={parseThankYouMessage(form)}
+            inviteToken={inviteToken ?? null}
           />
         </div>
 

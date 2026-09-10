@@ -38,6 +38,7 @@ Migrations live in `supabase/migrations/` and are applied **manually** via Supab
 - `PRODUCT.md` — product vision, business model, current state
 - `DESIGN.md` — design system and component guidance
 - `PRODUCTION.md` — production deploy checklist (env vars, webhooks, cron, security)
+- `PADDLE.md` — payments integration status, pending fixes and config checklist
 - `CHANGELOG.md` — milestone history
 
 ## Agent instructions
