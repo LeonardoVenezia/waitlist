@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { getFormLimit } from "@/lib/plans";
 import { CopyLinkPill } from "@/components/testimonials/copy-link-pill";
-import { FormMiniPreview } from "@/components/testimonials/form-mini-preview";
+import { FormPreviewFrame } from "@/components/testimonials/form-preview-frame";
 import type { Database } from "@/lib/supabase/types";
 import { FormRowActions } from "./row-actions";
 
@@ -147,11 +147,14 @@ export default async function FormsPage(props: {
           {forms.map((form: FormRow) => {
             const rawQuestions = form.questions as unknown;
             const questions = Array.isArray(rawQuestions)
-              ? (rawQuestions as Array<{ label?: string }>).filter(
-                  (q): q is { label: string } => typeof q?.label === "string",
+              ? (rawQuestions as Array<Record<string, unknown>>).filter(
+                  (q): q is Record<string, unknown> & { label: string } =>
+                    typeof q?.label === "string",
                 )
               : [];
             const fields = Array.isArray(form.fields) ? (form.fields as string[]) : [];
+            const thankYouMessage =
+              ((form.design ?? {}) as { thank_you_message?: string }).thank_you_message ?? null;
 
             const visits = visitCounts.get(form.id) ?? 0;
             const collected = testimonialCounts.get(form.id) ?? 0;
@@ -164,19 +167,17 @@ export default async function FormsPage(props: {
                 className="relative block overflow-hidden rounded-xl border bg-card"
               >
                 <div className="flex items-stretch">
-                  <Link
-                    href={`/t/${form.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Open ${form.name} in a new tab`}
-                  >
-                    <FormMiniPreview
-                      name={form.name}
-                      description={form.description}
+                  <div className="w-[300px] shrink-0 p-4 hidden lg:block">
+                    <FormPreviewFrame
+                      formId={form.id}
+                      projectId={id}
                       fields={fields}
                       questions={questions}
+                      thankYouMessage={thankYouMessage}
+                      url={`/t/${form.slug}`}
+                      externalHref={`/t/${form.slug}`}
                     />
-                  </Link>
+                  </div>
 
                   <div className="flex min-w-0 flex-grow flex-col gap-4 px-5 py-5">
                     <div>

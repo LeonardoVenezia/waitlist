@@ -46,7 +46,7 @@ export default async function FormEditorPage(props: {
   const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/t/${form.slug}`;
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-6xl">
       <div className="mb-8">
         <Link
           href={`/dashboard/projects/${id}/testimonials/forms`}

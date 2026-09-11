@@ -23,9 +23,11 @@ interface TestimonialFormProps {
   redirectUrl: string | null;
   thankYouMessage?: string | null;
   inviteToken?: string | null;
+  /** Dashboard preview mode: no Turnstile, no network — submit shows the thank-you state locally. */
+  preview?: boolean;
 }
 
-export function TestimonialForm({ formId, projectId, fields, questions, redirectUrl, thankYouMessage, inviteToken }: TestimonialFormProps) {
+export function TestimonialForm({ formId, projectId, fields, questions, redirectUrl, thankYouMessage, inviteToken, preview }: TestimonialFormProps) {
   const [loading, setLoading] = useState(false);
   const [rating, setRating] = useState(5);
   const [submitted, setSubmitted] = useState(false);
@@ -34,6 +36,8 @@ export function TestimonialForm({ formId, projectId, fields, questions, redirect
   const turnstileEl = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (preview) return;
+
     const scriptId = "cf-turnstile-script";
     if (!document.getElementById(scriptId)) {
       const script = document.createElement("script");
@@ -62,7 +66,14 @@ export function TestimonialForm({ formId, projectId, fields, questions, redirect
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!turnstileToken) return;
+    if (!preview && !turnstileToken) return;
+
+    // Preview mode: show the thank-you state without hitting the API.
+    if (preview) {
+      setSubmitted(true);
+      return;
+    }
+
     setLoading(true);
 
     const fd = new FormData(e.currentTarget);
@@ -234,7 +245,7 @@ export function TestimonialForm({ formId, projectId, fields, questions, redirect
 
       <div ref={turnstileEl} className="flex justify-center" />
 
-      <Button type="submit" disabled={loading || !turnstileToken} className="w-full">
+      <Button type="submit" disabled={loading || (!preview && !turnstileToken)} className="w-full">
         {loading ? "Submitting..." : "Submit testimonial"}
       </Button>
     </form>

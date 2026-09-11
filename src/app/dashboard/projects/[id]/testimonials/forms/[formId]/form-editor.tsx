@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { toggleFormStatus, deleteForm, updateForm } from "@/lib/testimonials/actions";
 import { QuestionsEditor, type FormQuestion } from "./questions-editor";
+import { FormPreviewFrame } from "@/components/testimonials/form-preview-frame";
 import type { Database } from "@/lib/supabase/types";
 
 type FormRow = Database["public"]["Tables"]["testimonial_forms"]["Row"];
@@ -38,6 +39,10 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
   const [activeFields, setActiveFields] = useState<string[]>(fields);
   const [fieldsSaved, setFieldsSaved] = useState<string[]>(fields);
   const fieldsDirty = JSON.stringify([...activeFields].sort()) !== JSON.stringify([...fieldsSaved].sort());
+
+  // Questions (lifted so the live preview reflects them while editing)
+  const [questions, setQuestions] = useState<FormQuestion[]>(parseQuestions(form.questions));
+  const [questionsSaved, setQuestionsSaved] = useState<FormQuestion[]>(questions);
 
   // Thank-you & redirect
   const design = (form.design ?? {}) as { thank_you_message?: string };
@@ -89,8 +94,15 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
   }
 
   return (
-    <div className="space-y-5">
-      <QuestionsEditor formId={form.id} initialQuestions={parseQuestions(form.questions)} />
+    <div className="grid gap-8 lg:grid-cols-2 items-start">
+      <div className="space-y-5 min-w-0">
+      <QuestionsEditor
+        formId={form.id}
+        questions={questions}
+        savedQuestions={questionsSaved}
+        onChange={setQuestions}
+        onSaved={setQuestionsSaved}
+      />
 
       {/* Fields */}
       <div className="rounded-xl border bg-card p-5">
@@ -240,6 +252,20 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
         <Button variant="outline" size="sm" onClick={handleDelete} disabled={pending}>
           Delete form
         </Button>
+      </div>
+      </div>
+
+      {/* Live preview — same pattern as the waitlist page builder */}
+      <div className="lg:sticky lg:top-24 hidden lg:block">
+        <FormPreviewFrame
+          formId={form.id}
+          projectId={projectId}
+          fields={activeFields}
+          questions={questions}
+          thankYouMessage={thankYou || null}
+          url={`/t/${form.slug}`}
+          externalHref={`/t/${form.slug}`}
+        />
       </div>
     </div>
   );

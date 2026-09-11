@@ -5,37 +5,33 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { updateForm } from "@/lib/testimonials/actions";
 
-export interface FormQuestion {
+export type FormQuestion = {
   label: string;
   type: "text" | "textarea" | "select";
   options?: string[];
   required: boolean;
-}
+};
 
 export function QuestionsEditor({
   formId,
-  initialQuestions,
+  questions,
+  savedQuestions,
+  onChange,
+  onSaved,
 }: {
   formId: string;
-  initialQuestions: FormQuestion[];
+  questions: FormQuestion[];
+  savedQuestions: FormQuestion[];
+  onChange: (next: FormQuestion[]) => void;
+  onSaved: (clean: FormQuestion[]) => void;
 }) {
-  const [questions, setQuestions] = useState<FormQuestion[]>(initialQuestions);
-  const [saved, setSaved] = useState<FormQuestion[]>(initialQuestions);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const dirty = JSON.stringify(questions) !== JSON.stringify(saved);
+  const dirty = JSON.stringify(questions) !== JSON.stringify(savedQuestions);
 
   function update(index: number, patch: Partial<FormQuestion>) {
-    setQuestions((prev) => prev.map((q, i) => (i === index ? { ...q, ...patch } : q)));
-  }
-
-  function addQuestion() {
-    setQuestions((prev) => [...prev, { label: "", type: "text", required: false }]);
-  }
-
-  function removeQuestion(index: number) {
-    setQuestions((prev) => prev.filter((_, i) => i !== index));
+    onChange(questions.map((q, i) => (i === index ? { ...q, ...patch } : q)));
   }
 
   async function handleSave() {
@@ -54,8 +50,7 @@ export function QuestionsEditor({
     setError(null);
     try {
       await updateForm(formId, { questions: clean });
-      setSaved(clean);
-      setQuestions(clean);
+      onSaved(clean);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save");
     } finally {
@@ -95,7 +90,7 @@ export function QuestionsEditor({
               </Select>
               <button
                 type="button"
-                onClick={() => removeQuestion(i)}
+                onClick={() => onChange(questions.filter((_, j) => j !== i))}
                 className="text-xs text-muted-foreground hover:text-red-600 shrink-0"
               >
                 Remove
@@ -129,7 +124,7 @@ export function QuestionsEditor({
       <div className="flex items-center gap-3 mt-3">
         <button
           type="button"
-          onClick={addQuestion}
+          onClick={() => onChange([...questions, { label: "", type: "text", required: false }])}
           className="text-sm text-primary hover:underline"
         >
           + Add question
@@ -141,7 +136,7 @@ export function QuestionsEditor({
             </Button>
             <button
               type="button"
-              onClick={() => setQuestions(saved)}
+              onClick={() => onChange(savedQuestions)}
               className="text-sm text-muted-foreground hover:text-foreground"
             >
               Discard
