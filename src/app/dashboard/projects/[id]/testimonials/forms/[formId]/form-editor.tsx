@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -55,6 +55,29 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
   const closingDirty = thankYou !== closingSaved.thank || redirectUrl !== closingSaved.redirect;
 
   const [error, setError] = useState<string | null>(null);
+
+  // Persist the in-progress draft to localStorage so /preview/forms/[formId]
+  // can render what the user is currently trying (same pattern as the
+  // page builder's preview-draft).
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        `preview-form-draft-${form.id}`,
+        JSON.stringify({
+          formId: form.id,
+          projectId,
+          slug: form.slug,
+          name: form.name,
+          description: form.description,
+          fields: activeFields,
+          questions,
+          thankYouMessage: thankYou || null,
+        }),
+      );
+    } catch {
+      // Storage unavailable — preview falls back to the saved form.
+    }
+  }, [form.id, form.slug, form.name, form.description, projectId, activeFields, questions, thankYou]);
 
   function handleStatus(next: "draft" | "published" | "archived") {
     startTransition(async () => {
@@ -264,7 +287,7 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
           questions={questions}
           thankYouMessage={thankYou || null}
           url={`/t/${form.slug}`}
-          externalHref={`/t/${form.slug}`}
+          externalHref={`/preview/forms/${form.id}`}
         />
       </div>
     </div>

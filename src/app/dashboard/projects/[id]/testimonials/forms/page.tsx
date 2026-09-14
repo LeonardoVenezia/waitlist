@@ -175,7 +175,7 @@ export default async function FormsPage(props: {
                       questions={questions}
                       thankYouMessage={thankYouMessage}
                       url={`/t/${form.slug}`}
-                      externalHref={`/t/${form.slug}`}
+                      externalHref={`/preview/forms/${form.id}`}
                     />
                   </div>
 
