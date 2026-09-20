@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { TestimonialForm } from "./testimonial-form";
-import { getPublicForm, parseFormFields, parseThankYouMessage, trackFormVisit, markInviteOpened } from "./form-data";
+import { getPublicForm, parseFormFields, parseFormDesign, trackFormVisit, markInviteOpened } from "./form-data";
 
 export const dynamic = "force-dynamic";
 
@@ -16,9 +16,11 @@ export default async function PublicFormPage(props: {
 
   await Promise.all([trackFormVisit(form.id), markInviteOpened(inviteToken)]);
 
+  const design = parseFormDesign(form);
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <h1 className="font-heading text-2xl font-semibold tracking-tight">{form.name}</h1>
           {form.description && (
@@ -33,7 +35,8 @@ export default async function PublicFormPage(props: {
             fields={parseFormFields(form)}
             questions={form.questions as Record<string, unknown>[]}
             redirectUrl={form.redirect_url}
-            thankYouMessage={parseThankYouMessage(form)}
+            thankYouMessage={design.thankYouMessage}
+            wizard={design}
             inviteToken={inviteToken ?? null}
           />
         </div>

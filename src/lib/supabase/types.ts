@@ -453,6 +453,10 @@ export interface Database {
           tags: string[] | null;
           is_featured: boolean;
           answers: Json;
+          consent: "public" | "private" | null;
+          private_feedback: string | null;
+          website: string | null;
+          company_logo_url: string | null;
           status: "pending" | "approved" | "rejected";
           created_at: string;
           updated_at: string;
@@ -474,6 +478,10 @@ export interface Database {
           tags?: string[] | null;
           is_featured?: boolean;
           answers?: Json;
+          consent?: "public" | "private" | null;
+          private_feedback?: string | null;
+          website?: string | null;
+          company_logo_url?: string | null;
           status?: "pending" | "approved" | "rejected";
           created_at?: string;
           updated_at?: string;
@@ -495,6 +503,10 @@ export interface Database {
           tags?: string[] | null;
           is_featured?: boolean;
           answers?: Json;
+          consent?: "public" | "private" | null;
+          private_feedback?: string | null;
+          website?: string | null;
+          company_logo_url?: string | null;
           status?: "pending" | "approved" | "rejected";
           created_at?: string;
           updated_at?: string;

@@ -64,3 +64,26 @@ export function parseThankYouMessage(form: TestimonialFormRow): string | null {
   const design = (form.design ?? {}) as { thank_you_message?: string };
   return design.thank_you_message ?? null;
 }
+
+export interface FormDesign {
+  askPrivateFeedback: boolean;
+  askConsent: boolean;
+  rewardCode: string | null;
+  thankYouMessage: string | null;
+}
+
+/** Reads the wizard-related config stored in `testimonial_forms.design`. */
+export function parseFormDesign(form: TestimonialFormRow): FormDesign {
+  const design = (form.design ?? {}) as {
+    ask_private_feedback?: boolean;
+    ask_consent?: boolean;
+    reward_code?: string;
+    thank_you_message?: string;
+  };
+  return {
+    askPrivateFeedback: design.ask_private_feedback === true,
+    askConsent: design.ask_consent === true,
+    rewardCode: design.reward_code?.trim() || null,
+    thankYouMessage: design.thank_you_message ?? null,
+  };
+}

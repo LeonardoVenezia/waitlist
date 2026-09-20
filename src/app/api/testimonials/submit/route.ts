@@ -5,6 +5,13 @@ import { checkRateLimit } from "@/lib/api/rate-limit";
 
 const MAX_ANSWER_LENGTH = 1000;
 
+/** Trims a string field and caps its length. Empty/blank → null. */
+function str(v: unknown, max: number): string | null {
+  if (typeof v !== "string") return null;
+  const t = v.trim();
+  return t ? t.slice(0, max) : null;
+}
+
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 
@@ -23,15 +30,22 @@ export async function POST(req: NextRequest) {
   const {
     form_id,
     project_id,
-    name,
-    email,
-    company,
-    role,
-    message,
-    rating,
     turnstile_token,
     invite_token,
+    rating,
   } = body;
+
+  const name = str(body.name, 200);
+  const message = str(body.message, 5000);
+  const email = str(body.email, 320);
+  const company = str(body.company, 200);
+  const role = str(body.role, 200);
+  const website = str(body.website, 500);
+  const avatar_url = str(body.avatar_url, 500);
+  const company_logo_url = str(body.company_logo_url, 500);
+  const private_feedback = str(body.private_feedback, 2000);
+  const consent =
+    body.consent === "public" || body.consent === "private" ? body.consent : null;
 
   if (!form_id || !project_id || !name || !message) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -84,12 +98,17 @@ export async function POST(req: NextRequest) {
   const { error } = await admin.from("testimonials").insert({
     project_id: project_id as string,
     form_id: form_id as string,
-    name: name as string,
-    email: (email as string) ?? null,
-    company: (company as string) ?? null,
-    role: (role as string) ?? null,
-    message: message as string,
+    name,
+    email,
+    company,
+    role,
+    website,
+    message,
     rating: typeof rating === "number" ? rating : 5,
+    avatar_url,
+    company_logo_url,
+    private_feedback,
+    consent,
     source: "form",
     // Manual moderation (default): hold for owner approval. Auto: publish.
     status: form.moderation === "auto" ? "approved" : "pending",

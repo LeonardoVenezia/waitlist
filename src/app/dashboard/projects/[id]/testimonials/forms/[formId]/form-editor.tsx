@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { toggleFormStatus, deleteForm, updateForm } from "@/lib/testimonials/actions";
 import { QuestionsEditor, type FormQuestion } from "./questions-editor";
 import { FormPreviewFrame } from "@/components/testimonials/form-preview-frame";
@@ -18,7 +19,17 @@ const AVAILABLE_FIELDS = [
   { key: "role", label: "Role" },
   { key: "message", label: "Message" },
   { key: "rating", label: "Rating" },
+  { key: "photo", label: "Photo" },
+  { key: "website", label: "Website" },
+  { key: "logo", label: "Company logo" },
 ];
+
+interface Design {
+  thank_you_message?: string;
+  reward_code?: string;
+  ask_private_feedback?: boolean;
+  ask_consent?: boolean;
+}
 
 function parseQuestions(raw: unknown): FormQuestion[] {
   if (!Array.isArray(raw)) return [];
@@ -44,15 +55,26 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
   const [questions, setQuestions] = useState<FormQuestion[]>(parseQuestions(form.questions));
   const [questionsSaved, setQuestionsSaved] = useState<FormQuestion[]>(questions);
 
-  // Thank-you & redirect
-  const design = (form.design ?? {}) as { thank_you_message?: string };
+  // Thank-you, reward code, extra steps & redirect
+  const design = (form.design ?? {}) as Design;
   const [thankYou, setThankYou] = useState(design.thank_you_message ?? "");
+  const [rewardCode, setRewardCode] = useState(design.reward_code ?? "");
+  const [askPrivateFeedback, setAskPrivateFeedback] = useState(design.ask_private_feedback === true);
+  const [askConsent, setAskConsent] = useState(design.ask_consent === true);
   const [redirectUrl, setRedirectUrl] = useState(form.redirect_url ?? "");
   const [closingSaved, setClosingSaved] = useState({
     thank: design.thank_you_message ?? "",
+    reward: design.reward_code ?? "",
+    privateFeedback: design.ask_private_feedback === true,
+    consent: design.ask_consent === true,
     redirect: form.redirect_url ?? "",
   });
-  const closingDirty = thankYou !== closingSaved.thank || redirectUrl !== closingSaved.redirect;
+  const closingDirty =
+    thankYou !== closingSaved.thank ||
+    rewardCode !== closingSaved.reward ||
+    askPrivateFeedback !== closingSaved.privateFeedback ||
+    askConsent !== closingSaved.consent ||
+    redirectUrl !== closingSaved.redirect;
 
   const [error, setError] = useState<string | null>(null);
 
@@ -72,12 +94,17 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
           fields: activeFields,
           questions,
           thankYouMessage: thankYou || null,
+          wizard: {
+            askPrivateFeedback,
+            askConsent,
+            rewardCode: rewardCode.trim() || null,
+          },
         }),
       );
     } catch {
       // Storage unavailable — preview falls back to the saved form.
     }
-  }, [form.id, form.slug, form.name, form.description, projectId, activeFields, questions, thankYou]);
+  }, [form.id, form.slug, form.name, form.description, projectId, activeFields, questions, thankYou, rewardCode, askPrivateFeedback, askConsent]);
 
   function handleStatus(next: "draft" | "published" | "archived") {
     startTransition(async () => {
@@ -100,9 +127,21 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
     try {
       await updateForm(form.id, {
         redirect_url: redirectUrl.trim() || null,
-        design: { ...design, thank_you_message: thankYou.trim() || undefined },
+        design: {
+          ...design,
+          thank_you_message: thankYou.trim() || undefined,
+          reward_code: rewardCode.trim() || undefined,
+          ask_private_feedback: askPrivateFeedback,
+          ask_consent: askConsent,
+        },
       });
-      setClosingSaved({ thank: thankYou.trim(), redirect: redirectUrl.trim() });
+      setClosingSaved({
+        thank: thankYou.trim(),
+        reward: rewardCode.trim(),
+        privateFeedback: askPrivateFeedback,
+        consent: askConsent,
+        redirect: redirectUrl.trim(),
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save");
     }
@@ -131,7 +170,8 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
       <div className="rounded-xl border bg-card p-5">
         <h3 className="font-medium text-sm mb-1">Fields</h3>
         <p className="text-xs text-muted-foreground mb-3">
-          Name and Message are always required.
+          Name and Message are always required. Each enabled field adds a step to the form:
+          Rating, About you and About your company.
         </p>
         <div className="flex flex-wrap gap-2">
           {AVAILABLE_FIELDS.map((f) => {
@@ -199,6 +239,42 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
         </p>
       </div>
 
+      {/* Extra steps */}
+      <div className="rounded-xl border bg-card p-5">
+        <h3 className="font-medium text-sm mb-1">Extra steps</h3>
+        <p className="text-xs text-muted-foreground mb-4">
+          Optional steps in the middle of the form.
+        </p>
+        <div className="space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm">Ask for private feedback</p>
+              <p className="text-xs text-muted-foreground">
+                A note that is never shared publicly.
+              </p>
+            </div>
+            <Switch
+              checked={askPrivateFeedback}
+              onCheckedChange={setAskPrivateFeedback}
+              disabled={pending}
+            />
+          </div>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm">Ask where we can use it</p>
+              <p className="text-xs text-muted-foreground">
+                Public or private use consent. Private testimonials never show publicly.
+              </p>
+            </div>
+            <Switch
+              checked={askConsent}
+              onCheckedChange={setAskConsent}
+              disabled={pending}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Thank-you & redirect */}
       <div className="rounded-xl border bg-card p-5">
         <h3 className="font-medium text-sm mb-1">After submitting</h3>
@@ -215,6 +291,19 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
               placeholder="Thanks! Your testimonial was received."
               className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary resize-y"
             />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground">Reward code (optional)</label>
+            <input
+              value={rewardCode}
+              onChange={(e) => setRewardCode(e.target.value)}
+              placeholder="WELCOME10"
+              spellCheck={false}
+              className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm font-mono focus:border-primary focus:ring-1 focus:ring-primary"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Shown on the thank-you screen with a copy button.
+            </p>
           </div>
           <div>
             <label className="text-xs text-muted-foreground">Redirect URL (optional)</label>
@@ -235,6 +324,9 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
                 type="button"
                 onClick={() => {
                   setThankYou(closingSaved.thank);
+                  setRewardCode(closingSaved.reward);
+                  setAskPrivateFeedback(closingSaved.privateFeedback);
+                  setAskConsent(closingSaved.consent);
                   setRedirectUrl(closingSaved.redirect);
                 }}
                 className="text-sm text-muted-foreground hover:text-foreground"
@@ -286,6 +378,11 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
           fields={activeFields}
           questions={questions}
           thankYouMessage={thankYou || null}
+          wizard={{
+            askPrivateFeedback,
+            askConsent,
+            rewardCode: rewardCode.trim() || null,
+          }}
           url={`/t/${form.slug}`}
           externalHref={`/preview/forms/${form.id}`}
         />

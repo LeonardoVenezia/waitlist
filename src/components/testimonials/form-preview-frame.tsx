@@ -6,6 +6,11 @@ interface FormPreviewFrameProps {
   fields: string[];
   questions: Record<string, unknown>[];
   thankYouMessage?: string | null;
+  wizard?: {
+    askPrivateFeedback: boolean;
+    askConsent: boolean;
+    rewardCode: string | null;
+  } | null;
   /** URL shown in the fake browser bar. */
   url: string;
   /** Where the external-link icon points (the real public form). */
@@ -25,6 +30,7 @@ export function FormPreviewFrame({
   fields,
   questions,
   thankYouMessage,
+  wizard,
   url,
   externalHref,
   variant = "card",
@@ -66,6 +72,7 @@ export function FormPreviewFrame({
             questions={questions}
             redirectUrl={null}
             thankYouMessage={thankYouMessage}
+            wizard={wizard ?? null}
             preview
           />
         </div>

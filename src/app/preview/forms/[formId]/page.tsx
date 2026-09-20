@@ -22,6 +22,11 @@ interface FormDraft {
   fields: string[];
   questions: FormQuestion[];
   thankYouMessage: string | null;
+  wizard: {
+    askPrivateFeedback: boolean;
+    askConsent: boolean;
+    rewardCode: string | null;
+  };
 }
 
 // Full-page preview of a testimonial form. Renders whatever the user is
@@ -69,7 +74,12 @@ export default function FormPreviewPage() {
         return;
       }
 
-      const design = (form.design ?? {}) as { thank_you_message?: string };
+      const design = (form.design ?? {}) as {
+        thank_you_message?: string;
+        ask_private_feedback?: boolean;
+        ask_consent?: boolean;
+        reward_code?: string;
+      };
       const rawFields = form.fields as unknown;
       setDraft({
         formId: form.id,
@@ -80,6 +90,11 @@ export default function FormPreviewPage() {
         fields: Array.isArray(rawFields) ? (rawFields as string[]) : [],
         questions: Array.isArray(form.questions) ? (form.questions as FormQuestion[]) : [],
         thankYouMessage: design.thank_you_message ?? null,
+        wizard: {
+          askPrivateFeedback: design.ask_private_feedback === true,
+          askConsent: design.ask_consent === true,
+          rewardCode: design.reward_code?.trim() || null,
+        },
       });
     }
     void load();
@@ -114,7 +129,7 @@ export default function FormPreviewPage() {
       </div>
 
       <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-lg">
           <div className="text-center mb-8">
             <h1 className="font-heading text-2xl font-semibold tracking-tight">{draft.name}</h1>
             {draft.description && (
@@ -130,6 +145,7 @@ export default function FormPreviewPage() {
               questions={draft.questions}
               redirectUrl={null}
               thankYouMessage={draft.thankYouMessage}
+              wizard={draft.wizard ?? null}
               preview
             />
           </div>

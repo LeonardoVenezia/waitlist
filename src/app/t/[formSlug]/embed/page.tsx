@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { TestimonialForm } from "../testimonial-form";
-import { getPublicForm, parseFormFields, parseThankYouMessage, trackFormVisit } from "../form-data";
+import { getPublicForm, parseFormFields, parseFormDesign, trackFormVisit } from "../form-data";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +18,11 @@ export default async function EmbedFormPage(props: {
 
   await trackFormVisit(form.id);
 
+  const design = parseFormDesign(form);
+
   return (
     <div className="bg-transparent flex items-center justify-center p-2">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-lg">
         <div className="text-center mb-4">
           <h1 className="font-heading text-xl font-semibold tracking-tight">{form.name}</h1>
           {form.description && (
@@ -35,7 +37,8 @@ export default async function EmbedFormPage(props: {
             fields={parseFormFields(form)}
             questions={form.questions as Record<string, unknown>[]}
             redirectUrl={form.redirect_url}
-            thankYouMessage={parseThankYouMessage(form)}
+            thankYouMessage={design.thankYouMessage}
+            wizard={design}
             inviteToken={null}
           />
         </div>

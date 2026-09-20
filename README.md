@@ -1,6 +1,6 @@
 # [PACK]
 
-Suite of pre-launch tools for founders. Monthly subscription per project. Each project bundles a **showcase** (public directory entry), a **waitlist** (hosted page + widget + referral engine), and a **page builder** to customize the waitlist page. Testimonials are paused, see `PRODUCT.md`.
+Suite of pre-launch tools for founders. Monthly subscription per project. Each project bundles a **showcase** (public directory entry), a **waitlist** (hosted page + widget + referral engine), **testimonials** (embeddable multi-step collection form), and a **page builder** to customize the waitlist page.
 
 ## Stack
 
@@ -26,7 +26,7 @@ Env vars in `.env.local` (see `.env.example`).
 - **Auth**: Supabase. `handle_new_user()` trigger auto-creates profile + account.
 - **RLS pattern**: `createClient()` (RLS) for reads, `createAdminClient()` (service role) for writes, always verifying ownership with an RLS read first.
 - **Feature gating**: `src/lib/plans.ts` — `hasFeature(plan, feature)`. Plans are per-project, monthly subscription. Three tiers: Free, Launch, Grow.
-- **Public routes**: `/` (directory), `/product/[slug]`, `/p/[slug]` (waitlist page, customizable via page builder), `/t/[slug]` (testimonial form, paused), `/w/e/[publicKey]` (widget).
+- **Public routes**: `/` (directory), `/product/[slug]`, `/p/[slug]` (waitlist page, customizable via page builder), `/t/[slug]` (testimonial form, multi-step), `/w/e/[publicKey]` (widget).
 - **Dashboard**: `/dashboard/projects/[id]/...` with sub-nav for Overview, Submissions, Page Builder, Integration, Analytics, Export, Settings, Upgrade.
 
 ## Database migrations

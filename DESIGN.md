@@ -100,6 +100,7 @@ A project page has its own sub-navigation (tabs or side links) for the tools/sec
 - **Tables**: Remove `hover:bg-muted/50` — use a more subtle `hover:bg-muted/30` instead. Keep `border-b` rows.
 - **Icons**: Always use the SVG `Icon` components from `@/components/ui/icon`. Stroke 1.5, currentColor. Never use native emoji as UI chrome.
 - **Placeholders for products without images**: Use `ProductPlaceholder` (initials in `font-heading` over the muted background) — both `sm` (40×40) and `md` (16:9) sizes.
+- **Multi-step forms (testimonial wizard)**: thin progress bar (`bg-primary` fill over `bg-muted`), step title in `font-heading`, plain-text "Back" next to the primary "Continue" button (never a styled secondary button). Choice steps (usage consent, rating) use custom-styled option rows — bordered card + filled dot / star — instead of native radios. Image steps use `ImageUpload` (`variant="avatar"` for photo/logo). Errors are inline text, never `alert()`.
 
 ## Anti-patterns (do not)
 

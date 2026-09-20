@@ -22,6 +22,17 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
+/**
+ * Uploaded images are stored as bucket-relative paths (e.g.
+ * `testimonials/<formId>/<file>.jpg`); older/manual rows may hold a full URL.
+ */
+function resolveImage(value?: string | null) {
+  if (!value) return null;
+  if (value.startsWith("http")) return value;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  return `${supabaseUrl}/storage/v1/object/public/showcase-images/${value}`;
+}
+
 function formatDate(dateStr: string) {
   const date = new Date(dateStr);
   const now = new Date();
@@ -47,12 +58,13 @@ export function TestimonialCard({
   answers,
 }: TestimonialCardProps) {
   const answerEntries = answers ? Object.entries(answers).filter(([, v]) => v) : [];
+  const avatarSrc = resolveImage(avatarUrl);
   return (
     <div className="rounded-xl border bg-card p-5 flex flex-col gap-3">
       <div className="flex items-center gap-3">
-        {avatarUrl ? (
+        {avatarSrc ? (
           <img
-            src={avatarUrl}
+            src={avatarSrc}
             alt={name}
             className="size-10 rounded-full object-cover shrink-0"
           />

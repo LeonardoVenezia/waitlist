@@ -14,7 +14,7 @@ Sobre ese núcleo se integra:
 
 - **Waitlist viral con referidos** (`/p/[slug]` + widget embebible)
 
-**Testimonials** está temporalmente oculta del producto (código comentado en la UI), ver `PRODUCT.md` para los pasos de reactivación.
+**Testimonials** está activo: formulario público multi-paso estilo Senja (`/t/[formSlug]`) con foto del autor, logo/website de empresa, feedback privado, consentimiento de uso público/privado y código de recompensa. Los pasos se derivan de la config del form (campos habilitados + preguntas custom + toggles de pasos extra).
 
 Cada proyecto es una unidad independiente con su propio plan. Los planes son de **suscripción mensual por proyecto** vía Paddle:
 
@@ -76,7 +76,8 @@ El showcase del plan Free expira al año (`expires_at`); el job diario `expire_d
 | `/api/public/position` | GET | Posición actual y referral_count |
 | `/api/public/verify` | GET | Verificación de email (double opt-in) |
 | `/api/public/pageview` | POST | Track de page views |
-| `/api/testimonials/submit` | POST | Submit de testimonios |
+| `/api/testimonials/submit` | POST | Submit de testimonios (wizard multi-paso) |
+| `/api/testimonials/upload-url` | POST | Signed upload URL para foto/logo del autor (rate limit + Turnstile) |
 | `/api/webhooks/paddle` | POST | Webhook de Paddle |
 
 ### Dashboard

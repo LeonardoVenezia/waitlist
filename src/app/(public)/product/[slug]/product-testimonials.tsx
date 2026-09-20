@@ -16,6 +16,7 @@ export async function ProductTestimonials({
     .eq("project_id", projectId)
     .eq("status", "approved")
     .eq("is_featured", true)
+    .or("consent.is.null,consent.eq.public")
     .order("created_at", { ascending: false })
     .limit(10);
 
@@ -28,6 +29,7 @@ export async function ProductTestimonials({
       .select("*")
       .eq("project_id", projectId)
       .eq("status", "approved")
+      .or("consent.is.null,consent.eq.public")
       .order("created_at", { ascending: false })
       .limit(4);
 

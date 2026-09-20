@@ -55,7 +55,7 @@ alter table public.showcases add constraint showcases_status_check
   check (status in ('draft', 'published', 'rejected', 'coming_soon'));
 ```
 
-Después creá las tablas de testimonials si todavía no existen (migración `011_testimonials.sql` completa, pegala entera).
+Después creá las tablas de testimonials si todavía no existen (migración `011_testimonials.sql` completa, pegala entera). Si ya existen, aplicá las pendientes: `017_testimonials_moderation.sql`, `018_testimonial_invites_visits.sql` y `019_testimonial_wizard.sql` (esta última agrega `consent`, `private_feedback`, `website` y `company_logo_url` a `testimonials`).
 
 ### Paso 4 — Storage bucket público
 
