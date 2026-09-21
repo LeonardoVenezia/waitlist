@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
 import { ImageUpload } from "@/components/shared/image-upload";
+import { TURNSTILE_ENABLED } from "@/lib/turnstile";
 
 declare global {
   interface Window {
@@ -117,7 +118,7 @@ export function TestimonialForm({
   const isLast = stepIndex === steps.length - 1;
 
   useEffect(() => {
-    if (preview) return;
+    if (preview || !TURNSTILE_ENABLED) return;
 
     const scriptId = "cf-turnstile-script";
     if (!document.getElementById(scriptId)) {
@@ -147,6 +148,7 @@ export function TestimonialForm({
 
   /** Turnstile tokens are single-use, so refresh after consuming one on upload. */
   function refreshTurnstile() {
+    if (!TURNSTILE_ENABLED) return;
     setTurnstileToken(null);
     if (turnstileEl.current) window.turnstile?.reset(turnstileEl.current);
   }
@@ -181,7 +183,7 @@ export function TestimonialForm({
   }
 
   async function handleSubmit() {
-    if (!preview && !turnstileToken) {
+    if (TURNSTILE_ENABLED && !preview && !turnstileToken) {
       setError("Please wait a moment for verification, then try again.");
       return;
     }
@@ -535,7 +537,7 @@ export function TestimonialForm({
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      {!preview && <div ref={turnstileEl} className="flex justify-center" />}
+      {!preview && TURNSTILE_ENABLED && <div ref={turnstileEl} className="flex justify-center" />}
 
       <div className="flex items-center gap-4">
         {stepIndex > 0 && (
@@ -552,7 +554,7 @@ export function TestimonialForm({
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={loading || (!preview && !turnstileToken)}
+            disabled={loading || (TURNSTILE_ENABLED && !preview && !turnstileToken)}
             className="w-full"
           >
             {loading ? "Submitting..." : "Submit"}

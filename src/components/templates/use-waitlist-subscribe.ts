@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { TURNSTILE_ENABLED } from "@/lib/turnstile";
 
 export interface SubscribeResult {
   id: string;
@@ -123,7 +124,7 @@ export function useWaitlistSubscribe(
     setError(null);
 
     const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-    if (!siteKey) {
+    if (!TURNSTILE_ENABLED || !siteKey) {
       await doSubmit("");
       return;
     }

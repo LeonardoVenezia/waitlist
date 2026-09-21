@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validateTurnstileToken } from "@/lib/api/validate-turnstile";
 import { checkRateLimit } from "@/lib/api/rate-limit";
+import { TURNSTILE_ENABLED } from "@/lib/turnstile";
 import { randomUUID } from "crypto";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
 
   // Turnstile is mandatory whenever the server-side secret is configured.
   const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
-  if (turnstileSecret) {
+  if (TURNSTILE_ENABLED && turnstileSecret) {
     if (typeof turnstile_token !== "string" || !turnstile_token) {
       return NextResponse.json({ error: "Verification required" }, { status: 400 });
     }

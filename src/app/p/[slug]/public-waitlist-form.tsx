@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { TURNSTILE_ENABLED } from "@/lib/turnstile";
 
 interface WaitlistFormProps {
   publicKey: string;
@@ -91,7 +92,7 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
     setError(null);
 
     const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-    if (!siteKey) {
+    if (!TURNSTILE_ENABLED || !siteKey) {
       await doSubmit("");
       return;
     }
@@ -335,7 +336,7 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
         </div>
 
         {/* Turnstile implicit widget */}
-        {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+        {TURNSTILE_ENABLED && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
           <div ref={turnstileRef} className="cf-turnstile hidden" data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} data-size="invisible" data-callback="handleTurnstileCallback" />
         )}
 

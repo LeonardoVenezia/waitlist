@@ -1,4 +1,5 @@
 import Script from "next/script";
+import { TURNSTILE_ENABLED } from "@/lib/turnstile";
 
 export default function HostedLayout({
   children,
@@ -8,12 +9,14 @@ export default function HostedLayout({
   return (
     <>
       {children}
-      <Script
-        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-        async
-        defer
-        strategy="afterInteractive"
-      />
+      {TURNSTILE_ENABLED && (
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          async
+          defer
+          strategy="afterInteractive"
+        />
+      )}
     </>
   );
 }

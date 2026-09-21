@@ -141,3 +141,8 @@ RESEND_API_KEY=
 - **Consent & privacy**: testimonials submitted with `consent = 'private'` are excluded from the public `/product/[slug]` render, even when approved. Card avatars now resolve bucket-relative paths to the public bucket URL.
 - **Form editor**: new "Extra steps" card (private feedback, usage consent) and a reward-code field in "After submitting"; the field list gained Photo, Website and Company logo. The live preview and `/preview/forms/[formId]` reflect all of it.
 - **Thank-you screen**: shows the configurable reward code with a copy button (redirect still overrides the screen when set).
+
+## Turnstile desactivado (kill switch)
+
+- Nuevo switch maestro `TURNSTILE_ENABLED` en `src/lib/turnstile.ts`, hoy en `false`. Apaga el captcha en **toda** la app sin borrar código: el wizard de testimonials, el form hosteado `/p/[slug]`, los templates del page builder y el script de Cloudflare en `/p/*` no renderizan ni ejecutan ningún challenge; y `validateTurnstileToken` + las rutas `/api/public/subscribe`, `/api/testimonials/submit` y `/api/testimonials/upload-url` dejan de exigir token.
+- Para reactivarlo: poner la bandera en `true` (y tener `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`). No hace falta ningún otro cambio.

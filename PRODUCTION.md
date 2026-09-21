@@ -119,6 +119,8 @@ Cuando tengas dominio propio:
 
 Turnstile: creá un widget en Cloudflare → Turnstile con tu dominio. Configurá `NEXT_PUBLIC_TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY`.
 
+> **Turnstile está desactivado por ahora** (kill switch en `src/lib/turnstile.ts`, `TURNSTILE_ENABLED = false`). Con la bandera en `false` el captcha no se renderiza, no se ejecuta ningún challenge y las rutas de servidor no exigen token. Para reactivarlo: poner la bandera en `true` y verificar que las dos variables de entorno estén seteadas.
+
 ### Paso 8 — Revisión de seguridad antes de cobrar
 
 - **Paddle webhook** (Paso 6) — obligatorio
