@@ -16,6 +16,44 @@ interface ImageUploadProps {
   variant?: "cover" | "avatar";
   /** Dashboard preview: show the picked image locally without uploading. */
   preview?: boolean;
+  /**
+   * Downscale the longest side to this many pixels before uploading, encoding
+   * to WebP. Use it for avatars/logos that only ever render small; leave it
+   * unset for full-bleed images that need their resolution.
+   */
+  maxDimension?: number;
+}
+
+/**
+ * Shrinks an image in the browser. An avatar renders at ~40px, so shipping the
+ * raw 3–8 MB phone photo is pure waste. Returns null when anything in the
+ * pipeline is unavailable, so callers can fall back to the original file.
+ */
+async function downscaleImage(file: File, maxDimension: number): Promise<Blob | null> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      bitmap.close();
+      return null;
+    }
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+
+    // WebP keeps transparency (PNGs/logos) and is supported across browsers.
+    return await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), "image/webp", 0.85);
+    });
+  } catch {
+    return null;
+  }
 }
 
 export function ImageUpload({
@@ -27,6 +65,7 @@ export function ImageUpload({
   onUploaded,
   variant = "cover",
   preview: previewMode = false,
+  maxDimension,
 }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -39,7 +78,13 @@ export function ImageUpload({
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) return;
-    if (file.size > 2 * 1024 * 1024) { setError("Max 2 MB"); return; }
+
+    // When we downscale, the source is expected to be a full-size phone photo.
+    const maxBytes = maxDimension ? 12 * 1024 * 1024 : 2 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setError(`Image is larger than ${maxDimension ? 12 : 2} MB.`);
+      return;
+    }
 
     const localPreview = URL.createObjectURL(file);
     setPreview(localPreview);
@@ -50,22 +95,35 @@ export function ImageUpload({
     setUploading(true);
 
     try {
+      let body: Blob = file;
+      let contentType = file.type;
+      let fileName = file.name;
+
+      if (maxDimension) {
+        const smaller = await downscaleImage(file, maxDimension);
+        if (smaller) {
+          body = smaller;
+          contentType = "image/webp";
+          fileName = fileName.replace(/\.[^.]+$/, "") + ".webp";
+        }
+      }
+
       const urlRes = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileName: file.name, fileType: file.type, ...extraBody }),
+        body: JSON.stringify({ fileName, fileType: contentType, ...extraBody }),
       });
       if (!urlRes.ok) {
-        const body = await urlRes.json().catch(() => null);
-        throw new Error(body?.error ?? "Failed to get upload URL");
+        const resBody = await urlRes.json().catch(() => null);
+        throw new Error(resBody?.error ?? "Failed to get upload URL");
       }
 
       const { path, signedUrl } = await urlRes.json();
 
       const upRes = await fetch(signedUrl, {
         method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
+        body,
+        headers: { "Content-Type": contentType },
       });
       if (!upRes.ok) throw new Error("Upload failed");
 
@@ -84,7 +142,7 @@ export function ImageUpload({
     if (variant === "avatar") {
       return (
         <div className="space-y-2">
-          <div className="relative size-20 rounded-full overflow-hidden border bg-muted group">
+          <div className="relative size-24 rounded-full overflow-hidden border bg-muted group">
             <img src={publicUrl} alt="" className="size-full object-cover" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
               <button type="button" onClick={() => inputRef.current?.click()} className="px-1.5 py-0.5 text-[10px] bg-black/60 text-white rounded hover:bg-black/80">
@@ -124,7 +182,7 @@ export function ImageUpload({
       onClick={() => inputRef.current?.click()}
       className={
         variant === "avatar"
-          ? "size-20 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 flex flex-col items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+          ? "size-24 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 flex flex-col items-center justify-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
           : "w-full h-24 rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
       }
     >
@@ -152,7 +210,7 @@ export function ImageUpload({
         <img
           src={preview}
           alt=""
-          className={variant === "avatar" ? "mt-2 size-20 rounded-full object-cover" : "mt-2 rounded-lg w-full h-24 object-cover"}
+          className={variant === "avatar" ? "mt-2 size-24 rounded-full object-cover" : "mt-2 rounded-lg w-full h-24 object-cover"}
         />
       )}
       <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />

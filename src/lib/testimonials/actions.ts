@@ -29,7 +29,7 @@ export async function createForm(
       name: data.name,
       slug: data.slug,
       description: data.description ?? null,
-      fields: data.fields ?? ["name", "email", "message", "rating"],
+      fields: data.fields ?? ["name", "email", "message", "rating", "photo"],
       questions: (data.questions ?? []) as unknown as Json,
       redirect_url: data.redirect_url ?? null,
       status: "draft",

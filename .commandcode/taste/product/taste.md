@@ -24,6 +24,7 @@
 # feature-design
 - When cloning or referencing a competitor product, expects the agent to apply project-specific judgment to filter which features to include — not blindly replicate everything. The project has its own aesthetic/design criteria; balance simplicity with completeness ("no exagerar la simpleza"). Confidence: 0.70
 # onboarding
+- Walks the flow as an end user and expects capabilities that are part of the experience to be visible by default, not hidden behind an opt-in toggle — after testing the testimonial form and finding no way to upload a photo (the field existed but was off by default), the resolution was to include it in the default field set for new forms and enable it on the form being tested. Confidence: 0.65
 - Empty states and first-time user experiences must be informative and guide the user — show URLs, actionable steps, and clear next actions rather than leaving new users confused. When the user identifies a UX problem but isn't sure of the best solution, the agent should analyze it deeply and propose a complete UX solution. Confidence: 0.70
 # ux-copy
 - Prefers plain, self-explanatory labels over marketing or technical jargon. If a label doesn't sound intuitive to a new user, it should be renamed — even common terms like "Referral link" can be confusing when a simpler alternative like "Waitlist URL" or "Your link" exists. Confidence: 0.80

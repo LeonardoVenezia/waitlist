@@ -19,6 +19,8 @@ See [debugging/taste.md](debugging/taste.md)
 - Wants to understand the operational limits, failure modes, and production-readiness (rate limits, ToS, cost) of third-party services before relying on them — specifically asks what the limits are and what happens when they're exhausted, expecting graceful degradation rather than silent breakage of core flows. Confidence: 0.60
 - Prefers free, infrastructure-native alternatives already available in the existing stack (e.g., Cloudflare's CF-IPCountry header) over adding third-party APIs that carry rate limits, cost, or production restrictions. Confidence: 0.70
 - Prefers transactional/notification emails to be sent from their own branded, provider-verified domain (e.g., leovenezia.dev) rather than a generic or placeholder sender address. Confidence: 0.60
+# performance
+- Cares about upload payload weight: when an image only ever renders small (author photo or company logo shown at ~40px), it should be downscaled + recompressed (e.g. WebP) in the browser before upload rather than shipping the original 3–8 MB phone photo. Expects the input size cap to be raised accordingly (2 MB → 12 MB) so a normal phone photo actually works, while surfaces that need full resolution (page-builder images) stay untouched. Confidence: 0.70
 # product
 See [product/taste.md](product/taste.md)
 # workflow

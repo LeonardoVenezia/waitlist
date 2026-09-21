@@ -166,3 +166,13 @@ RESEND_API_KEY=
 
 - La regla base de `globals.css` para `h1`–`h4` pasa a `@apply font-heading font-semibold tracking-tight`, así que **todos los títulos de la app heredan la negrita desde un único lugar**. La app ya venía con `font-bold` en las páginas públicas y `font-semibold` en el dashboard; la regla de DESIGN.md ("No bold") estaba desactualizada respecto del código y quedó corregida.
 - Los `h1`–`h4` que declaran `font-bold` explícito lo conservan; con Italiana (que solo trae peso 400) el bold es sintetizado y se ve igual que semibold, así que no hay inconsistencia visual. Pendiente opcional: normalizar esos overrides para que el peso viva en un solo lugar.
+
+## Testimonial photo — reducción de peso y tamaño
+
+- **Downscale en el cliente**: `ImageUpload` acepta `maxDimension`. Cuando se pasa, la imagen se redimensiona en el browser (canvas + `createImageBitmap`) y se reencoda a **WebP calidad 0.85** antes de pedir la signed URL — no viaja el original de 3–8 MB de una foto de celular. Si algo del pipeline no está disponible, cae al archivo original sin romper la subida.
+- El wizard de testimonials usa `maxDimension={256}` para la foto del autor y el logo de empresa (se renderizan a ~40px).
+- **Límite de entrada**: con `maxDimension` el máximo subible pasa de 2 MB a 12 MB, porque el origen esperado es una foto de celular y el resultado final es chico igual.
+- **Affordance**: el uploader en modo avatar pasa de 80px con texto de 10px a 96px con texto de 12px, y el paso "About you" agrega una línea explicando para qué se usa la foto.
+- **Nota**: el campo `photo` sigue siendo un toggle por form (Fields → Photo), apagado por defecto para forms nuevos.
+
+- **Foto activada por defecto**: el set de campos por defecto de un form nuevo pasa a `["name","email","message","rating","photo"]` (`createForm` + default de la columna en `019`). Al form de prueba existente se le activó el campo `photo`.

@@ -525,8 +525,13 @@ export function TestimonialForm({
                       onUploaded={refreshTurnstile}
                       variant="avatar"
                       preview={preview}
+                      maxDimension={256}
                     />
                   </div>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    Shown small next to your testimonial. We shrink it for you, so any
+                    photo from your phone works.
+                  </p>
                 </div>
               )}
             </div>
@@ -582,6 +587,7 @@ export function TestimonialForm({
                       onUploaded={refreshTurnstile}
                       variant="avatar"
                       preview={preview}
+                      maxDimension={256}
                     />
                   </div>
                 </div>

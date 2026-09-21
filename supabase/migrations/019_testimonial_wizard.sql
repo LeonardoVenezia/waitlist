@@ -9,3 +9,7 @@ alter table public.testimonials
   add column if not exists private_feedback text,
   add column if not exists website          text,
   add column if not exists company_logo_url text;
+
+-- The author photo is part of the default field set for new forms.
+alter table public.testimonial_forms
+  alter column fields set default '["name", "email", "message", "rating", "photo"]';
