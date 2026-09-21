@@ -38,23 +38,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { form_id, file_type, turnstile_token } = body;
+  // `fileType` is the contract shared with the other signed-URL routes
+  // (page builder / showcase), which is what `ImageUpload` sends.
+  const { form_id: formId, fileType, turnstile_token: turnstileToken } = body;
 
-  if (typeof form_id !== "string" || typeof file_type !== "string") {
+  if (typeof formId !== "string" || typeof fileType !== "string") {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
-  if (!ALLOWED_TYPES.includes(file_type)) {
+  if (!ALLOWED_TYPES.includes(fileType)) {
     return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
   }
 
   // Turnstile is mandatory whenever the server-side secret is configured.
   const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
   if (TURNSTILE_ENABLED && turnstileSecret) {
-    if (typeof turnstile_token !== "string" || !turnstile_token) {
+    if (typeof turnstileToken !== "string" || !turnstileToken) {
       return NextResponse.json({ error: "Verification required" }, { status: 400 });
     }
-    const valid = await validateTurnstileToken(turnstile_token);
+    const valid = await validateTurnstileToken(turnstileToken);
     if (!valid) {
       return NextResponse.json({ error: "Verification failed" }, { status: 400 });
     }
@@ -66,7 +68,7 @@ export async function POST(req: NextRequest) {
   const { data: form } = await admin
     .from("testimonial_forms")
     .select("id")
-    .eq("id", form_id)
+    .eq("id", formId)
     .eq("status", "published")
     .maybeSingle();
 
@@ -74,8 +76,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid form" }, { status: 400 });
   }
 
-  const ext = EXT_MAP[file_type] ?? "jpg";
-  const path = `testimonials/${form_id}/${Date.now()}-${randomUUID().slice(0, 8)}.${ext}`;
+  const ext = EXT_MAP[fileType] ?? "jpg";
+  const path = `testimonials/${formId}/${Date.now()}-${randomUUID().slice(0, 8)}.${ext}`;
 
   const { data, error } = await admin.storage
     .from("showcase-images")
