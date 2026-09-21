@@ -100,7 +100,7 @@
     @apply font-sans;
   }
   h1, h2, h3, h4 {
-    @apply font-heading tracking-tight;
+    @apply font-heading font-semibold tracking-tight;
   }
 }
 

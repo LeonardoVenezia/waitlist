@@ -130,7 +130,7 @@ export default function FormPreviewPage() {
 
       <div className="flex min-h-screen flex-col bg-background">
         <header className="px-6 pt-12 text-center sm:pt-16">
-          <h1 className="font-heading text-3xl font-normal tracking-tight sm:text-4xl">
+          <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
             {draft.name}
           </h1>
           {draft.description && (

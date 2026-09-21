@@ -24,7 +24,7 @@ export default async function EmbedFormPage(props: {
     <div className="flex justify-center bg-transparent px-4 py-8">
       <div className="w-full max-w-xl">
         <div className="mb-8 text-center">
-          <h1 className="font-heading text-2xl font-normal tracking-tight">{form.name}</h1>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">{form.name}</h1>
           {form.description && (
             <p className="mt-2 text-sm text-muted-foreground">{form.description}</p>
           )}

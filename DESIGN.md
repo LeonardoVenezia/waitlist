@@ -19,7 +19,7 @@ Warm editorial. Think a refined indie publisher or a boutique creative studio's 
 | UI labels, body, tables | Geist (sans) | 400, 500 | 0.75rem – 1rem |
 | Monospace (codes, positions) | Geist Mono | 400 | 0.75rem |
 
-- **Headings**: Instrument Serif for all `h1`/`h2`, and any display-size text. No bold — let the serif's elegance speak at regular weight.
+- **Headings**: Italiana (loaded as `--font-heading`) at `font-semibold` for every `h1`–`h4`. Declared **once** in `globals.css`'s base layer so all headings inherit it — don't re-declare a weight per component, and don't override it unless a surface deliberately opts out. (Italiana ships only weight 400, so the bold is browser-synthesized.)
 - **Body**: Geist at 400. Keep it crisp and legible for dense UI.
 - **Scale**: Use a 1.25 minor third for prose, but let the UI use fixed sizes (xs/sm/base/lg/xl) for consistency.
 
@@ -100,7 +100,7 @@ A project page has its own sub-navigation (tabs or side links) for the tools/sec
 - **Tables**: Remove `hover:bg-muted/50` — use a more subtle `hover:bg-muted/30` instead. Keep `border-b` rows.
 - **Icons**: Always use the SVG `Icon` components from `@/components/ui/icon`. Stroke 1.5, currentColor. Never use native emoji as UI chrome.
 - **Placeholders for products without images**: Use `ProductPlaceholder` (initials in `font-heading` over the muted background) — both `sm` (40×40) and `md` (16:9) sizes.
-- **Multi-step forms (testimonial wizard)**: the public form is a bare, full-height centered column (`max-w-xl`) with the form name as a serif masthead — no card, the whitespace does the framing. Thin progress bar (`bg-primary` over `bg-muted`), step title in `font-heading` at `text-2xl/3xl` regular. Nav stacks vertically and centers: full-width primary CTA on top, plain-text "Back" below (never side by side, never a styled secondary button). Choice steps use custom-styled option rows — bordered container + filled dot — instead of native radios. The rating step starts empty (all stars `text-border`) and is required to continue; hover fills up to the cursor, click commits. Image steps use `ImageUpload` (`variant="avatar"`). The thank-you is a warm note: serif headline with the author's first name plus the reward code as a dashed-border ticket. Errors are inline text with `role="alert"`, never `alert()`.
+- **Multi-step forms (testimonial wizard)**: the public form is a bare, full-height centered column (`max-w-xl`) with the form name as a serif masthead — no card, the whitespace does the framing. Thin progress bar (`bg-primary` over `bg-muted`), step title in `font-heading` at `text-2xl/3xl`. Nav stacks vertically and centers: full-width primary CTA on top, plain-text "Back" below (never side by side, never a styled secondary button). Choice steps use custom-styled option rows — bordered container + filled dot — instead of native radios. The rating step starts empty (all stars `text-border`) and is required to continue; hover fills up to the cursor, click commits. Image steps use `ImageUpload` (`variant="avatar"`). The thank-you echoes the testimonial back using the same `TestimonialCard` the owner sees, with the reward code below as a dashed-border ticket. Errors are inline text with `role="alert"`, never `alert()`.
 
 ## Anti-patterns (do not)
 

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { StarRating } from "@/components/ui/star-rating";
 import { ImageUpload } from "@/components/shared/image-upload";
+import { TestimonialCard } from "@/components/testimonials/testimonial-card";
 import { TURNSTILE_ENABLED } from "@/lib/turnstile";
 
 declare global {
@@ -242,7 +243,9 @@ export function TestimonialForm({
       project_id: projectId,
       name,
       message,
-      rating,
+      // Forms without the rating step never collect one: keep the value in the
+      // 1–5 range the column enforces instead of sending 0.
+      rating: rating > 0 ? rating : 5,
       turnstile_token: turnstileToken,
     };
 
@@ -298,17 +301,39 @@ export function TestimonialForm({
 
   if (submitted) {
     const firstName = name.trim().split(" ")[0];
+    // Echo the testimonial back in the same card the owner will see, so the
+    // moment is about what the author gave us rather than about our receipt.
+    const echoAnswers: Record<string, string> = {};
+    questions.forEach((q, i) => {
+      const val = answers[i]?.trim();
+      if (val) echoAnswers[(q.label as string) ?? `Question ${i + 1}`] = val;
+    });
+
     return (
       <div className="animate-rise py-6 text-center">
-        <h3 className="font-heading text-3xl font-normal tracking-tight sm:text-4xl">
+        <h3 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
           Thank you{firstName ? `, ${firstName}` : ""}.
         </h3>
         <p className="mx-auto mt-4 max-w-md text-base text-muted-foreground sm:text-lg">
           {thankYouMessage || "It means a lot that you took the time."}
         </p>
 
+        {message.trim() && name.trim() && (
+          <div className="mx-auto mt-10 max-w-md text-left">
+            <TestimonialCard
+              name={name}
+              company={company || null}
+              role={role || null}
+              message={message}
+              rating={rating || 5}
+              avatarUrl={photoPath || null}
+              answers={echoAnswers}
+            />
+          </div>
+        )}
+
         {rewardCode && (
-          <div className="mx-auto mt-10 max-w-sm rounded-xl border bg-muted/40 p-5 text-left">
+          <div className="mx-auto mt-6 max-w-sm rounded-xl border bg-muted/40 p-5 text-left">
             <p className="text-xs tracking-[0.18em] text-muted-foreground uppercase">
               Your reward
             </p>
@@ -354,7 +379,7 @@ export function TestimonialForm({
       </div>
 
       <div className="min-h-[280px]">
-        <h2 className="font-heading text-2xl font-normal tracking-tight sm:text-3xl">
+        <h2 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
           {STEP_COPY[current].title}
         </h2>
         {STEP_COPY[current].subtitle && (

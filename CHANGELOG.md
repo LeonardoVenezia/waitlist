@@ -155,3 +155,14 @@ RESEND_API_KEY=
 - **Validación de email**: al no haber `<form>` nativo, `type="email"` no validaba. Se agrega validación explícita en el paso "About you" (mismo regex que `/api/public/subscribe`), `aria-invalid` en el control y `role="alert"` en el error. Enter avanza el wizard (excepto en textareas).
 - **Thank-you**: rediseñado como nota cálida — headline serif con el nombre de la persona, mensaje por defecto más humano, y el código de recompensa como ticket (borde punteado + divisor + copiar). Se elimina el círculo verde genérico. Entrada suave con `@keyframes rise` (`.animate-rise`), respetando `prefers-reduced-motion`.
 - **Limpieza de drift**: títulos serif vuelven a `font-normal` (la regla del sistema), el `<select>` de preguntas custom pasa al componente `Select`, y los focus rings de los campos se alinean al sistema (`ring-3 ring-ring/50`).
+
+## Testimonial form — segunda pasada
+
+- **Títulos en negrita**: masthead, títulos de paso y headline del thank-you pasan a `font-semibold` (el usuario comparó en el navegador y prefiere así). Excepción documentada en `DESIGN.md`, que venía pidiendo serif regular.
+- **Thank-you más amable**: ahora devuelve el testimonio del autor usando el mismo `TestimonialCard` que verá el owner (avatar/foto, nombre, cargo/empresa, estrellas, texto y respuestas custom), en vez de un simple acuse de recibo. El código de recompensa queda debajo, como ticket.
+- **Fix**: si un form tiene el campo Rating desactivado, el wizard enviaba `rating: 0`, lo que violaba el check `1..5` de `testimonials.rating` y hacía fallar el submit. Ahora cae al default 5 cuando no se pidió rating.
+
+## Headings en negrita (global)
+
+- La regla base de `globals.css` para `h1`–`h4` pasa a `@apply font-heading font-semibold tracking-tight`, así que **todos los títulos de la app heredan la negrita desde un único lugar**. La app ya venía con `font-bold` en las páginas públicas y `font-semibold` en el dashboard; la regla de DESIGN.md ("No bold") estaba desactualizada respecto del código y quedó corregida.
+- Los `h1`–`h4` que declaran `font-bold` explícito lo conservan; con Italiana (que solo trae peso 400) el bold es sintetizado y se ve igual que semibold, así que no hay inconsistencia visual. Pendiente opcional: normalizar esos overrides para que el peso viva en un solo lugar.
