@@ -146,3 +146,12 @@ RESEND_API_KEY=
 
 - Nuevo switch maestro `TURNSTILE_ENABLED` en `src/lib/turnstile.ts`, hoy en `false`. Apaga el captcha en **toda** la app sin borrar código: el wizard de testimonials, el form hosteado `/p/[slug]`, los templates del page builder y el script de Cloudflare en `/p/*` no renderizan ni ejecutan ningún challenge; y `validateTurnstileToken` + las rutas `/api/public/subscribe`, `/api/testimonials/submit` y `/api/testimonials/upload-url` dejan de exigir token.
 - Para reactivarlo: poner la bandera en `true` (y tener `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`). No hace falta ningún otro cambio.
+
+## Testimonial form — refinamiento de escala y detalle
+
+- **Escala tipo Senja**: el form público pasa a una columna centrada `max-w-xl`, full-height, con el nombre del form como masthead serif — se elimina la tarjeta (`rounded-xl border bg-card`) en las tres shells (`/t/[slug]`, `/t/[slug]/embed`, `/preview/forms/[id]`). Títulos de paso a `text-2xl/3xl` regular, labels a `text-base`, inputs/textarea más altos, CTA `h-12` full-width, más aire vertical.
+- **Rating**: las estrellas arrancan vacías (`text-border`, no amarillas) y el paso es obligatorio — hover rellena hasta el cursor, click fija. Nuevo tamaño `xl` (44px) en `StarRating`. Se agregan `focus-visible` ring y `aria-label` por estrella.
+- **Nav**: Back y Continue ya no comparten fila (el `w-full` desbordaba el contenedor). Ahora stack vertical centrado: CTA arriba, "Back" como texto plano abajo. El botón final pasa a "Send testimonial".
+- **Validación de email**: al no haber `<form>` nativo, `type="email"` no validaba. Se agrega validación explícita en el paso "About you" (mismo regex que `/api/public/subscribe`), `aria-invalid` en el control y `role="alert"` en el error. Enter avanza el wizard (excepto en textareas).
+- **Thank-you**: rediseñado como nota cálida — headline serif con el nombre de la persona, mensaje por defecto más humano, y el código de recompensa como ticket (borde punteado + divisor + copiar). Se elimina el círculo verde genérico. Entrada suave con `@keyframes rise` (`.animate-rise`), respetando `prefers-reduced-motion`.
+- **Limpieza de drift**: títulos serif vuelven a `font-normal` (la regla del sistema), el `<select>` de preguntas custom pasa al componente `Select`, y los focus rings de los campos se alinean al sistema (`ring-3 ring-ring/50`).

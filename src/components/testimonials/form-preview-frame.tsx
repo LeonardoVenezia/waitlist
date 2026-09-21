@@ -64,7 +64,7 @@ export function FormPreviewFrame({
             : "min-h-0 overflow-y-auto bg-background px-4 py-4 h-[320px]"
         }
       >
-        <div className={variant === "editor" ? "max-w-sm mx-auto" : "mx-auto"}>
+        <div className={variant === "editor" ? "max-w-md mx-auto" : "mx-auto"}>
           <TestimonialForm
             formId={formId}
             projectId={projectId}

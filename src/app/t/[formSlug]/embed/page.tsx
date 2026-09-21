@@ -21,27 +21,25 @@ export default async function EmbedFormPage(props: {
   const design = parseFormDesign(form);
 
   return (
-    <div className="bg-transparent flex items-center justify-center p-2">
-      <div className="w-full max-w-lg">
-        <div className="text-center mb-4">
-          <h1 className="font-heading text-xl font-semibold tracking-tight">{form.name}</h1>
+    <div className="flex justify-center bg-transparent px-4 py-8">
+      <div className="w-full max-w-xl">
+        <div className="mb-8 text-center">
+          <h1 className="font-heading text-2xl font-normal tracking-tight">{form.name}</h1>
           {form.description && (
-            <p className="text-xs text-muted-foreground mt-1">{form.description}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{form.description}</p>
           )}
         </div>
 
-        <div className="rounded-xl border bg-card p-4">
-          <TestimonialForm
-            formId={form.id}
-            projectId={form.project_id}
-            fields={parseFormFields(form)}
-            questions={form.questions as Record<string, unknown>[]}
-            redirectUrl={form.redirect_url}
-            thankYouMessage={design.thankYouMessage}
-            wizard={design}
-            inviteToken={null}
-          />
-        </div>
+        <TestimonialForm
+          formId={form.id}
+          projectId={form.project_id}
+          fields={parseFormFields(form)}
+          questions={form.questions as Record<string, unknown>[]}
+          redirectUrl={form.redirect_url}
+          thankYouMessage={design.thankYouMessage}
+          wizard={design}
+          inviteToken={null}
+        />
       </div>
     </div>
   );

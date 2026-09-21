@@ -7,17 +7,21 @@ interface StarRatingProps {
   value: number;
   onChange?: (value: number) => void;
   readonly?: boolean;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
-const sizeMap = { sm: "size-4", md: "size-5", lg: "size-6" };
+const sizeMap = { sm: "size-4", md: "size-5", lg: "size-6", xl: "size-11" };
 
 export function StarRating({ value, onChange, readonly = false, size = "md" }: StarRatingProps) {
   const [hover, setHover] = useState(0);
   const isInteractive = !readonly && !!onChange;
 
   return (
-    <div className={cn("flex items-center gap-0.5", isInteractive && "cursor-pointer")}>
+    <div
+      role="group"
+      aria-label="Rating"
+      className={cn("flex items-center", size === "xl" ? "gap-1.5" : "gap-0.5")}
+    >
       {[1, 2, 3, 4, 5].map((star) => {
         const filled = star <= (hover || value);
         return (
@@ -25,13 +29,22 @@ export function StarRating({ value, onChange, readonly = false, size = "md" }: S
             key={star}
             type="button"
             disabled={!isInteractive}
-            className={cn(sizeMap[size], "transition-colors", isInteractive ? "hover:scale-110" : "")}
+            aria-label={`Rate ${star} out of 5`}
+            className={cn(
+              sizeMap[size],
+              "rounded-md transition-[color,transform] duration-150",
+              "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              isInteractive && "cursor-pointer hover:scale-110 active:scale-95",
+            )}
             onMouseEnter={() => isInteractive && setHover(star)}
             onMouseLeave={() => isInteractive && setHover(0)}
             onClick={() => isInteractive && onChange?.(star)}
           >
+            {/* ponytail: gold is the rating convention; it sits outside the warm
+                palette on purpose, same as it does on every other product. */}
             <svg
-              className={cn(sizeMap[size], filled ? "text-yellow-400" : "text-gray-300")}
+              aria-hidden="true"
+              className={cn(sizeMap[size], filled ? "text-yellow-400" : "text-border")}
               fill="currentColor"
               viewBox="0 0 20 20"
             >

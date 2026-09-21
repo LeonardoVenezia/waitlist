@@ -52,6 +52,9 @@
 
 # form-ux
 - Cancel/secondary actions should be plain text links, not styled buttons — styled cancel buttons blend in with primary actions and create bad UX ("se camufla"). Confidence: 0.70
+- Primary CTA and the back action must never share a row in a wizard/step form: a full-width primary button sitting next to "Back" overflows the container and looks broken. Wants them stacked vertically and centered — CTA on top (full width), "Back" as plain text below. Confidence: 0.70
+- Interactive rating controls should start empty (all stars neutral/grey), not pre-selected at 5 — a pre-filled value "no se entiende lo que hay que hacer". Hover must preview the fill up to the cursor, click commits it, mouse-out reverts, and the step is required to continue. Confidence: 0.65
+- Inputs must declare the correct semantics — `type="email"`, `inputMode`, `autoComplete` — even in custom forms without a native `<form>` (where the browser doesn't validate automatically, explicit validation must be added too). Confidence: 0.60
 - Interactive form controls (field toggles, checkboxes, selectors) must be visually distinct from action buttons (submit, cancel); when they look the same, the form becomes confusing and users can't tell what's a control vs what's an action. Confidence: 0.65
 - Slug fields should auto-generate from the name on every keystroke, not just when the slug is empty. The only exception: when editing an already-published resource, the slug should be locked/frozen. Confidence: 0.80
 # editor-design
