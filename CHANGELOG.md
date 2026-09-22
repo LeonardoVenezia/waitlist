@@ -179,5 +179,6 @@ RESEND_API_KEY=
 
 ## Títulos de sección del editor de forms
 
-- Los 9 títulos de tarjeta del editor de formularios pasan de `font-medium text-sm` (14px, 500) a **`font-semibold text-base`** (16px, negrita): Fields, Moderation, Extra steps, After submitting, Status y Danger zone en `form-editor.tsx`, Questions en `questions-editor.tsx`, y Request testimonials / Sent invites en `invites-client.tsx`.
+- Los 9 títulos de tarjeta del editor de formularios pasan de `font-medium text-sm` (14px, 500) a **`font-semibold text-lg`** (18px, negrita): Fields, Moderation, Extra steps, After submitting, Status y Danger zone en `form-editor.tsx`, Questions en `questions-editor.tsx`, y Request testimonials / Sent invites en `invites-client.tsx`.
 - Como la regla base ya aplica `font-heading` a todo `h1`–`h4`, quedan serif + negrita, iguales a la convención de card title que ya usaban `showcase-card` y `showcase-form`.
+- Los márgenes inferiores estaban desparejos (`mb-1` en la mayoría, `mb-4` en Moderation y Status, ninguno en Sent invites); se normalizaron a **`mb-3`** en los 8 títulos que van sobre contenido apilado. "Sent invites" queda sin margen a propósito: es el título de un header horizontal (`flex items-center justify-between`), donde un `mb` desalinea en vez de dar aire.

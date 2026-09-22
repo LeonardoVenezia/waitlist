@@ -168,7 +168,7 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
 
       {/* Fields */}
       <div className="rounded-xl border bg-card p-5">
-        <h3 className="font-semibold text-base mb-1">Fields</h3>
+        <h3 className="font-semibold text-lg mb-3">Fields</h3>
         <p className="text-xs text-muted-foreground mb-3">
           Name and Message are always required. Each enabled field adds a step to the form:
           Rating, About you and About your company.
@@ -218,7 +218,7 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
 
       {/* Moderation */}
       <div className="rounded-xl border bg-card p-5">
-        <h3 className="font-semibold text-base mb-4">Moderation</h3>
+        <h3 className="font-semibold text-lg mb-3">Moderation</h3>
         <Select
           value={form.moderation}
           onChange={(e) => {
@@ -241,7 +241,7 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
 
       {/* Extra steps */}
       <div className="rounded-xl border bg-card p-5">
-        <h3 className="font-semibold text-base mb-1">Extra steps</h3>
+        <h3 className="font-semibold text-lg mb-3">Extra steps</h3>
         <p className="text-xs text-muted-foreground mb-4">
           Optional steps in the middle of the form.
         </p>
@@ -277,7 +277,7 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
 
       {/* Thank-you & redirect */}
       <div className="rounded-xl border bg-card p-5">
-        <h3 className="font-semibold text-base mb-1">After submitting</h3>
+        <h3 className="font-semibold text-lg mb-3">After submitting</h3>
         <p className="text-xs text-muted-foreground mb-3">
           What people see when they finish. Redirect overrides the thank-you screen.
         </p>
@@ -342,7 +342,7 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
 
       {/* Status */}
       <div className="rounded-xl border bg-card p-5">
-        <h3 className="font-semibold text-base mb-4">Status</h3>
+        <h3 className="font-semibold text-lg mb-3">Status</h3>
         <div className="flex gap-2">
           {(["draft", "published", "archived"] as const).map((s) => (
             <Button
@@ -360,7 +360,7 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
 
       {/* Danger zone */}
       <div className="rounded-xl border border-red-200 bg-red-50/50 p-5">
-        <h3 className="font-semibold text-base mb-1 text-red-900">Danger zone</h3>
+        <h3 className="font-semibold text-lg mb-3 text-red-900">Danger zone</h3>
         <p className="text-xs text-red-700/70 mb-3">
           Deleting the form does not delete collected testimonials.
         </p>
