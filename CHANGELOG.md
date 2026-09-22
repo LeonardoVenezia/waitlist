@@ -176,3 +176,8 @@ RESEND_API_KEY=
 - **Nota**: el campo `photo` sigue siendo un toggle por form (Fields → Photo), apagado por defecto para forms nuevos.
 
 - **Foto activada por defecto**: el set de campos por defecto de un form nuevo pasa a `["name","email","message","rating","photo"]` (`createForm` + default de la columna en `019`). Al form de prueba existente se le activó el campo `photo`.
+
+## Títulos de sección del editor de forms
+
+- Los 9 títulos de tarjeta del editor de formularios pasan de `font-medium text-sm` (14px, 500) a **`font-semibold text-base`** (16px, negrita): Fields, Moderation, Extra steps, After submitting, Status y Danger zone en `form-editor.tsx`, Questions en `questions-editor.tsx`, y Request testimonials / Sent invites en `invites-client.tsx`.
+- Como la regla base ya aplica `font-heading` a todo `h1`–`h4`, quedan serif + negrita, iguales a la convención de card title que ya usaban `showcase-card` y `showcase-form`.

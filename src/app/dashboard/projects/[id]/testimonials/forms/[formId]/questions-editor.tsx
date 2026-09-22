@@ -60,7 +60,7 @@ export function QuestionsEditor({
 
   return (
     <div className="rounded-xl border bg-card p-5">
-      <h3 className="font-medium text-sm mb-1">Questions</h3>
+      <h3 className="font-semibold text-base mb-1">Questions</h3>
       <p className="text-xs text-muted-foreground mb-4">
         Custom questions shown below the main fields. Answers appear on each testimonial.
       </p>

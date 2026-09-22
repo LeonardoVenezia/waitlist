@@ -72,7 +72,7 @@ export function InvitesClient({
     <div className="space-y-6">
       {/* Composer */}
       <div className="rounded-xl border bg-card p-5">
-        <h3 className="font-medium text-sm mb-1">Request testimonials</h3>
+        <h3 className="font-semibold text-base mb-1">Request testimonials</h3>
         <p className="text-xs text-muted-foreground mb-3">
           Paste emails separated by commas or new lines. The email asks for a
           testimonial and links to your form.
@@ -101,7 +101,7 @@ export function InvitesClient({
       {/* List */}
       <div className="rounded-xl border bg-card">
         <div className="flex items-center justify-between px-5 py-3 border-b">
-          <h3 className="font-medium text-sm">Sent invites</h3>
+          <h3 className="font-semibold text-base">Sent invites</h3>
           <div className="flex items-center gap-3 text-[10px] uppercase tracking-wide text-muted-foreground">
             {(["queued", "sent", "opened", "submitted"] as const).map((s) => (
               <span key={s} className="flex items-center gap-1">
