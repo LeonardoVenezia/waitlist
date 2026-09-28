@@ -281,6 +281,56 @@ export function TemplateEditor({
     );
   }
 
+  if (templateId === "mono") {
+    // The placeholders model a specific, measurable promise — the whole point
+    // of this template is that a vague slogan looks obviously empty in it.
+    return (
+      <div className="space-y-4">
+        <Field label="Badge text">
+          <Input
+            value={(data.badge_text as string) ?? ""}
+            onChange={(e) => set("badge_text", e.target.value)}
+            placeholder="v1.0 · opening soon"
+          />
+        </Field>
+        <Field label="Title">
+          <Input
+            value={(data.title as string) ?? ""}
+            onChange={(e) => set("title", e.target.value)}
+            placeholder="Launch your waitlist in one afternoon"
+          />
+        </Field>
+        <Field label="Subtitle">
+          <Input
+            value={(data.subtitle as string) ?? ""}
+            onChange={(e) => set("subtitle", e.target.value)}
+            placeholder="Waitlists, referrals and social proof in one place."
+          />
+        </Field>
+        <Field label="CTA label">
+          <Input
+            value={(data.cta_label as string) ?? ""}
+            onChange={(e) => set("cta_label", e.target.value)}
+            placeholder="Request access"
+          />
+        </Field>
+        <Field label="Social count override">
+          <Input
+            value={(data.social_count_override as string) ?? ""}
+            onChange={(e) => set("social_count_override", e.target.value)}
+            placeholder="Leave empty to use real count"
+          />
+        </Field>
+        <ToggleField
+          label="Show social proof"
+          checked={(data.show_social_proof as boolean) ?? true}
+          onChange={(v) => set("show_social_proof", v)}
+        />
+        {saveButton}
+      </div>
+    );
+  }
+
   const benefits = (data.benefits as string[]) ?? [];
   const tabs = (data.tabs as Array<{ label: string; title: string; description: string }>) ?? [];
   const testimonials = (data.testimonials as Array<{ quote: string; author: string }>) ?? [];

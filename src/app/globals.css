@@ -102,6 +102,19 @@
   h1, h2, h3, h4 {
     @apply font-heading font-semibold tracking-tight;
   }
+  /*
+   * Templates are self-contained visual worlds: the app's heading typography
+   * must not leak into them. This sits in the same layer as the rule above so
+   * its higher specificity wins for un-styled headings, but it still loses to
+   * utility classes (later `utilities` layer) — Editorial, Split and Mono keep
+   * their explicit font-heading / font-sans.
+   */
+  [data-surface="template"] h1,
+  [data-surface="template"] h2,
+  [data-surface="template"] h3,
+  [data-surface="template"] h4 {
+    font-family: inherit;
+  }
 }
 
 @keyframes pastel-shift {

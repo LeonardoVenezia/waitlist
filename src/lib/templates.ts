@@ -1,6 +1,6 @@
 import type { Plan } from "@/lib/plans";
 
-export type TemplateId = "neon" | "carbon" | "pastel" | "editorial" | "split";
+export type TemplateId = "neon" | "carbon" | "pastel" | "editorial" | "split" | "mono";
 
 export interface NeonTemplateData {
   badge_text: string;
@@ -60,12 +60,22 @@ export interface SplitTemplateData {
   show_social_proof: boolean;
 }
 
+export interface MonoTemplateData {
+  badge_text: string;
+  title: string;
+  subtitle: string;
+  cta_label: string;
+  social_count_override: string;
+  show_social_proof: boolean;
+}
+
 export type TemplateData =
   | NeonTemplateData
   | CarbonTemplateData
   | PastelTemplateData
   | EditorialTemplateData
-  | SplitTemplateData;
+  | SplitTemplateData
+  | MonoTemplateData;
 
 export interface TemplateDefinition {
   id: TemplateId;
@@ -156,6 +166,15 @@ const splitDefaults: SplitTemplateData = {
   show_social_proof: true,
 };
 
+const monoDefaults: MonoTemplateData = {
+  badge_text: "v1.0 · opening soon",
+  title: "Launch your waitlist in one afternoon",
+  subtitle: "Waitlists, referrals and social proof in one place. No code required.",
+  cta_label: "Request access",
+  social_count_override: "",
+  show_social_proof: true,
+};
+
 export const TEMPLATE_DEFINITIONS: Record<TemplateId, TemplateDefinition> = {
   neon: {
     id: "neon",
@@ -206,6 +225,16 @@ export const TEMPLATE_DEFINITIONS: Record<TemplateId, TemplateDefinition> = {
       text: "text-zinc-900",
     },
     defaultData: splitDefaults,
+  },
+  mono: {
+    id: "mono",
+    name: "Mono",
+    description: "Brutalist precision: terminal badge, oversized headline, one electric accent.",
+    thumbnail: {
+      bg: "bg-[#FAFAFA] border-b border-zinc-200",
+      text: "text-zinc-900",
+    },
+    defaultData: monoDefaults,
   },
 };
 
@@ -302,6 +331,19 @@ export function normalizeTemplateData(id: TemplateId, value: unknown): TemplateD
       version_status: asString(raw.version_status) || defaults.version_status,
       social_x: asString(raw.social_x) || defaults.social_x,
       social_linkedin: asString(raw.social_linkedin) || defaults.social_linkedin,
+      show_social_proof: asBool(raw.show_social_proof, defaults.show_social_proof),
+    };
+  }
+
+  if (id === "mono") {
+    const defaults = def.defaultData as MonoTemplateData;
+    return {
+      ...defaults,
+      badge_text: asString(raw.badge_text) || defaults.badge_text,
+      title: asString(raw.title) || defaults.title,
+      subtitle: asString(raw.subtitle) || defaults.subtitle,
+      cta_label: asString(raw.cta_label) || defaults.cta_label,
+      social_count_override: asString(raw.social_count_override),
       show_social_proof: asBool(raw.show_social_proof, defaults.show_social_proof),
     };
   }

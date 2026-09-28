@@ -188,7 +188,7 @@ Configuración por proyecto guardada en `settings.email` y parseada por `src/lib
 
 ```json
 {
-  "template_id": "neon" | "carbon" | "pastel" | "editorial" | "split" | null,
+  "template_id": "neon" | "carbon" | "pastel" | "editorial" | "split" | "mono" | null,
   "template_data": { ... },
   "sections": [ ... ],
   "global": { ... }

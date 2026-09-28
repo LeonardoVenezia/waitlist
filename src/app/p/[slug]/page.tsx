@@ -63,14 +63,25 @@ export async function generateMetadata(props: {
   const settings = (waitlist.settings as Record<string, unknown>) ?? {};
   const pageSections = (settings.page_sections as Record<string, unknown>) ?? {};
   const global = (pageSections.global as PageGlobal) ?? {};
+
+  // A template replaces the custom-builder sections entirely, so the template's
+  // own headline is the only sensible fallback — the sections' hero is never
+  // rendered when a template is active.
+  const templateDefinition = getTemplateDefinition(pageSections.template_id);
+  const templateTitle = templateDefinition
+    ? normalizeTemplateData(templateDefinition.id, pageSections.template_data)
+        .title
+    : undefined;
+
   const heroSection = ((pageSections.sections as PageSection[]) ?? []).find(
     (s) => s.type === "hero" && s.visible,
   );
-  const heroTitle = (heroSection?.settings?.title as string) || waitlist.name;
+  const pageTitle =
+    templateTitle || (heroSection?.settings?.title as string) || waitlist.name;
 
   return {
-    title: global.seo_title || heroTitle,
-    description: global.seo_description || heroTitle,
+    title: global.seo_title || pageTitle,
+    description: global.seo_description || pageTitle,
     robots: global.seo_indexable === false ? "noindex, nofollow" : undefined,
   };
 }
@@ -107,7 +118,7 @@ export default async function HostedPage(props: {
 
   const sections = pageSections.sections ?? [];
   const rawGlobal = pageSections.global ?? ({} as PageGlobal);
-  // ponytail: migrate legacy default colors to the new cream/bordeaux palette.
+  // ponytail: migrate legacy default colors to the new cream/rust palette.
   const global: PageGlobal = {
     ...rawGlobal,
     bg_color: rawGlobal.bg_color && rawGlobal.bg_color !== "#f9fafb" ? rawGlobal.bg_color : "#fbf8f3",

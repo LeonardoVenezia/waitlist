@@ -979,9 +979,18 @@ export function PageBuilderClient({
               <span className="size-2.5 rounded-full bg-green-400/70 mr-3" />
               <span className="text-[11px] font-mono text-muted-foreground truncate">{pageUrl}</span>
             </div>
-            {/* Preview rendered inline */}
-            <div className="min-h-[500px] max-h-[700px] overflow-y-auto" style={{ backgroundColor: global.bg_color }}>
-              <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px" }}>
+            {/* Preview rendered inline. A template is a self-contained world:
+                it renders full-bleed with its own background, exactly like the
+                published page, so the global bg/padding must not wrap it. */}
+            <div
+              className="min-h-[500px] max-h-[700px] overflow-y-auto"
+              style={templateId ? undefined : { backgroundColor: global.bg_color }}
+            >
+              <div
+                style={
+                  templateId ? undefined : { maxWidth: 720, margin: "0 auto", padding: "40px 24px" }
+                }
+              >
                 {templateId ? (
                   <TemplateRenderer
                     templateId={templateId}

@@ -5,7 +5,7 @@ import type { PastelTemplateData } from "@/lib/templates";
 
 // The pastel template is a soft, animated gradient with a glass card
 // and floating tags. The CTA, focus rings, and tag colors are all in
-// its own purple/lilac family — explicitly NOT the host app's bordeaux.
+// its own purple/lilac family — deliberately NOT the host app's rust.
 
 const ACCENT = "#8b5cf6";
 const ACCENT_LIGHT = "#a78bfa";

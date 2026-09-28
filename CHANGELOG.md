@@ -194,3 +194,42 @@ RESEND_API_KEY=
 - **Global Settings siempre visible**: antes se ocultaba con un template activo, pero `global.page_enabled` y `global.seo_*` sí se aplican en modo template (la página pública los lee antes de resolver el template). Con nota aclaratoria: colores y toggles de display solo aplican al custom builder.
 - **Sin tocar las embebidas**: `saveTemplateData` queda intacta porque la usa la página de integración del widget; `TemplateEditor` recibe un `showSaveButton` opcional (default `true`) y el Page Builder lo pasa en `false`, así la integración conserva su propio botón.
 - **Proyectos degradados**: si el plan no permite templates o el id es desconocido, se preservan los campos de template guardados y se guardan igual `sections`/`global`.
+
+## Template "Mono" para el Page Builder
+
+Nueva template de landing, registrada siguiendo el patrón existente (Neon, Carbon, Pastel, Editorial, Split). Estética de precisión brutalista, pensada para forzar una promesa concreta.
+
+- **Registro** (mismo patrón que las demás): `TemplateId`, `MonoTemplateData`, `monoDefaults`, entrada en `TEMPLATE_DEFINITIONS`, rama propia en `normalizeTemplateData` (sin ella caía al normalizador de Split), rama en `TemplateRenderer` y en `TemplateEditor`, más `TEMPLATE_ACCENT_COLOR` de la página de integración y la unión local duplicada en `/preview/[slug]`.
+- **Diseño**: fondo `#FAFAFA`, texto casi negro, un único acento `#2540FF` (constante del módulo, no campo del builder), esquinas rectas, sin gradientes, sombras ni imágenes. Badge y labels en monospace; título en la sans geométrica con `font-extrabold` y tracking negativo (`-0.045em`) a tamaño `clamp(2.5rem, 7.5vw, 4.5rem)`.
+- **Campos del builder**: badge text, title, subtitle, CTA label, social count override y toggle de social proof. Sin floating tags.
+- **Copy del contador**: `realCount > 1` → "N people in line"; `= 1` → "1 person in line"; `= 0` → "Be the first in line" (nunca muestra "0 people in line", que es prueba social negativa). Un override se muestra literal. Formateo con locale explícito para evitar hydration mismatch.
+- **Arreglo necesario**: `--font-mono` apuntaba a `var(--font-geist-mono)` pero esa variable **no se definía en ningún lado**, así que `font-mono` no renderizaba monoespaciado en toda la app (afectaba también a Neon, Carbon, Editorial y Split). Se carga Geist Mono en `layout.tsx`.
+- Nota: el título usa `font-sans` explícito porque la regla base `h1,h2,h3,h4 { font-heading }` aplica la serif Italiana a todo heading.
+
+## Los templates dejan de heredar la tipografía global
+
+Los templates son mundos visuales autocontenidos, pero la regla base `h1,h2,h3,h4 { font-heading }` se filtraba adentro: `neon`, `carbon` y `pastel` nunca declaran familia, así que sus titulares se renderizaban en **Italiana serif** (un hero oscuro tech y un teaser estilo developer con serif elegante). `editorial` y `split` sí la declaran a propósito, y `mono` declara `font-sans`.
+
+- **Mecanismo**: cada template se renderiza dentro de un wrapper `data-surface="template"` y una regla en `@layer base` resetea `h1`–`h4` a `font-family: inherit` ahí. Alta especificidad, misma capa → gana sobre la regla genérica. Pero **las utilidades están en una capa posterior**, así que `.font-heading` / `.font-sans` siguen ganando: Editorial, Split y Mono conservan su elección, y los templates nuevos quedan protegidos solos.
+- **SEO en modo template**: `generateMetadata` armaba el `<title>` con `global.seo_title || <título del hero de las secciones> || nombre del proyecto`. Con un template activo las secciones **no se renderizan**, así que `/p/showcase` publicaba `<title>Startpack</title>` (una sección invisible) mientras la página mostraba el titular "Startups Army" del template. Ahora el fallback lee `template_data.title` antes de caer al hero de secciones.
+- **Preview fiel**: el preview inline del Page Builder envolvía al template en un contenedor pintado con `global.bg_color` y recortado a 720px, mientras en producción es full-bleed con su propio fondo. Ahora, con template activo, el preview renderiza igual que la página publicada.
+
+Lo que **no** se toca, a propósito: `global.page_enabled` (es el interruptor de despublicar → 404) y `global.seo_title` / `seo_description` / `seo_indexable` (no son parte del mundo visual; un template no puede generar metadata y el override explícito del dueño siempre gana).
+
+## La regla de templates estaba al revés (+ la paleta del doc no era la de la app)
+
+El anti-pattern de `DESIGN.md` decía que los templates debían usar los tokens de la app (`text-foreground`, `bg-primary`, `border-border`…). Estaba mal, y el propio código ya declaraba la política opuesta: los comentarios de Neon ("deliberately does NOT use the host app's tokens") y de Pastel ("explicitly NOT"). Si un template heredara `--primary` o `--background`, el usuario no tendría motivo para elegirlo.
+
+- **Regla nueva** (`DESIGN.md` → *Color palette → Templates*): el template es dueño de su mundo y a cambio se compromete a (1) **explicitud** — declarar sus colores y su tipografía, sin heredar nada de la app; (2) **coherencia** — una rampa neutra + un acento (un segundo hue solo como par diseñado); (3) **contraste AA** — 4.5:1 texto normal, 3:1 grande, placeholders no exentos; (4) **inmunidad** — no depender del estado ambiente.
+- El anti-pattern pasa a prohibir los **tokens dentro de un template** y aclara que las rampas `zinc`/`neutral` no están prohibidas: son su base neutra.
+- **Contrastes corregidos** — la regla vieja no detectaba ninguno: `mono` labels 11px y contador `black/45 → black/60` (3.31 → 5.67:1); `carbon` línea de prueba social `zinc-500 → zinc-400` (4.04 → 7.63:1); `split` caption del testimonio `neutral-400 → neutral-500` (2.42 → 4.54:1). Los placeholders quedan como deuda conocida.
+
+### Paleta
+
+`DESIGN.md` documentaba `--primary: oklch(0.35 0.06 25)` (borbó oscuro, `#562d2a`) mientras `globals.css` tiene `oklch(0.48 0.19 70)` (**óxido**, `#9d3e00`). Conviven tres terracotas distintas: el token, el del doc y el `#7a3325` hardcodeado. Se confirmó que **`globals.css` manda**.
+
+- Tablas Light y Dark de `DESIGN.md` reescritas con los valores reales de `:root`, con el hex equivalente junto al oklch y la nota de que el valor se toma del token.
+- `--sidebar-bg`: el doc lo afirmaba y se contradecía en la misma línea ("no sidebar-specific tokens"); el sidebar en realidad es `<aside className="… border-r bg-card">` y la variable no existe en ningún lado.
+- El bloque `.dark` queda documentado como **no cableado** (nada aplica la clase) en vez de aparentar que está activo.
+- Corregidas las menciones a "bordeaux" en `DESIGN.md`, `PRODUCT.md`, `page-builder/page.tsx`, `p/[slug]/page.tsx` y los comentarios de `pastel`, `editorial` y `split`.
+- **No tocado, reportado**: el email de invitación (`src/emails/testimonial-invite.ts`) sigue con `#7a3325` hardcodeado — según la preferencia registrada, eso es un bug de drift; y `#22c563` en Neon es casi seguro un typo de `#22c55e`.

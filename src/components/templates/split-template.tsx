@@ -6,7 +6,7 @@ import type { SplitTemplateData } from "@/lib/templates";
 
 // The split template is a sticky two-column with interactive tabs on the
 // right. Its identity is a clean cream background and a deep ink CTA —
-// intentionally not the host app's bordeaux, which would feel out of
+// intentionally not the host app's rust, which would feel out of
 // place in a layout this light and editorial.
 const ACCENT = "#111111";
 
@@ -221,7 +221,7 @@ export function SplitTemplate({
           {data.testimonials.map((t, i) => (
             <div key={i} className="rounded-lg border border-neutral-200 bg-white p-4">
               <p className="text-sm text-neutral-700">&ldquo;{t.quote}&rdquo;</p>
-              <p className="mt-2 text-xs text-neutral-400">{t.author}</p>
+              <p className="mt-2 text-xs text-neutral-500">{t.author}</p>
             </div>
           ))}
         </div>

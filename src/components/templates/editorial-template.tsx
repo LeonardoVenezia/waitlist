@@ -5,7 +5,7 @@ import type { EditorialTemplateData } from "@/lib/templates";
 
 // The editorial template is a clean, type-led layout. Its accent is
 // user-configurable (data.accent_color) but defaults to a deep ink color
-// that pairs with the type, not the host app's bordeaux.
+// that pairs with the type, not the host app's rust.
 const ACCENT_DEFAULT = "#1a1a1a";
 
 export function EditorialTemplate({

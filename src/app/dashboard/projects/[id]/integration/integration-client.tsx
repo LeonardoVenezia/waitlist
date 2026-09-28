@@ -22,6 +22,7 @@ const TEMPLATE_ACCENT_COLOR: Record<TemplateId, string> = {
   pastel: "#8b5cf6",
   editorial: "#1a1a1a",
   split: "#111111",
+  mono: "#2540FF",
 };
 
 // ── Types ──────────────────────────────────────────────

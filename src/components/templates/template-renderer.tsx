@@ -5,6 +5,7 @@ import { CarbonTemplate } from "./carbon-template";
 import { PastelTemplate } from "./pastel-template";
 import { EditorialTemplate } from "./editorial-template";
 import { SplitTemplate } from "./split-template";
+import { MonoTemplate } from "./mono-template";
 import {
   normalizeTemplateData,
   type TemplateId,
@@ -13,6 +14,7 @@ import {
   type PastelTemplateData,
   type EditorialTemplateData,
   type SplitTemplateData,
+  type MonoTemplateData,
 } from "@/lib/templates";
 
 export function TemplateRenderer({
@@ -40,7 +42,7 @@ export function TemplateRenderer({
   if (templateId === "neon") {
     const data = normalizeTemplateData("neon", templateData) as NeonTemplateData;
     return (
-      <div className={`${shell} bg-[#090A0F] flex items-center justify-center px-4 py-16`}>
+      <div data-surface="template" className={`${shell} bg-[#090A0F] flex items-center justify-center px-4 py-16`}>
         <NeonTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} />
       </div>
     );
@@ -50,6 +52,7 @@ export function TemplateRenderer({
     const data = normalizeTemplateData("carbon", templateData) as CarbonTemplateData;
     return (
       <div
+        data-surface="template"
         className={`${shell} bg-[#0B0C10] px-4 py-16`}
         style={{
           backgroundImage:
@@ -64,7 +67,7 @@ export function TemplateRenderer({
   if (templateId === "pastel") {
     const data = normalizeTemplateData("pastel", templateData) as PastelTemplateData;
     return (
-      <div className={shell}>
+      <div data-surface="template" className={shell}>
         <PastelTemplate
           publicKey={publicKey}
           data={data}
@@ -79,15 +82,27 @@ export function TemplateRenderer({
   if (templateId === "editorial") {
     const data = normalizeTemplateData("editorial", templateData) as EditorialTemplateData;
     return (
-      <div className={`${shell} bg-white px-4 py-16 flex items-center`}>
+      <div data-surface="template" className={`${shell} bg-white px-4 py-16 flex items-center`}>
         <EditorialTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} />
+      </div>
+    );
+  }
+
+  if (templateId === "mono") {
+    const data = normalizeTemplateData("mono", templateData) as MonoTemplateData;
+    return (
+      <div
+        data-surface="template"
+        className={`${shell} bg-[#FAFAFA] px-4 py-16 flex items-center justify-center`}
+      >
+        <MonoTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} />
       </div>
     );
   }
 
   const data = normalizeTemplateData("split", templateData) as SplitTemplateData;
   return (
-    <div className={`${shell} bg-[#fafafa] px-4 py-16`}>
+    <div data-surface="template" className={`${shell} bg-[#fafafa] px-4 py-16`}>
       <SplitTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} />
     </div>
   );

@@ -208,7 +208,7 @@ export function CarbonTemplate({
         </form>
 
         {data.show_social_proof && (
-          <p className="mt-6 text-xs font-mono text-zinc-500">
+          <p className="mt-6 text-xs font-mono text-zinc-400">
             {socialCount} people already requested access
           </p>
         )}

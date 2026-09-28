@@ -20,6 +20,7 @@ Warm editorial. Think a refined indie publisher or a boutique creative studio's 
 | Monospace (codes, positions) | Geist Mono | 400 | 0.75rem |
 
 - **Headings**: Italiana (loaded as `--font-heading`) at `font-semibold` for every `h1`–`h4`. Declared **once** in `globals.css`'s base layer so all headings inherit it — don't re-declare a weight per component, and don't override it unless a surface deliberately opts out. (Italiana ships only weight 400, so the bold is browser-synthesized.)
+- **Template surfaces opt out of the heading family.** Every template renders inside a `data-surface="template"` wrapper, where a base-layer rule resets `h1`–`h4` to `font-family: inherit` so the app's serif never leaks into a template's own world. Utility classes still win (later layer), so a template declares its own family: Editorial and Split use `font-heading`, Mono uses `font-sans`, and Neon / Carbon / Pastel inherit Geist. New templates are protected automatically.
 - **Body**: Geist at 400. Keep it crisp and legible for dense UI.
 - **Scale**: Use a 1.25 minor third for prose, but let the UI use fixed sizes (xs/sm/base/lg/xl) for consistency.
 
@@ -29,32 +30,50 @@ Warm editorial. Think a refined indie publisher or a boutique creative studio's 
 
 | Token | Value | Notes |
 |---|---|---|
-| `--background` | `oklch(0.985 0.005 75)` | Warm off-white (creamy) |
-| `--foreground` | `oklch(0.15 0.008 75)` | Warm near-black |
-| `--card` | `oklch(0.99 0.003 75)` | Slightly warmer than bg |
-| `--primary` | `oklch(0.35 0.06 25)` | Deep bordeaux-wine |
-| `--primary-foreground` | `oklch(0.97 0 0)` | Near-white |
-| `--secondary` | `oklch(0.93 0.01 75)` | Warm beige |
-| `--accent` | `oklch(0.88 0.015 70)` | Warm tan |
-| `--muted` | `oklch(0.95 0.005 75)` | Warm subtle gray |
-| `--muted-foreground` | `oklch(0.5 0.01 75)` | Warm mid-gray |
-| `--border` | `oklch(0.88 0.008 75)` | Warm light border |
-| `--ring` | `oklch(0.35 0.06 25)` | Matches primary |
-| `--destructive` | `oklch(0.55 0.18 25)` | Refined red |
+| `--background` | `oklch(0.985 0.004 85)` | Warm off-white (creamy) — `#fbfaf7` |
+| `--foreground` | `oklch(0.18 0.01 80)` | Warm near-black — `#14110d` |
+| `--card` | `oklch(0.99 0.002 85)` | Slightly lighter than bg — `#fcfcfa` |
+| `--primary` | `oklch(0.48 0.19 70)` | **Rust-orange** (`#9d3e00`) — the one brand accent |
+| `--primary-foreground` | `oklch(0.98 0.005 85)` | Near-white |
+| `--secondary` | `oklch(0.92 0.015 80)` | Warm beige — `#eae4da` |
+| `--accent` | `oklch(0.88 0.04 70)` | Warm tan — `#e9d4bc` |
+| `--muted` | `oklch(0.95 0.008 85)` | Warm subtle gray — `#f1eee9` |
+| `--muted-foreground` | `oklch(0.45 0.015 80)` | Warm mid-gray — `#5a554c` |
+| `--border`, `--input` | `oklch(0.87 0.012 80)` | Warm light border — `#d8d3cc` |
+| `--ring` | `oklch(0.48 0.19 70)` | Matches primary |
+| `--destructive` | `oklch(0.52 0.2 25)` | Refined red — `#c21725` |
+| `--coming-soon` | `oklch(0.55 0.16 45)` | Amber badge — `#b94a00` |
+| `--success` | `oklch(0.55 0.14 150)` | Green — `#1c8742` |
+
+- **`globals.css` is the source of truth.** These rows are transcribed from `:root`; when the palette changes, update this table in the same commit. The brand accent was historically written up as "bordeaux" (`#7a3325`) but the shipped token is the rust-orange above — three different terracottas (`#9d3e00`, `#562d2a`, `#7a3325`) have coexisted, so always take the value from the token.
 
 ### Dark
 
+**Not wired up.** `.dark` is fully defined in `globals.css`, but nothing ever applies the class (no toggle, no `prefers-color-scheme`), so these values are unreachable today. Documented for whoever turns it on — and it is why templates must hardcode their own surface (see **Templates**).
+
 | Token | Value |
 |---|---|
-| `--background` | `oklch(0.15 0.008 75)` |
-| `--foreground` | `oklch(0.97 0.003 75)` |
-| `--card` | `oklch(0.18 0.008 75)` |
-| `--primary` | `oklch(0.7 0.04 25)` |
-| `--primary-foreground` | `oklch(0.15 0 0)` |
-| `--border` | `oklch(0.25 0.008 75 / 0.4)` |
-| `--muted` | `oklch(0.22 0.005 75)` |
+| `--background` | `oklch(0.14 0.01 80)` |
+| `--foreground` | `oklch(0.94 0.003 85)` |
+| `--card` | `oklch(0.17 0.008 80)` |
+| `--primary` | `oklch(0.65 0.16 70)` |
+| `--primary-foreground` | `oklch(0.14 0.01 80)` |
+| `--muted` | `oklch(0.22 0.008 80)` |
+| `--muted-foreground` | `oklch(0.6 0.01 80)` |
+| `--border` | `oklch(0.25 0.01 80 / 0.4)` |
 
-- **No sidebar-specific tokens.** The sidebar uses the same palette with a `--sidebar-bg: oklch(0.92 0.008 75)` in light mode for subtle differentiation.
+- **No sidebar-specific tokens.** The sidebar is just `<aside className="… border-r bg-card">` — it uses the shared palette like any other surface.
+
+### Templates
+
+A template is a **replacement visual world**, not a themed surface: the user picks one precisely to leave the app's identity behind. So templates are the single place that deliberately does **not** use the app tokens — inheriting `--primary` or `--background` would erase the reason the template exists. (The template files already state this themselves: Neon's comment says it "deliberately does NOT use the host app's tokens", and Pastel's describes its palette as "explicitly NOT" the app's.) What a template owes in exchange:
+
+- **Explicitness.** Declare your own colors *and* typography inside the template. Never inherit them from the app — that is the bug that silently put Italiana in Neon, Carbon and Pastel's headlines (see **Typography**).
+- **Coherence.** One neutral ramp — `zinc` for cool, `neutral` for warm — plus **one** accent hue. A second hue is allowed only as a deliberate pair (Carbon's emerald + cyan), never as an ad-hoc grab bag.
+- **Contrast (WCAG AA).** Every text/background pair clears **4.5:1** for body and label text, and **3:1** for large text (≥24px, or ≥18.66px bold). Inactive/disabled controls are exempt; placeholders are not, because low-contrast hint text is exactly what low-vision users can't read.
+- **Immunity.** A template must render correctly regardless of ambient state. Nothing applies `.dark` today, but a template built on `text-foreground` would invert the day a theme toggle ships — hardcoding its own surface is what keeps it safe.
+
+Everything outside a template — dashboard, public shells, forms, empty states — uses the tokens, as always.
 
 ## Spacing & Rhythm
 
@@ -95,7 +114,7 @@ A project page has its own sub-navigation (tabs or side links) for the tools/sec
 ## Component specific
 
 - **Cards**: No ring/shadow. Just a subtle `background` difference from the page. If a card needs elevation, use a very subtle shadow `0 1px 3px rgba(0,0,0,0.04)`.
-- **Buttons**: Keep the `active:translate-y-px` micro-interaction. Primary uses the bordeaux. Secondary uses the warm beige background.
+- **Buttons**: Keep the `active:translate-y-px` micro-interaction. Primary uses the rust accent (`--primary`). Secondary uses the warm beige background.
 - **Inputs**: Use the `Input` component (with optional `leftIcon`/`rightIcon` slot). For selects use `Select`, for checkboxes use `Checkbox`, for radios use `RadioGroup`, for textareas use `Textarea`. All share the same warm border colors and focus state.
 - **Tables**: Remove `hover:bg-muted/50` — use a more subtle `hover:bg-muted/30` instead. Keep `border-b` rows.
 - **Icons**: Always use the SVG `Icon` components from `@/components/ui/icon`. Stroke 1.5, currentColor. Never use native emoji as UI chrome.
@@ -110,4 +129,4 @@ A project page has its own sub-navigation (tabs or side links) for the tools/sec
 - **No emoji as UI chrome** (sidebar, page builder, tabs, status pills, placeholders, form labels). Emojis may appear in copy/onboarding copy where they add warmth, but never as icons or status indicators.
 - No `bg-green-50 text-green-800` alert style — use a softer, more refined semantic palette
 - No raw `<select>`, `<input type="checkbox">`, `<input type="radio">`, or `<input type="date">` in the dashboard or public pages — use the `Select`, `Checkbox`, `RadioGroup`, `Input` components.
-- No `text-neutral-900` / `text-zinc-*` / `bg-zinc-*` / `bg-violet-*` / `bg-emerald-*` etc. in templates — they should all use the design tokens (`text-foreground`, `text-muted-foreground`, `bg-primary`, `border-border`, `bg-card`, `bg-muted`).
+- No **app tokens** (`text-foreground`, `bg-primary`, `border-border`, `bg-card`, `bg-muted`…) inside a template, and no app-level typography inherited by one — a template owns its world (see **Color palette → Templates**). Corollary: Tailwind's `zinc`/`neutral` ramps are **not** banned in templates; they are exactly the neutral base a template builds on.

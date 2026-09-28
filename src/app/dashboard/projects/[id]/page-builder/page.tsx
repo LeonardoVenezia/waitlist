@@ -61,7 +61,7 @@ export interface GlobalSettings {
   page_enabled: boolean;
 }
 
-// ponytail: migrate defaults from old cream/blue to new cream/bordeaux
+// ponytail: migrate defaults from old cream/blue to the new cream/rust palette
 // on first render. Covers users who already saved with the old defaults
 // (bg #f9fafb / button #0ea5e9) — those values are treated as "unset".
 const LEGACY_BG = "#f9fafb";
