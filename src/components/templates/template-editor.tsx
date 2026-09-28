@@ -81,14 +81,25 @@ export function TemplateEditor({
   onChange,
   onSave,
   saving,
+  showSaveButton = true,
 }: {
   templateId: TemplateId;
   data: Record<string, unknown>;
   onChange: (patch: Record<string, unknown>) => void;
-  onSave: () => void;
+  onSave?: () => void;
   saving: boolean;
+  showSaveButton?: boolean;
 }) {
   const set = (key: string, value: unknown) => onChange({ [key]: value });
+
+  // The Page Builder owns the single save button, so it renders this editor
+  // with showSaveButton={false} and no onSave.
+  const saveButton =
+    showSaveButton && onSave ? (
+      <Button size="sm" onClick={onSave} disabled={saving}>
+        {saving ? "Saving…" : "Save template"}
+      </Button>
+    ) : null;
 
   if (templateId === "neon") {
     return (
@@ -126,9 +137,7 @@ export function TemplateEditor({
           checked={(data.show_social_proof as boolean) ?? true}
           onChange={(v) => set("show_social_proof", v)}
         />
-        <Button size="sm" onClick={onSave} disabled={saving}>
-          {saving ? "Saving…" : "Save template"}
-        </Button>
+        {saveButton}
       </div>
     );
   }
@@ -174,9 +183,7 @@ export function TemplateEditor({
           checked={(data.show_social_proof as boolean) ?? true}
           onChange={(v) => set("show_social_proof", v)}
         />
-        <Button size="sm" onClick={onSave} disabled={saving}>
-          {saving ? "Saving…" : "Save template"}
-        </Button>
+        {saveButton}
       </div>
     );
   }
@@ -214,9 +221,7 @@ export function TemplateEditor({
           checked={(data.show_social_proof as boolean) ?? true}
           onChange={(v) => set("show_social_proof", v)}
         />
-        <Button size="sm" onClick={onSave} disabled={saving}>
-          {saving ? "Saving…" : "Save template"}
-        </Button>
+        {saveButton}
       </div>
     );
   }
@@ -271,9 +276,7 @@ export function TemplateEditor({
           checked={(data.show_social_proof as boolean) ?? true}
           onChange={(v) => set("show_social_proof", v)}
         />
-        <Button size="sm" onClick={onSave} disabled={saving}>
-          {saving ? "Saving…" : "Save template"}
-        </Button>
+        {saveButton}
       </div>
     );
   }
@@ -339,9 +342,7 @@ export function TemplateEditor({
         checked={(data.show_social_proof as boolean) ?? true}
         onChange={(v) => set("show_social_proof", v)}
       />
-      <Button size="sm" onClick={onSave} disabled={saving}>
-        {saving ? "Saving…" : "Save template"}
-      </Button>
+      {saveButton}
     </div>
   );
 }

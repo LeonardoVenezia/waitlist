@@ -182,3 +182,15 @@ RESEND_API_KEY=
 - Los 9 títulos de tarjeta del editor de formularios pasan de `font-medium text-sm` (14px, 500) a **`font-semibold text-lg`** (18px, negrita): Fields, Moderation, Extra steps, After submitting, Status y Danger zone en `form-editor.tsx`, Questions en `questions-editor.tsx`, y Request testimonials / Sent invites en `invites-client.tsx`.
 - Como la regla base ya aplica `font-heading` a todo `h1`–`h4`, quedan serif + negrita, iguales a la convención de card title que ya usaban `showcase-card` y `showcase-form`.
 - Los márgenes inferiores estaban desparejos (`mb-1` en la mayoría, `mb-4` en Moderation y Status, ninguno en Sent invites); se normalizaron a **`mb-3`** en los 8 títulos que van sobre contenido apilado. "Sent invites" queda sin margen a propósito: es el título de un header horizontal (`flex items-center justify-between`), donde un `mb` desalinea en vez de dar aire.
+
+## Page Builder: un solo botón para guardar
+
+**El bug**: el estilo de la waitlist no se guardaba. El render público se decide con un único campo, `settings.page_sections.template_id`, y de los tres botones del Page Builder ninguno de los que uno usa naturalmente lo escribía: "Save changes" solo escribía `sections` + `global`, "Save template" exigía que `template_id` ya existiera en la DB (si no, fallaba en silencio), y únicamente "Apply template" lo escribía.
+
+- **Un solo botón**: `savePageDesign` reemplaza a `savePageSections` y `selectTemplate`, y escribe `template_id` + `template_data` + `sections` + `global` en una sola actualización. Se eliminan los botones "Apply template" y "Save template".
+- **Feedback honesto**: las acciones ya devolvían `{ error }` pero el cliente las descartaba y mostraba "✓ Saved" igual. Ahora el retorno se revisa y el error real se muestra en rojo.
+- **Estado sin guardar**: indicador "Unsaved changes" (contra el último snapshot guardado) y guard `beforeunload`, porque ahora el botón único es la única vía de persistencia.
+- **"Restore default content"**: reemplaza la mitad útil de "Apply template" (volver el contenido del template a sus defaults), como acción local que se persiste con el botón único.
+- **Global Settings siempre visible**: antes se ocultaba con un template activo, pero `global.page_enabled` y `global.seo_*` sí se aplican en modo template (la página pública los lee antes de resolver el template). Con nota aclaratoria: colores y toggles de display solo aplican al custom builder.
+- **Sin tocar las embebidas**: `saveTemplateData` queda intacta porque la usa la página de integración del widget; `TemplateEditor` recibe un `showSaveButton` opcional (default `true`) y el Page Builder lo pasa en `false`, así la integración conserva su propio botón.
+- **Proyectos degradados**: si el plan no permite templates o el id es desconocido, se preservan los campos de template guardados y se guardan igual `sections`/`global`.

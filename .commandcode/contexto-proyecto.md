@@ -188,7 +188,7 @@ Configuración por proyecto guardada en `settings.email` y parseada por `src/lib
 
 ```json
 {
-  "template_id": "neon" | "carbon" | "pastel" | null,
+  "template_id": "neon" | "carbon" | "pastel" | "editorial" | "split" | null,
   "template_data": { ... },
   "sections": [ ... ],
   "global": { ... }
@@ -199,6 +199,9 @@ Configuración por proyecto guardada en `settings.email` y parseada por `src/lib
 - Templates disponibles solo para planes pagos (`hasTemplateAccess`).
 - La elección es reversible: elegir "Custom builder" restaura el editor de secciones.
 - `src/lib/templates.ts` define tipos, defaults y normalización.
+- El guardado es **un solo botón** (`savePageDesign`): escribe `template_id`, `template_data`, `sections` y `global` en una única actualización. No hay que "aplicar" el template por separado.
+- `saveTemplateData` sigue existiendo y es independiente: la usa la página de integración del widget embebido, que solo escribe `template_data` (nunca `template_id`).
+- `global.page_enabled` y `global.seo_*` se aplican aunque haya un template activo; el resto de `global` (colores, toggles de display) solo lo consume el render por secciones.
 - `src/components/templates/template-renderer.tsx` es la **única fuente** de layout/switch de templates, usada tanto por la página pública como por el preview del Page Builder.
 
 ---

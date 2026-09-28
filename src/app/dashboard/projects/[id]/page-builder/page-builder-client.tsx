@@ -17,7 +17,7 @@ import {
   IconSparkles,
 } from "@/components/ui/icon";
 import type { Section, GlobalSettings } from "./page";
-import { savePageSections, selectTemplate, saveTemplateData } from "./actions";
+import { savePageDesign } from "./actions";
 import {
   TEMPLATE_DEFINITIONS,
   hasTemplateAccess,
@@ -550,8 +550,10 @@ export function PageBuilderClient({
     }
   }, [templateId, templateData, sections, global, slug, waitlistId, publicKey, realCount]);
 
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">(
+    "idle",
+  );
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [addSectionOpen, setAddSectionOpen] = useState(false);
   const [globalOpen, setGlobalOpen] = useState(false);
@@ -563,14 +565,53 @@ export function PageBuilderClient({
   const pageUrl = `${appUrl}/p/${slug}`;
   const canUseTemplates = hasTemplateAccess(plan);
 
+  const designSnapshot = JSON.stringify({
+    sections,
+    global,
+    templateId,
+    templateData,
+  });
+  const [savedSnapshot, setSavedSnapshot] = useState(designSnapshot);
+  const dirty = designSnapshot !== savedSnapshot;
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+
   const save = useCallback(async () => {
-    setSaving(true);
-    await savePageSections(waitlistId, slug, sections, global);
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaveState("saving");
+    setSaveError(null);
+
+    const result = await savePageDesign(waitlistId, slug, {
+      sections,
+      global,
+      templateId,
+      templateData,
+    });
+
+    if (result?.error) {
+      setSaveError(result.error);
+      setSaveState("error");
+      return;
+    }
+
+    setSavedSnapshot(
+      JSON.stringify({
+        sections,
+        global,
+        templateId,
+        templateData,
+      }),
+    );
+    setSaveState("saved");
+    if (savedTimer.current) clearTimeout(savedTimer.current);
+    savedTimer.current = setTimeout(() => setSaveState("idle"), 2000);
     router.refresh();
-  }, [waitlistId, slug, sections, global, router]);
+  }, [waitlistId, slug, sections, global, templateId, templateData, router]);
 
   const handlePickTemplate = useCallback(
     (next: TemplateId | null) => {
@@ -585,26 +626,6 @@ export function PageBuilderClient({
     },
     [canUseTemplates, templateId],
   );
-
-  const handleApplyTemplate = useCallback(async () => {
-    if (!templateId) return;
-    setSaving(true);
-    await selectTemplate(waitlistId, slug, templateId);
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-    router.refresh();
-  }, [templateId, waitlistId, slug, router]);
-
-  const handleSaveTemplate = useCallback(async () => {
-    if (!templateId) return;
-    setSaving(true);
-    await saveTemplateData(waitlistId, slug, templateData);
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-    router.refresh();
-  }, [templateId, waitlistId, slug, templateData, router]);
 
   const updateTemplateData = useCallback((patch: Record<string, unknown>) => {
     setTemplateData((prev) => ({ ...prev, ...patch }));
@@ -685,8 +706,18 @@ export function PageBuilderClient({
 
       {/* Save + status */}
       <div className="flex items-center gap-2">
-        {saved && <span className="text-sm text-green-600 font-medium">✓ Saved</span>}
-        <Button size="sm" onClick={save} disabled={saving}>{saving ? "Saving…" : "Save changes"}</Button>
+        {saveState === "saved" && (
+          <span className="text-sm text-green-600 font-medium">✓ Saved</span>
+        )}
+        {saveState === "error" && saveError && (
+          <span className="text-sm text-destructive font-medium">{saveError}</span>
+        )}
+        {saveState === "idle" && dirty && (
+          <span className="text-sm text-muted-foreground">Unsaved changes</span>
+        )}
+        <Button size="sm" onClick={save} disabled={saveState === "saving"}>
+          {saveState === "saving" ? "Saving…" : "Save changes"}
+        </Button>
       </div>
 
       {/* Main grid: left sections + right preview */}
@@ -761,16 +792,28 @@ export function PageBuilderClient({
                 })}
                 {templateId && (
                   <div className="border-t pt-3 space-y-3">
-                    <Button size="sm" onClick={handleApplyTemplate} disabled={saving}>
-                      {saving ? "Applying…" : "Apply template"}
-                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      Edit the template content, then use Save changes.
+                    </p>
                     <TemplateEditor
                       templateId={templateId}
                       data={templateData}
                       onChange={updateTemplateData}
-                      onSave={handleSaveTemplate}
-                      saving={saving}
+                      showSaveButton={false}
+                      saving={saveState === "saving"}
                     />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setTemplateData(
+                          TEMPLATE_DEFINITIONS[templateId]
+                            .defaultData as unknown as Record<string, unknown>,
+                        )
+                      }
+                      className="text-xs text-muted-foreground underline hover:text-foreground transition-colors"
+                    >
+                      Restore default content
+                    </button>
                   </div>
                 )}
               </div>
@@ -820,6 +863,9 @@ export function PageBuilderClient({
             ))}
           </div>
 
+            </>
+          )}
+
           {/* Global Settings */}
           <div className="border rounded-xl overflow-hidden">
             <button onClick={() => setGlobalOpen(!globalOpen)} className="flex items-center justify-between w-full px-4 py-3 bg-card hover:bg-muted/50 transition-colors text-left">
@@ -831,6 +877,12 @@ export function PageBuilderClient({
             </button>
             {globalOpen && (
               <div className="border-t bg-muted/30 p-4 space-y-5">
+                {templateId && (
+                  <p className="text-xs text-muted-foreground">
+                    A template is active. Colors and display toggles only apply to the
+                    custom builder; SEO and page settings always apply.
+                  </p>
+                )}
                 {/* Colors */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Colors</p>
@@ -907,8 +959,6 @@ export function PageBuilderClient({
               </div>
             )}
           </div>
-          </>
-          )}
         </div>
 
         {/* Right: Preview */}

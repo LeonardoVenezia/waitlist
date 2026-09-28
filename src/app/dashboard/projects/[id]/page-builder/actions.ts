@@ -13,49 +13,17 @@ import type { Plan } from "@/lib/plans";
 
 type Json = Database["public"]["Tables"]["projects"]["Row"]["settings"];
 
-export async function savePageSections(
+export type PageDesignPayload = {
+  sections: unknown;
+  global: unknown;
+  templateId: string | null;
+  templateData: unknown;
+};
+
+export async function savePageDesign(
   waitlistId: string,
   slug: string,
-  sections: unknown,
-  global: unknown,
-) {
-  const supabase = createAdminClient();
-
-  const { data: waitlist } = await supabase
-    .from("projects")
-    .select("settings")
-    .eq("id", waitlistId)
-    .single();
-
-  if (!waitlist) return { error: "Not found" };
-
-  const current = (waitlist.settings as Record<string, unknown>) ?? {};
-  const pageSections = (current.page_sections as Record<string, unknown>) ?? {};
-  const updated = {
-    ...current,
-    page_sections: {
-      ...pageSections,
-      sections,
-      global,
-    },
-  } as Json;
-
-  const { error } = await supabase
-    .from("projects")
-    .update({ settings: updated })
-    .eq("id", waitlistId);
-
-  if (error) return { error: error.message };
-
-  revalidatePath(`/dashboard/projects/${waitlistId}/page-builder`);
-  revalidatePath(`/p/${slug}`, "page");
-  return { success: true };
-}
-
-export async function selectTemplate(
-  waitlistId: string,
-  slug: string,
-  templateId: string | null,
+  payload: PageDesignPayload,
 ) {
   const supabase = createAdminClient();
 
@@ -68,31 +36,38 @@ export async function selectTemplate(
   if (!waitlist) return { error: "Not found" };
 
   const plan = waitlist.plan as Plan;
-  if (!hasTemplateAccess(plan)) {
-    return { error: "Templates require a paid plan" };
-  }
-
   const current = (waitlist.settings as Record<string, unknown>) ?? {};
   const pageSections = (current.page_sections as Record<string, unknown>) ?? {};
 
-  let nextTemplateId: string | null = null;
-  let templateData: unknown;
+  const definition =
+    payload.templateId === null
+      ? null
+      : getTemplateDefinition(payload.templateId);
 
-  if (templateId !== null) {
-    const definition = getTemplateDefinition(templateId);
-    if (!definition) return { error: "Unknown template" };
-    nextTemplateId = definition.id;
-    templateData = definition.defaultData;
-  } else {
-    templateData = pageSections.template_data;
+  // Template fields are rewritten only when the client picked a template it is
+  // allowed to use. Anything else (no template, unknown id, plan without
+  // access) keeps whatever is already stored, so a downgraded project never
+  // loses its template nor gets its save rejected.
+  let templateFields: Record<string, unknown> = {};
+  if (definition && hasTemplateAccess(plan)) {
+    templateFields = {
+      template_id: definition.id,
+      template_data: normalizeTemplateData(
+        definition.id,
+        payload.templateData,
+      ),
+    };
+  } else if (payload.templateId === null) {
+    templateFields = { template_id: null };
   }
 
   const updated = {
     ...current,
     page_sections: {
       ...pageSections,
-      template_id: nextTemplateId,
-      template_data: templateData,
+      sections: payload.sections,
+      global: payload.global,
+      ...templateFields,
     },
   } as Json;
 
