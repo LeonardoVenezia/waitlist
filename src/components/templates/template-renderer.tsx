@@ -18,6 +18,10 @@ import {
   type MonoTemplateData,
   type AuroraTemplateData,
 } from "@/lib/templates";
+import {
+  DEFAULT_THANK_YOU_CONFIG,
+  type ThankYouConfig,
+} from "@/lib/thank-you-experiences";
 
 export function TemplateRenderer({
   templateId,
@@ -26,6 +30,7 @@ export function TemplateRenderer({
   realCount,
   embedded = false,
   preview = false,
+  thankYou = DEFAULT_THANK_YOU_CONFIG,
 }: {
   templateId: TemplateId;
   templateData: unknown;
@@ -36,6 +41,8 @@ export function TemplateRenderer({
   // makes the template's subscribe hook return a mock result instead of
   // POSTing to /api/public/subscribe.
   preview?: boolean;
+  /** The project's post-signup experience. Templates delegate their done state to it. */
+  thankYou?: ThankYouConfig;
 }) {
   const shell = embedded
     ? "min-h-[520px] rounded-xl overflow-hidden"
@@ -45,7 +52,7 @@ export function TemplateRenderer({
     const data = normalizeTemplateData("neon", templateData) as NeonTemplateData;
     return (
       <div data-surface="template" className={`${shell} bg-[#090A0F] flex items-center justify-center px-4 py-16`}>
-        <NeonTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} />
+        <NeonTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} thankYou={thankYou} />
       </div>
     );
   }
@@ -61,7 +68,7 @@ export function TemplateRenderer({
             "radial-gradient(circle at 50% 0%, rgba(16,185,129,0.08), transparent 50%)",
         }}
       >
-        <CarbonTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} />
+        <CarbonTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} thankYou={thankYou} />
       </div>
     );
   }
@@ -76,6 +83,7 @@ export function TemplateRenderer({
           realCount={realCount}
           embedded={embedded}
           preview={preview}
+          thankYou={thankYou}
         />
       </div>
     );
@@ -85,7 +93,7 @@ export function TemplateRenderer({
     const data = normalizeTemplateData("editorial", templateData) as EditorialTemplateData;
     return (
       <div data-surface="template" className={`${shell} bg-white px-4 py-16 flex items-center`}>
-        <EditorialTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} />
+        <EditorialTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} thankYou={thankYou} />
       </div>
     );
   }
@@ -97,7 +105,7 @@ export function TemplateRenderer({
         data-surface="template"
         className={`${shell} bg-[#FAFAFA] px-4 py-16 flex items-center justify-center`}
       >
-        <MonoTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} />
+        <MonoTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} thankYou={thankYou} />
       </div>
     );
   }
@@ -112,6 +120,7 @@ export function TemplateRenderer({
           realCount={realCount}
           embedded={embedded}
           preview={preview}
+          thankYou={thankYou}
         />
       </div>
     );
@@ -120,7 +129,7 @@ export function TemplateRenderer({
   const data = normalizeTemplateData("split", templateData) as SplitTemplateData;
   return (
     <div data-surface="template" className={`${shell} bg-[#fafafa] px-4 py-16`}>
-      <SplitTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} />
+      <SplitTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} thankYou={thankYou} />
     </div>
   );
 }

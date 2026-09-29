@@ -265,3 +265,28 @@ Nueva template, registrada con el mismo patrón que las demás: `TemplateId`, in
 - **Campos del builder**: badge text, title (con `*itálica*`), subtitle, CTA label, floating tags, social count override y toggle de social proof.
 - **Gradiente**: se implementó el cálido (amanecer). La variante oscura (azul profundo → violeta → magenta) implicaría un campo extra que no estaba en la lista de campos pedida — es agregar un toggle si lo querés.
 - **Navbar**: lleva una marca decorativa (un punto con el gradiente) y no el nombre del proyecto, porque las templates no reciben el nombre. Pasar esa prop tocaría el renderer y las 7 templates.
+
+## "Embajadores" — experiencia de referidos post-registro
+
+Nueva pantalla post-registro seleccionable, la que ve el visitante **después** de dejar su email. Codifica el loop de Harry's (recompensas a 3/10/25 referidos) y la posición en la fila al estilo Monzo.
+
+- **Se elige en el tab Thank You** del proyecto, con **preview en vivo** y números de ejemplo. Se guarda como `thank_you.experience` dentro del objeto que ya existía, así el formato de config no cambia. `classic` es el default: **si no elegís nada, todo queda exactamente como hoy.**
+- **Pisa al template de landing** (decisión acordada): si está en Embajadores, reemplaza la pantalla propia del template. Es **una línea de branch por template**, sin borrar nada.
+- **No hubo que extender la config de hitos**: `settings.referral.milestones` ya era `Array<{count, reward}>`, exactamente "nombre + cantidad por hito". Si el proyecto no configuró ninguno, se usan 3/10/25 con recompensas cortas, para que **el primer hito esté a 3 referidos y la recompensa sea alcanzable** (el brief lo pedía explícitamente).
+- **`total` en la respuesta de subscribe**: el total ya se calculaba en el servidor, solo no se devolvía. Ahora la pantalla puede decir "Sos el #482 de 2.314" (formateado por locale, con separador argentino en español).
+- **Despierta tres campos que estaban dormidos**: `thank_you.brand_color` (se guardaba, no lo renderizaba nadie), `settings.language` (se guardaba, no lo leía nadie — ahora define el idioma de las etiquetas: en/es) y `thank_you.social_buttons` + `social_message` (se guardaban, nunca se usaban — ahora arman los botones de compartir con URLs de intención reales de WhatsApp, X, LinkedIn, Facebook, Telegram, Reddit y email).
+- **Piezas nuevas**: `src/lib/thank-you-experiences.ts` (registro propio siguiendo el patrón de `templates.ts`, con **toda la lógica pura**: hitos, progreso, links de compartir, etiquetas, formateo de posición), `src/components/thank-you/embajadores.tsx` (presentación) y `src/lib/color.ts` (los helpers de color que estaban en `email-brand.ts`, ahora compartidos con la web).
+- **Layout**: el estado post-registro se renderiza *dentro* del shell del template, y 5 de los 7 tienen fondo y padding propios, así que una pantalla clara quedaba enmarcada por el mundo del landing. La experiencia se renderiza como **capa propia** en vez de tocar los 7 shells.
+
+### Verificación
+
+- **Lógica headless** (el estado post-registro solo existe en el cliente, así que el HTML no sirve): 62 aserciones sobre el resolutor, el registro, los hitos, los links de compartir, las etiquetas y el formateo de posición.
+- La verificación **encontró 4 fallas reales** que se corrigieron: el azul de Facebook (`#1877F2`) es una **zona muerta de contraste** — 4.23:1 con blanco y 4.45:1 con tinta, así que ningún color de texto pasa AA — y dos tonos terciarios propios por debajo de 4.5:1. Los compartir ahora usan `contrastTextOn` sobre el color de marca, nunca un blanco fijo.
+- **`total` end-to-end**: alta real contra `/api/public/subscribe` → `total` = 11 con 10 suscriptores previos. El suscriptor de prueba se borró y el proyecto quedó restaurado byte-idéntico.
+- **SSR smoke** con la experiencia configurada, `tsc`, `pnpm build` y lint (13 errores preexistentes, ninguno nuevo).
+
+### Límites conocidos
+
+- **El widget embebido en modo custom** conserva su propia pantalla: es una plantilla de string con JS vanilla y no puede renderizar la experiencia sin duplicar el diseño. En modo `template` redirige a `/p/[slug]?embed=1`, así que ese camino sí la muestra.
+- **El paso de preguntas post-signup** sigue siendo el de cada template; la experiencia es dueña del "done".
+- La pantalla es deliberadamente clara y **no combina con un landing oscuro** (Neon, Carbon): es la consecuencia aceptada de que el proyecto la elija por encima del look del template.

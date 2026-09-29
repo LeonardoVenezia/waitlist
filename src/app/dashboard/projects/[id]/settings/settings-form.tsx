@@ -12,6 +12,13 @@ import { Switch } from "@/components/ui/switch";
 import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  THANK_YOU_EXPERIENCES,
+  normalizeMilestones,
+  resolveThankYouConfig,
+} from "@/lib/thank-you-experiences";
+import { Embajadores } from "@/components/thank-you/embajadores";
+import type { SubscribeResult } from "@/components/templates/use-waitlist-subscribe";
 
 type Project = Database["public"]["Tables"]["projects"]["Row"];
 type TeamMember = {
@@ -235,6 +242,86 @@ function PlanExpiryNote({ expiresAt, projectId }: { expiresAt: string; projectId
   );
 }
 
+// ── Post-signup experience ──
+function PostSignupExperienceCard({
+  settings,
+  slug,
+}: {
+  settings: Record<string, unknown>;
+  slug: string;
+}) {
+  const saved = (settings.thank_you ?? {}) as Record<string, unknown>;
+  const [experience, setExperience] = useState<string>(
+    (saved.experience as string) ?? "classic",
+  );
+  // Saved copy + the selected experience, so the preview reacts before saving.
+  const config = resolveThankYouConfig({
+    ...settings,
+    thank_you: { ...saved, experience },
+  });
+  const milestones = normalizeMilestones(
+    ((settings.referral ?? {}) as Record<string, unknown>).milestones,
+  );
+  const previewResult: SubscribeResult = {
+    id: "preview",
+    email: "you@example.com",
+    position: 482,
+    referral_code: "preview",
+    referral_link: `/p/${slug}?ref=preview`,
+    referral_count: 5,
+    total: 2314,
+    milestones: milestones.length > 0 ? milestones : undefined,
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Post-signup experience</CardTitle>
+        <CardDescription>
+          What people see right after they leave their email.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <input type="hidden" name="thank_you.experience" value={experience} />
+        <div className="grid gap-3 sm:grid-cols-2">
+          {Object.values(THANK_YOU_EXPERIENCES).map((def) => {
+            const active = experience === def.id;
+            return (
+              <button
+                key={def.id}
+                type="button"
+                onClick={() => setExperience(def.id)}
+                className={`w-full overflow-hidden rounded-xl border text-left transition ${
+                  active ? "border-primary bg-primary/5" : "hover:bg-muted"
+                }`}
+              >
+                <div
+                  className={`flex h-16 items-center justify-center px-4 ${def.thumbnail.bg} ${def.thumbnail.text}`}
+                >
+                  <span className="truncate font-heading text-lg">{def.name}</span>
+                </div>
+                <p className="px-3 py-2 text-xs text-muted-foreground">{def.description}</p>
+              </button>
+            );
+          })}
+        </div>
+
+        {experience === "embajadores" && (
+          <div className="space-y-2">
+            <div className="max-h-[620px] overflow-y-auto rounded-xl border">
+              <Embajadores config={config} result={previewResult} layout="inline" />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Preview with example numbers. Rewards come from the Submissions tab and the copy from
+              this one — save to refresh.
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ── Main ──
 export function SettingsForm({
   project,
@@ -364,6 +451,7 @@ export function SettingsForm({
       {/* ── THANK YOU ── */}
       {tab === "Thank You" && (
         <div className="space-y-6">
+          <PostSignupExperienceCard settings={settings} slug={project.slug} />
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">Thank You Page <UpgradeBadge plan="Launch" /></CardTitle>

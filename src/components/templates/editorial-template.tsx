@@ -2,6 +2,8 @@
 
 import { useWaitlistSubscribe } from "./use-waitlist-subscribe";
 import type { EditorialTemplateData } from "@/lib/templates";
+import type { ThankYouConfig } from "@/lib/thank-you-experiences";
+import { Embajadores } from "@/components/thank-you/embajadores";
 
 // The editorial template is a clean, type-led layout. Its accent is
 // user-configurable (data.accent_color) but defaults to a deep ink color
@@ -13,11 +15,13 @@ export function EditorialTemplate({
   data,
   realCount,
   preview = false,
+  thankYou,
 }: {
   publicKey: string;
   data: EditorialTemplateData;
   realCount: number;
   preview?: boolean;
+  thankYou: ThankYouConfig;
 }) {
   const accent = data.accent_color && data.accent_color !== "#2563eb" ? data.accent_color : ACCENT_DEFAULT;
   const {
@@ -92,6 +96,14 @@ export function EditorialTemplate({
           </form>
         </EditorialCard>
       </div>
+    );
+  }
+
+  // The project can override the post-signup screen: when it does, this
+  // template's own done state is skipped entirely.
+  if (step === "done" && result && thankYou.experience === "embajadores") {
+    return (
+      <Embajadores config={thankYou} result={result} copied={copied} onCopy={copyReferralLink} />
     );
   }
 

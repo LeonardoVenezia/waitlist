@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { TURNSTILE_ENABLED } from "@/lib/turnstile";
+import { resolveThankYouConfig } from "@/lib/thank-you-experiences";
+import { Embajadores } from "@/components/thank-you/embajadores";
 
 interface WaitlistFormProps {
   publicKey: string;
@@ -27,6 +29,8 @@ interface SubscribeResult {
   position: number;
   referral_code: string;
   referral_link: string;
+  referral_count: number;
+  total?: number;
   leaderboard?: Array<{ position: number; email: string; referral_count: number }>;
   milestones?: Array<{ count: number; reward: string }>;
   reward_text?: string | null;
@@ -58,6 +62,7 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
   const errorParam = searchParams.get("error");
 
   const thankYou = (settings.thank_you ?? {}) as Record<string, unknown>;
+  const thankYouConfig = resolveThankYouConfig(settings);
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -237,6 +242,17 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
 
   // Success state
   if (step === "done" && result) {
+    // The project can swap the whole post-signup screen for the referral hub.
+    if (thankYouConfig.experience === "embajadores") {
+      return (
+        <Embajadores
+          config={thankYouConfig}
+          result={result}
+          copied={copied}
+          onCopy={copyReferralLink}
+        />
+      );
+    }
     const showMilestones = result.milestones && result.milestones.length > 0;
     const positionText = (thankYou.position_text as string) || "Your position: #{POSITION}";
     const referralPrompt = (thankYou.description as string) || "Share your referral link to climb the ranks:";

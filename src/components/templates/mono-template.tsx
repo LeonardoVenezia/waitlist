@@ -2,6 +2,8 @@
 
 import { useWaitlistSubscribe } from "./use-waitlist-subscribe";
 import type { MonoTemplateData } from "@/lib/templates";
+import type { ThankYouConfig } from "@/lib/thank-you-experiences";
+import { Embajadores } from "@/components/thank-you/embajadores";
 
 // Mono is precision brutalism: pure #FAFAFA, near-black text, a single
 // electric accent, monospace for every label, and an oversized headline in
@@ -58,11 +60,13 @@ export function MonoTemplate({
   data,
   realCount,
   preview = false,
+  thankYou,
 }: {
   publicKey: string;
   data: MonoTemplateData;
   realCount: number;
   preview?: boolean;
+  thankYou: ThankYouConfig;
 }) {
   const {
     email,
@@ -146,6 +150,14 @@ export function MonoTemplate({
           </form>
         </div>
       </Shell>
+    );
+  }
+
+  // The project can override the post-signup screen: when it does, this
+  // template's own done state is skipped entirely.
+  if (step === "done" && result && thankYou.experience === "embajadores") {
+    return (
+      <Embajadores config={thankYou} result={result} copied={copied} onCopy={copyReferralLink} />
     );
   }
 

@@ -215,6 +215,18 @@ Los clientes de email no soportan `var()`, `oklch()`, gradientes ni `@font-face`
 - `saveTemplateData` sigue existiendo y es independiente: la usa la página de integración del widget embebido, que solo escribe `template_data` (nunca `template_id`).
 - `global.page_enabled` y `global.seo_*` se aplican aunque haya un template activo; el resto de `global` (colores, toggles de display) solo lo consume el render por secciones.
 - `src/components/templates/template-renderer.tsx` es la **única fuente** de layout/switch de templates, usada tanto por la página pública como por el preview del Page Builder.
+- Otras 2 superficies derivadas del mismo sistema: `emailPalette` por template (ver **Email → Estética**) y la **experiencia post-registro** (abajo).
+
+## Pantalla post-registro ("Embajadores")
+
+La pantalla que ve el visitante **después** de dejar su email. Es una superficie propia: **no** es un template de landing, no aparece en el picker del Page Builder y no comparte `TemplateId`. Se elige por proyecto en `settings.thank_you.experience` (`classic` default = comportamiento actual; tab **Thank You**, con preview en vivo).
+
+- `src/lib/thank-you-experiences.ts` — registro (mismo patrón que `templates.ts`) y **toda la lógica pura**: `resolveThankYouConfig`, `milestoneStates`, `buildShareLinks`, `thankYouLabels`, `formatPositionLine`, `defaultMilestones`. El estado post-registro solo existe en el cliente después de un submit, así que este módulo es la única superficie verificable.
+- `src/components/thank-you/embajadores.tsx` — la pantalla (presentación). Se renderiza como **capa propia** (`fixed inset-0`) porque el estado `done` vive dentro del shell del template y 5 de los 7 shells tienen fondo y padding propios.
+- **Cómo se activa**: los 7 templates + `public-waitlist-form.tsx` tienen un branch de una línea al inicio de su estado `done` que delega en la experiencia cuando `experience === "embajadores"`. La prop `thankYou` viaja desde `p/[slug]` vía `TemplateRenderer` (los 7 templates); el form de secciones la resuelve por su cuenta desde `settings`.
+- Config que consume: `thank_you.experience` / `title` / `subtitle` / `message` / `social_message` / `social_buttons` / `brand_color`, `branding.logo_url` y `primary_color`, `settings.language` (en/es) y `referral.milestones` (`{count, reward}`, default 3/10/25 localizado).
+- `SubscribeResult.total` viene de `/api/public/subscribe` (el total ya se calculaba; sólo no se devolvía) y es lo que permite "Sos el #482 de 2.314".
+- Límites: el widget embebido en modo **custom** conserva su pantalla propia (plantilla de string con JS vanilla, no React); el paso de preguntas post-signup sigue siendo el de cada template.
 
 ---
 

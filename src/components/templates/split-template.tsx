@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useWaitlistSubscribe } from "./use-waitlist-subscribe";
 import type { SplitTemplateData } from "@/lib/templates";
+import type { ThankYouConfig } from "@/lib/thank-you-experiences";
+import { Embajadores } from "@/components/thank-you/embajadores";
 
 // The split template is a sticky two-column with interactive tabs on the
 // right. Its identity is a clean cream background and a deep ink CTA —
@@ -15,11 +17,13 @@ export function SplitTemplate({
   data,
   realCount,
   preview = false,
+  thankYou,
 }: {
   publicKey: string;
   data: SplitTemplateData;
   realCount: number;
   preview?: boolean;
+  thankYou: ThankYouConfig;
 }) {
   const [activeTab, setActiveTab] = useState(0);
   const {
@@ -97,6 +101,14 @@ export function SplitTemplate({
           </form>
         </SplitCard>
       </div>
+    );
+  }
+
+  // The project can override the post-signup screen: when it does, this
+  // template's own done state is skipped entirely.
+  if (step === "done" && result && thankYou.experience === "embajadores") {
+    return (
+      <Embajadores config={thankYou} result={result} copied={copied} onCopy={copyReferralLink} />
     );
   }
 

@@ -30,6 +30,9 @@ export async function updateProjectSettings(
 
   // Thank You Page
   const thankYou = {
+    // Which post-signup screen the project uses. Lives inside thank_you so the
+    // config shape stays the same.
+    experience: (formData.get("thank_you.experience") as string) || "classic",
     message: formData.get("thank_you.message") as string || "",
     show_position: formData.get("thank_you.show_position") !== "off",
     show_referral_link: formData.get("thank_you.show_referral_link") !== "off",

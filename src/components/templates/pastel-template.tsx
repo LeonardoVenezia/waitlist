@@ -2,6 +2,8 @@
 
 import { useWaitlistSubscribe } from "./use-waitlist-subscribe";
 import type { PastelTemplateData } from "@/lib/templates";
+import type { ThankYouConfig } from "@/lib/thank-you-experiences";
+import { Embajadores } from "@/components/thank-you/embajadores";
 
 // The pastel template is a soft, animated gradient with a glass card
 // and floating tags. The CTA, focus rings, and tag colors are all in
@@ -23,12 +25,14 @@ export function PastelTemplate({
   realCount,
   embedded = false,
   preview = false,
+  thankYou,
 }: {
   publicKey: string;
   data: PastelTemplateData;
   realCount: number;
   embedded?: boolean;
   preview?: boolean;
+  thankYou: ThankYouConfig;
 }) {
   const {
     email,
@@ -104,6 +108,14 @@ export function PastelTemplate({
           </form>
         </GlassCard>
       </div>
+    );
+  }
+
+  // The project can override the post-signup screen: when it does, this
+  // template's own done state is skipped entirely.
+  if (step === "done" && result && thankYou.experience === "embajadores") {
+    return (
+      <Embajadores config={thankYou} result={result} copied={copied} onCopy={copyReferralLink} />
     );
   }
 

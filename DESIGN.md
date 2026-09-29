@@ -85,6 +85,18 @@ Transactional email is a third surface, and the most constrained one: clients st
 - **Fonts are approximated.** A template's type character is suggested with a system stack (sans / mono / Georgia), never reproduced exactly.
 - Colors are always inline, the background sits on a wrapper `<table>` rather than `<body>`, and the document declares `color-scheme: light only` so clients don't invert the design.
 
+### Post-signup experience
+
+The screen a visitor sees *after* submitting their email is a fourth surface, and the only one the project chooses on its own axis (`thank_you.experience`): it is **not** the landing template, and picking a landing template does not pick this.
+
+- **It has its own world.** `Embajadores` is a light, cheerful referral hub — position in line, share buttons, progress to rewards. It deliberately does not try to match a dark landing template, because its job is the referral loop, not visual continuity.
+- **Theming comes from the project, not the template**: `thank_you.brand_color` (falling back to `branding.primary_color`) is the accent, and its text color is **computed** with `contrastTextOn`, never a fixed white — the owner can set any accent.
+- **Rewards reuse the existing config**: `settings.referral.milestones` (`{count, reward}`) with a localized default of 3 / 10 / 25. The first milestone must stay within reach (≤5) — an unreachable reward is decoration, not a mechanic.
+- **It renders as its own layer.** The post-signup state lives inside the landing template's shell, and 5 of the 7 shells carry their own background and padding, so the experience paints over them instead of being framed by them.
+- **Copy** follows `settings.language` (en/es), which finally has a consumer.
+
+Everything above lives in `src/lib/thank-you-experiences.ts` as pure functions — the state only exists client-side after a submit, so that module is the only testable surface.
+
 ## Spacing & Rhythm
 
 - **Page padding**: `p-8` (2rem) instead of `p-6`

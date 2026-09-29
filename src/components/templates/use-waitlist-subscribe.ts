@@ -11,6 +11,8 @@ export interface SubscribeResult {
   referral_code: string;
   referral_link: string;
   referral_count: number;
+  /** Everyone in line, for "you're #482 of 2,314". */
+  total?: number;
   leaderboard?: Array<{ position: number; email: string; referral_count: number }>;
   milestones?: Array<{ count: number; reward: string }>;
   reward_text?: string | null;
@@ -63,10 +65,17 @@ export function useWaitlistSubscribe(
     setResult({
       id: "preview",
       email,
-      position: 1,
+      position: 482,
       referral_code: "preview",
       referral_link: "/preview",
-      referral_count: 0,
+      referral_count: 5,
+      // Plausible numbers so the post-signup preview shows a real-looking line.
+      total: 2314,
+      milestones: [
+        { count: 3, reward: "Early access" },
+        { count: 10, reward: "A free month" },
+        { count: 25, reward: "Merch" },
+      ],
     });
     setStep("done");
     setLoading(false);

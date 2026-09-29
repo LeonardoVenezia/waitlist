@@ -373,6 +373,8 @@ export async function POST(request: Request) {
     referral_code: referralCode,
     referral_link: `${pageUrl}?ref=${referralCode}`,
     referral_count: 0,
+    // Total people in line, so the post-signup screen can say "#482 of 2,314".
+    total: currentCount + 1,
     leaderboard,
     milestones,
     reward_text: rewardText ?? null,

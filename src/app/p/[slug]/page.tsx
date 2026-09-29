@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BRAND_ACCENT_OKLCH } from "@/lib/brand";
+import { resolveThankYouConfig } from "@/lib/thank-you-experiences";
 import { getSubscriberCount } from "@/lib/api/position";
 import {
   getTemplateDefinition,
@@ -129,6 +130,10 @@ export default async function HostedPage(props: {
   // If page is explicitly disabled, 404
   if (global.page_enabled === false) notFound();
 
+  // The project's post-signup experience: landing templates hand their done
+  // state over to it when it is set to something other than "classic".
+  const thankYouConfig = resolveThankYouConfig(settings);
+
   // If a template is selected, render it instead of the page builder sections
   const templateDefinition = getTemplateDefinition(pageSections.template_id);
   if (templateDefinition) {
@@ -147,6 +152,7 @@ export default async function HostedPage(props: {
           publicKey={waitlist.public_key}
           realCount={realCount}
           embedded={isEmbed}
+          thankYou={thankYouConfig}
         />
       </div>
     );
