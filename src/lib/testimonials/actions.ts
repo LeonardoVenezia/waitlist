@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { resolveWaitlistEmailBrand } from "@/lib/email-brand";
 import type { Database, Json } from "@/lib/supabase/types";
 
 type TestimonialFormRow = Database["public"]["Tables"]["testimonial_forms"]["Row"];
@@ -146,7 +147,7 @@ export async function sendInvites(
   // has no user policies).
   const { data: form } = await supabase
     .from("testimonial_forms")
-    .select("id, name, slug, project_id, projects!inner(name, account_id)")
+    .select("id, name, slug, project_id, projects!inner(name, account_id, settings)")
     .eq("id", formId)
     .eq("project_id", projectId)
     .maybeSingle();
@@ -167,8 +168,16 @@ export async function sendInvites(
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
   const admin = createAdminClient();
 
-  const projectName = (form.projects as unknown as { name: string }).name;
-  const accountId = (form.projects as unknown as { account_id: string }).account_id;
+  const project = form.projects as unknown as {
+    name: string;
+    account_id: string;
+    settings: Record<string, unknown> | null;
+  };
+  const projectName = project.name;
+  const accountId = project.account_id;
+  // The invite goes out in the project's name, so it carries the project's
+  // waitlist design. Resolved here because the queue payload is rendered later.
+  const emailBrand = resolveWaitlistEmailBrand(project.settings ?? {});
 
   // Sender name for the email copy: the project owner's profile name.
   const { data: account } = await admin
@@ -220,6 +229,7 @@ export async function sendInvites(
         product_name: projectName,
         form_url: `${appUrl}/t/${form.slug}?i=${inv.token}`,
         sender_name: profile?.full_name ?? null,
+        brand: emailBrand,
       },
     })),
   );
@@ -251,6 +261,20 @@ export async function resendInvite(projectId: string, inviteId: string) {
 
   const formMeta = invite.testimonial_forms as unknown as { name: string; slug: string };
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+
+  // Unlike sendInvites, this path never loaded the project — so it had no name
+  // to brand the email with and fell back to the form's name. Load it both for
+  // the copy and for the design.
+  const { data: project } = await supabase
+    .from("projects")
+    .select("name, settings")
+    .eq("id", invite.project_id)
+    .maybeSingle();
+  const projectName = project?.name ?? formMeta.name;
+  const emailBrand = resolveWaitlistEmailBrand(
+    (project?.settings as Record<string, unknown> | null) ?? {},
+  );
+
   const { error: queueError } = await admin.from("email_queue").insert({
     to_email: invite.email,
     subject: `¿Nos contás tu experiencia?`,
@@ -258,9 +282,10 @@ export async function resendInvite(projectId: string, inviteId: string) {
     payload: {
       invite_id: invite.id,
       form_name: formMeta.name,
-      product_name: formMeta.name,
+      product_name: projectName,
       form_url: `${appUrl}/t/${formMeta.slug}?i=${invite.token}`,
       sender_name: null,
+      brand: emailBrand,
     },
   });
   if (queueError) throw new Error(queueError.message);

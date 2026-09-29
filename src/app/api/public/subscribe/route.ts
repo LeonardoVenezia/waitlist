@@ -14,6 +14,7 @@ import { renderWelcomeEmail } from "@/emails/welcome";
 import { renderSignupNotificationEmail } from "@/emails/signup-notification";
 import { renderVerificationEmail } from "@/emails/verify";
 import { renderMilestoneReachedEmail } from "@/emails/milestone-reached";
+import { resolveWaitlistEmailBrand } from "@/lib/email-brand";
 import { createVerificationToken } from "@/lib/api/verify-token";
 import { sendSlackNotification } from "@/lib/api/slack";
 import { hasFeature, getWaitlistLimit } from "@/lib/plans";
@@ -63,6 +64,9 @@ export async function POST(request: Request) {
 
   const settings = waitlist.settings as Record<string, unknown>;
   const emailSettings = parseEmailSettings(settings.email);
+  // Every email this route sends is about the waitlist, so it carries the
+  // project's own design (template → custom sections → branding).
+  const emailBrand = resolveWaitlistEmailBrand(settings);
   const referralSettings = settings.referral as Record<string, unknown> || {};
   const milestones = (referralSettings.milestones as Array<{ count: number; reward: string }>) ?? [];
   const rewardText = referralSettings.reward_text as string | undefined;
@@ -247,6 +251,7 @@ export async function POST(request: Request) {
           to: referrerBefore.email,
           subject: `🎉 You unlocked a reward on ${waitlist.name}!`,
           html: renderMilestoneReachedEmail({
+            brand: emailBrand,
             email: referrerBefore.email,
             waitlistName: waitlist.name,
             count: newCount,
@@ -279,6 +284,7 @@ export async function POST(request: Request) {
       to: email,
       subject: emailSettings.welcomeSubject ?? `You're on the waitlist for ${waitlist.name}!`,
       html: renderWelcomeEmail({
+        brand: emailBrand,
         email,
         waitlistName: waitlist.name,
         referralLink: welcomeLink,
@@ -316,6 +322,7 @@ export async function POST(request: Request) {
           to: ownerProfile.email,
           subject: `New signup: ${email} joined ${waitlist.name}`,
           html: renderSignupNotificationEmail({
+            brand: emailBrand,
             waitlistName: waitlist.name,
             subscriberEmail: email,
             referralCode,
@@ -334,6 +341,7 @@ export async function POST(request: Request) {
       to: email,
       subject: `Verify your email for ${waitlist.name}`,
       html: renderVerificationEmail({
+        brand: emailBrand,
         email,
         waitlistName: waitlist.name,
         verificationLink: verifyLink,

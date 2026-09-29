@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { BRAND_ACCENT_OKLCH } from "@/lib/brand";
 import type { Database } from "@/lib/supabase/types";
 
 type Settings = Database["public"]["Tables"]["projects"]["Row"]["settings"];
@@ -126,7 +127,7 @@ export async function updateProjectSettings(
   const settings = {
     branding: {
       logo_url: formData.get("branding.logo_url") as string || null,
-      primary_color: (formData.get("branding.primary_color") as string) || "#22c563",
+      primary_color: (formData.get("branding.primary_color") as string) || BRAND_ACCENT_OKLCH,
       font: formData.get("branding.font") as string || null,
     },
     hero: {

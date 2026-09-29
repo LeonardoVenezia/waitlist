@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { BRAND_ACCENT_OKLCH } from "@/lib/brand";
 import { getSubscriberCount } from "@/lib/api/position";
 import {
   getTemplateDefinition,
@@ -388,7 +389,7 @@ export default async function HostedPage(props: {
   // Fallback: classic hosted page
   const branding = (settings.branding ?? {}) as Record<string, unknown>;
   const hero = (settings.hero ?? {}) as Record<string, unknown>;
-  const primaryColor = (branding.primary_color as string) ?? "#22c563";
+  const primaryColor = (branding.primary_color as string) ?? BRAND_ACCENT_OKLCH;
 
   return (
     <div

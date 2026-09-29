@@ -1,29 +1,41 @@
+import type { EmailBrand } from "@/lib/email-brand";
+import {
+  emailFootnote,
+  emailHeading,
+  emailP,
+  emailPanel,
+  escapeHtml,
+  renderEmailDocument,
+} from "./layout";
+
 export function renderMilestoneReachedEmail({
+  brand,
   email,
   waitlistName,
   count,
   reward,
 }: {
+  brand: EmailBrand;
   email: string;
   waitlistName: string;
   count: number;
   reward: string;
 }) {
-  return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:32px;max-width:480px;margin:0 auto;">
-  <h1 style="font-size:20px;font-weight:600;margin:0 0 8px;">🎉 You reached ${count} referrals!</h1>
-  <p style="font-size:14px;color:#555;margin:0 0 16px;">
-    Congrats! You've unlocked a reward on <strong>${waitlistName}</strong>:
-  </p>
-  <div style="background:#f5f5f5;padding:16px;border-radius:8px;margin-bottom:16px;">
-    <p style="font-size:16px;font-weight:500;margin:0;">🎁 ${reward}</p>
-  </div>
-  <p style="font-size:14px;color:#555;margin:0 0 16px;">
-    Keep sharing your referral link to earn more rewards!
-  </p>
-  <p style="font-size:12px;color:#999;margin-top:24px;">Sent to ${email}</p>
-</body>
-</html>`;
+  return renderEmailDocument({
+    brand,
+    preheader: `You unlocked a reward on ${waitlistName}`,
+    content: [
+      emailHeading(brand, `🎉 You reached ${count} referrals!`),
+      emailP(
+        brand,
+        `Congrats! You've unlocked a reward on <strong>${escapeHtml(waitlistName)}</strong>:`,
+      ),
+      emailPanel(
+        brand,
+        `<p style="margin:0;font-size:16px;font-weight:600;color:${brand.text};">🎁 ${escapeHtml(reward)}</p>`,
+      ),
+      emailP(brand, "Keep sharing your referral link to earn more rewards!"),
+      emailFootnote(brand, `Sent to ${escapeHtml(email)}`),
+    ].join("\n"),
+  });
 }

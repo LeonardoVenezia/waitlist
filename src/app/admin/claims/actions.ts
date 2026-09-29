@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { isAdminEmail } from "@/lib/admin";
+import { resolveProjectEmailBrand } from "@/lib/email-brand";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -83,6 +84,12 @@ export async function approveClaim(
 
   if (claimantProfile?.email) {
     const showcase = claim.showcases as { slug: string; name: string } | null;
+    // claim.showcase_id is the project id (see the transfer above).
+    const { data: project } = await admin
+      .from("projects")
+      .select("settings")
+      .eq("id", claim.showcase_id)
+      .maybeSingle();
     await admin.from("email_queue").insert({
       to_email: claimantProfile.email,
       subject: `Your claim for ${showcase?.name ?? "a product"} was approved`,
@@ -91,6 +98,9 @@ export async function approveClaim(
         result: "approved",
         showcase_name: showcase?.name ?? "",
         dashboard_url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/dashboard`,
+        brand: resolveProjectEmailBrand(
+          (project?.settings as Record<string, unknown> | null) ?? {},
+        ),
       },
     });
   }
@@ -115,7 +125,7 @@ export async function rejectClaim(
 
   const { data: claim, error: claimErr } = await admin
     .from("project_claims")
-    .select("id, status, claimant_user_id, showcases(name)")
+    .select("id, status, claimant_user_id, showcase_id, showcases(name)")
     .eq("id", claimId)
     .maybeSingle();
 
@@ -144,6 +154,11 @@ export async function rejectClaim(
 
   if (claimantProfile?.email) {
     const showcase = claim.showcases as { name: string } | null;
+    const { data: project } = await admin
+      .from("projects")
+      .select("settings")
+      .eq("id", claim.showcase_id)
+      .maybeSingle();
     await admin.from("email_queue").insert({
       to_email: claimantProfile.email,
       subject: `Update on your claim for ${showcase?.name ?? "a product"}`,
@@ -152,6 +167,9 @@ export async function rejectClaim(
         result: "rejected",
         showcase_name: showcase?.name ?? "",
         reason,
+        brand: resolveProjectEmailBrand(
+          (project?.settings as Record<string, unknown> | null) ?? {},
+        ),
       },
     });
   }

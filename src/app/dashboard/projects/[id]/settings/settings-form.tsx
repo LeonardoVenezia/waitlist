@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import type { Database } from "@/lib/supabase/types";
+import { BRAND_ACCENT_HEX } from "@/lib/brand";
 import { updateProjectSettings, inviteTeamMember, removeTeamMember } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -331,7 +332,7 @@ export function SettingsForm({
               <Label htmlFor="branding.logo_url">Logo URL</Label>
               <Input id="branding.logo_url" name="branding.logo_url" defaultValue={(branding.logo_url as string) ?? ""} placeholder="https://example.com/logo.png" />
             </div>
-            <ColorInput id="branding.primary_color" name="branding.primary_color" defaultValue={(branding.primary_color as string) ?? "#22c563"} label="Primary color" />
+            <ColorInput id="branding.primary_color" name="branding.primary_color" defaultValue={(branding.primary_color as string) ?? BRAND_ACCENT_HEX} label="Primary color" />
           </CardContent>
         </Card>
       )}

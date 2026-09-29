@@ -25,6 +25,7 @@
 # testing
 - When testing or demoing a product surface (e.g., the showcase directory), prefers seeding realistic, varied data — multiple users across subscription tiers and many entries with varied categories/attributes — rather than a minimal or empty dataset. Confidence: 0.55
 - Seeds backdated entries (e.g., a month old) specifically to test time-window filtering like "this week's launches", verifying that stale items are correctly excluded. Confidence: 0.55
+- Verifies user-facing output by inspecting the real artifact in its real medium, not just a simulation: for the themed emails, asked the agent to actually *send* one of every email type (and each applicable template variant, plus edge cases) to their own inbox "para verificar que estén bien" instead of accepting assertions over the generated HTML. Expects the agent to exercise the genuine production path (real renderers + real provider) and to state plainly what could NOT be confirmed (e.g. delivery/bounce status was unobtainable because the provider key is send-only). Confidence: 0.6
 
 # documentation
 - Values cross-session continuity: proactively considers whether documentation is needed so a new session can quickly understand the project structure and purpose, and is open to maintaining/updating project docs (README, PRODUCT.md) to support fast onboarding. Confidence: 0.55

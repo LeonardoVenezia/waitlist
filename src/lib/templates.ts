@@ -77,6 +77,41 @@ export type TemplateData =
   | SplitTemplateData
   | MonoTemplateData;
 
+/**
+ * Email-safe representation of a template. Emails are a surface where the
+ * design cannot be derived: clients strip CSS variables, don't understand
+ * oklch, ignore gradients, and can't load Geist or Italiana. So each template
+ * declares a curated flat palette — the same idea as `thumbnail` (a
+ * representation of the template for a surface that isn't the page), one
+ * surface lower.
+ *
+ * Values are chosen so every text/background pair clears WCAG AA. They are
+ * NOT a copy of the page classes: several of those fail (white on Neon's
+ * #22c563 is 2.27:1).
+ */
+export type EmailPalette = {
+  background: string;
+  surface: string;
+  border: string;
+  text: string;
+  muted: string;
+  accent: string;
+  accentText: string;
+  linkColor: string;
+  /** Corner radius in px, as a string. Mono is 0 — sharp corners are its identity. */
+  radius: string;
+  headingFamily: string;
+  labelFamily: string;
+}
+
+// System stacks: a webfont in email is unreliable (Gmail strips @font-face),
+// so a template's type character is approximated, never reproduced exactly.
+export const EMAIL_FONTS = {
+  sans: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
+  mono: "ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace",
+  serif: "Georgia,'Times New Roman',Times,serif",
+} as const;
+
 export interface TemplateDefinition {
   id: TemplateId;
   name: string;
@@ -87,6 +122,7 @@ export interface TemplateDefinition {
    * at a small size so users can recognize it at a glance.
    */
   thumbnail: { bg: string; text: string };
+  emailPalette: EmailPalette;
   defaultData: TemplateData;
 }
 
@@ -184,6 +220,23 @@ export const TEMPLATE_DEFINITIONS: Record<TemplateId, TemplateDefinition> = {
       bg: "bg-zinc-950",
       text: "text-emerald-400",
     },
+    // Neon is a dark page on the web. In email it is adapted to a light page:
+    // dark transactional email renders badly in clients that force their own
+    // dark mode. It keeps its emerald accent and its mono labels, and the
+    // black-on-emerald button it already uses on the page (which is AA).
+    emailPalette: {
+      background: "#FFFFFF",
+      surface: "#F4F4F5",
+      border: "#E4E4E7",
+      text: "#18181B",
+      muted: "#52525B",
+      accent: "#22C563",
+      accentText: "#0A0A0A",
+      linkColor: "#166534",
+      radius: "10px",
+      headingFamily: EMAIL_FONTS.sans,
+      labelFamily: EMAIL_FONTS.mono,
+    },
     defaultData: neonDefaults,
   },
   carbon: {
@@ -193,6 +246,22 @@ export const TEMPLATE_DEFINITIONS: Record<TemplateId, TemplateDefinition> = {
     thumbnail: {
       bg: "bg-zinc-900",
       text: "text-emerald-400/80",
+    },
+    // Adapted to a light page for the same reason as Neon. Its emerald is
+    // darkened (emerald-500 with white text is ~2.5:1); the cyan second accent
+    // stays out of email, where it would just be a stray hue.
+    emailPalette: {
+      background: "#FFFFFF",
+      surface: "#F4F4F5",
+      border: "#E4E4E7",
+      text: "#18181B",
+      muted: "#52525B",
+      accent: "#047857",
+      accentText: "#FFFFFF",
+      linkColor: "#047857",
+      radius: "10px",
+      headingFamily: EMAIL_FONTS.sans,
+      labelFamily: EMAIL_FONTS.mono,
     },
     defaultData: carbonDefaults,
   },
@@ -204,6 +273,22 @@ export const TEMPLATE_DEFINITIONS: Record<TemplateId, TemplateDefinition> = {
       bg: "bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200",
       text: "text-zinc-800",
     },
+    // Its gradient cannot be trusted in email (many clients drop it), so the
+    // page becomes a flat tint derived from it. The violet is deepened: white
+    // on its page accent #8b5cf6 is 4.23:1, just under AA.
+    emailPalette: {
+      background: "#F5EEFF",
+      surface: "#FFFFFF",
+      border: "#E9D5FF",
+      text: "#27272A",
+      muted: "#52525B",
+      accent: "#7C3AED",
+      accentText: "#FFFFFF",
+      linkColor: "#6D28D9",
+      radius: "20px",
+      headingFamily: EMAIL_FONTS.sans,
+      labelFamily: EMAIL_FONTS.sans,
+    },
     defaultData: pastelDefaults,
   },
   editorial: {
@@ -213,6 +298,22 @@ export const TEMPLATE_DEFINITIONS: Record<TemplateId, TemplateDefinition> = {
     thumbnail: {
       bg: "bg-white border-b border-zinc-200",
       text: "text-zinc-900",
+    },
+    // The only template whose accent is per-project (template_data.accent_color,
+    // applied by the email brand resolver). Keeps its serif identity, which in
+    // email is approximated with a Georgia stack.
+    emailPalette: {
+      background: "#FFFFFF",
+      surface: "#FFFFFF",
+      border: "#E5E5E5",
+      text: "#171717",
+      muted: "#525252",
+      accent: "#1A1A1A",
+      accentText: "#FFFFFF",
+      linkColor: "#1A1A1A",
+      radius: "8px",
+      headingFamily: EMAIL_FONTS.serif,
+      labelFamily: EMAIL_FONTS.mono,
     },
     defaultData: editorialDefaults,
   },
@@ -224,6 +325,21 @@ export const TEMPLATE_DEFINITIONS: Record<TemplateId, TemplateDefinition> = {
       bg: "bg-zinc-100",
       text: "text-zinc-900",
     },
+    // Cream page, ink CTA, serif headline: the closest template to the app's
+    // own email look, and the only one that needs no adaptation.
+    emailPalette: {
+      background: "#FAFAFA",
+      surface: "#FFFFFF",
+      border: "#E5E5E5",
+      text: "#171717",
+      muted: "#525252",
+      accent: "#111111",
+      accentText: "#FFFFFF",
+      linkColor: "#111111",
+      radius: "10px",
+      headingFamily: EMAIL_FONTS.serif,
+      labelFamily: EMAIL_FONTS.mono,
+    },
     defaultData: splitDefaults,
   },
   mono: {
@@ -233,6 +349,22 @@ export const TEMPLATE_DEFINITIONS: Record<TemplateId, TemplateDefinition> = {
     thumbnail: {
       bg: "bg-[#FAFAFA] border-b border-zinc-200",
       text: "text-zinc-900",
+    },
+    // The one template that transfers to email unchanged: #FAFAFA, one electric
+    // accent, mono labels, hairline borders. Its muted value is the same one the
+    // page was corrected to for AA (#646464 on #FAFAFA = 5.67:1).
+    emailPalette: {
+      background: "#FAFAFA",
+      surface: "#FFFFFF",
+      border: "#E5E5E5",
+      text: "#0A0A0A",
+      muted: "#646464",
+      accent: "#2540FF",
+      accentText: "#FFFFFF",
+      linkColor: "#2540FF",
+      radius: "0",
+      headingFamily: EMAIL_FONTS.sans,
+      labelFamily: EMAIL_FONTS.mono,
     },
     defaultData: monoDefaults,
   },

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email";
+import { APP_EMAIL_BRAND, parseEmailBrand } from "@/lib/email-brand";
 import { renderShowcaseExpiryEmail } from "@/emails/showcase-expiry";
 import { renderClaimNotificationEmail } from "@/emails/claim-notification";
 import { renderClaimResultEmail } from "@/emails/claim-result";
@@ -57,74 +58,97 @@ export async function POST(request: Request) {
       product_name?: string;
       form_url?: string;
       sender_name?: string | null;
+      // Resolved at enqueue time. Optional: rows queued before this existed
+      // fall back to the app brand.
+      brand?: unknown;
     };
 
-    let html = "";
-    if (row.template === "showcase-expiry-30d" || row.template === "showcase-expiry-7d") {
-      const daysLeft: 30 | 7 = row.template === "showcase-expiry-30d" ? 30 : 7;
-      html = renderShowcaseExpiryEmail({
-        daysLeft,
-        productName: payload.showcase_name ?? "tu producto",
-        upgradeUrl: payload.project_id
-          ? `${appUrl}/dashboard/projects/${payload.project_id}/upgrade`
-          : `${appUrl}/dashboard`,
-      });
-    } else if (row.template === "admin-new-claim") {
-      html = renderClaimNotificationEmail({
-        showcaseName: payload.showcase_name ?? "a product",
-        claimantEmail: payload.claimant_email ?? "unknown",
-        message: payload.message ?? null,
-        claimUrl: payload.claim_url ?? `${appUrl}/admin/claims`,
-      });
-    } else if (row.template === "claim-result") {
-      const result = payload.result === "approved" ? "approved" : "rejected";
-      html = renderClaimResultEmail({
-        result,
-        showcaseName: payload.showcase_name ?? "a product",
-        dashboardUrl: payload.dashboard_url,
-        reason: payload.reason ?? null,
-      });
-    } else if (row.template === "testimonial-invite") {
-      html = renderTestimonialInviteEmail({
-        productName: payload.product_name ?? "este producto",
-        formUrl: payload.form_url ?? "",
-        senderName: payload.sender_name ?? null,
-      });
-    } else {
-      html = `<p>${row.subject}</p>`;
-    }
-
-    const result = await sendEmail({
-      to: row.to_email,
-      subject: row.subject,
-      html,
-    });
-
-    if (result.ok) {
-      await supabase
-        .from("email_queue")
-        .update({
-          status: "sent",
-          sent_at: new Date().toISOString(),
-        })
-        .eq("id", row.id);
-      sent += 1;
-
-      // Track the corresponding invite as sent.
-      if (row.template === "testimonial-invite" && payload.invite_id) {
-        await supabase
-          .from("testimonial_invites")
-          .update({ status: "sent", sent_at: new Date().toISOString() })
-          .eq("id", payload.invite_id)
-          .in("status", ["queued"]);
+    try {
+      let html = "";
+      if (row.template === "showcase-expiry-30d" || row.template === "showcase-expiry-7d") {
+        const daysLeft: 30 | 7 = row.template === "showcase-expiry-30d" ? 30 : 7;
+        html = renderShowcaseExpiryEmail({
+          // Platform lifecycle notice about a plan, so it carries the app brand.
+          brand: APP_EMAIL_BRAND,
+          daysLeft,
+          productName: payload.showcase_name ?? "tu producto",
+          upgradeUrl: payload.project_id
+            ? `${appUrl}/dashboard/projects/${payload.project_id}/upgrade`
+            : `${appUrl}/dashboard`,
+        });
+      } else if (row.template === "admin-new-claim") {
+        html = renderClaimNotificationEmail({
+          // Goes to platform staff, not to the project's audience.
+          brand: APP_EMAIL_BRAND,
+          showcaseName: payload.showcase_name ?? "a product",
+          claimantEmail: payload.claimant_email ?? "unknown",
+          message: payload.message ?? null,
+          claimUrl: payload.claim_url ?? `${appUrl}/admin/claims`,
+        });
+      } else if (row.template === "claim-result") {
+        const result = payload.result === "approved" ? "approved" : "rejected";
+        html = renderClaimResultEmail({
+          brand: parseEmailBrand(payload.brand),
+          result,
+          showcaseName: payload.showcase_name ?? "a product",
+          dashboardUrl: payload.dashboard_url,
+          reason: payload.reason ?? null,
+        });
+      } else if (row.template === "testimonial-invite") {
+        html = renderTestimonialInviteEmail({
+          brand: parseEmailBrand(payload.brand),
+          productName: payload.product_name ?? "este producto",
+          formUrl: payload.form_url ?? "",
+          senderName: payload.sender_name ?? null,
+        });
+      } else {
+        html = `<p>${row.subject}</p>`;
       }
-    } else {
+
+      const result = await sendEmail({
+        to: row.to_email,
+        subject: row.subject,
+        html,
+      });
+
+      if (result.ok) {
+        await supabase
+          .from("email_queue")
+          .update({
+            status: "sent",
+            sent_at: new Date().toISOString(),
+          })
+          .eq("id", row.id);
+        sent += 1;
+
+        // Track the corresponding invite as sent.
+        if (row.template === "testimonial-invite" && payload.invite_id) {
+          await supabase
+            .from("testimonial_invites")
+            .update({ status: "sent", sent_at: new Date().toISOString() })
+            .eq("id", payload.invite_id)
+            .in("status", ["queued"]);
+        }
+      } else {
+        await supabase
+          .from("email_queue")
+          .update({
+            status: "failed",
+            attempts: (row.attempts ?? 0) + 1,
+            last_error: result.error ?? "unknown",
+          })
+          .eq("id", row.id);
+        failed += 1;
+      }
+    } catch (err) {
+      // One malformed row must not abort the remaining batch.
+      console.error(`Failed to dispatch email ${row.id} (${row.template}):`, err);
       await supabase
         .from("email_queue")
         .update({
           status: "failed",
           attempts: (row.attempts ?? 0) + 1,
-          last_error: result.error ?? "unknown",
+          last_error: err instanceof Error ? err.message : "render failed",
         })
         .eq("id", row.id);
       failed += 1;

@@ -233,3 +233,24 @@ El anti-pattern de `DESIGN.md` decía que los templates debían usar los tokens 
 - El bloque `.dark` queda documentado como **no cableado** (nada aplica la clase) en vez de aparentar que está activo.
 - Corregidas las menciones a "bordeaux" en `DESIGN.md`, `PRODUCT.md`, `page-builder/page.tsx`, `p/[slug]/page.tsx` y los comentarios de `pastel`, `editorial` y `split`.
 - **No tocado, reportado**: el email de invitación (`src/emails/testimonial-invite.ts`) sigue con `#7a3325` hardcodeado — según la preferencia registrada, eso es un bug de drift; y `#22c563` en Neon es casi seguro un typo de `#22c55e`.
+
+## Los emails llevan la estética del proyecto
+
+Los 8 emails transaccionales estaban pintados con la **marca original de la app**: 5 con el verde `#22c563` del commit inicial, 1 con el terracota `#7a3325`, ninguno igual al `--primary` real. Además cada uno repetía su propio `<body>` y sus propios literales, y `settings.branding` (logo + color) no lo leía ningún email.
+
+- **Cada template declara un `emailPalette`** (`src/lib/templates.ts`), al lado de `thumbnail`: la misma idea — una representación del template para una superficie que no es la página — un piso más abajo. Incluye fondo, superficie, borde, texto, texto secundario, acento, texto del acento, color de link, radio y familias tipográficas.
+- **La paleta se cura, no se copia.** Los colores del template tal cual fallan AA en email: blanco sobre `#22c563` = **2.27:1**, el esmeralda de Neon como link sobre blanco = 2.27:1, el violeta de Pastel con blanco = 4.23:1. Las 7 paletas (6 templates + la de la app) pasan AA en todos sus pares, verificado por aserción.
+- **Neon y Carbon se adaptan a fondo claro** (decisión acordada): conservan su acento y su tipografía mono, sin email oscuro. Neon mantiene texto negro sobre su esmeralda, que es lo que ya hace en la web y encima pasa AA.
+- **`src/lib/email-brand.ts`**: `APP_EMAIL_BRAND` (marca de la app, única copia del acento), `resolveWaitlistEmailBrand` (espeja los 3 niveles de `p/[slug]`: template → secciones custom → branding) y `resolveProjectEmailBrand` (estilo general del proyecto). Convierte `oklch()` a hex, porque el page builder guarda `oklch(0.48 0.19 70)` como color de botón y **los clientes de email no entienden oklch**.
+- **`src/emails/layout.ts`**: shell compartido, layout de tablas, fondo explícito en un `<table>` (Outlook ignora el de `<body>`), `color-scheme: light only` para que no inviertan el diseño, logo y `escapeHtml` compartido.
+- **Alcance**: los 5 emails de la waitlist (bienvenida, verificación, aviso al dueño, hito de referidos, invitación a testimonio) usan la estética de la waitlist; `claim-result` usa el estilo general del proyecto; `claim-notification` (va al staff) y `showcase-expiry` (ciclo de vida de la plataforma) usan la marca de la app.
+- **Cola**: `testimonial-invite` y `claim-result` embeben el `brand` resuelto en el payload, así que **no hizo falta ninguna migración SQL**. El cron lo parsea con `parseEmailBrand`, que completa lo que falte con la marca de la app, de modo que las filas ya encoladas no rompen. Se agregó **try/catch por fila**: antes un render que tirara excepción abortaba el lote entero de 50.
+- **`resendInvite` no cargaba el proyecto**, así que usaba el nombre del *form* como producto y no tenía diseño: ahora carga el proyecto y ambos caminos de invitación son iguales.
+- **Marca**: los **tres** fallbacks verdes `#22c563` pasan al rust de la app (`#9D3E00` / `oklch(0.48 0.19 70)`, centralizados en `src/lib/brand.ts` con el comentario de sincronización). El peor era `settings/actions.ts`, que **escribía el verde en la DB**. Neon: `AVATAR_COLORS` cambia su verde por un teal para romper el casi-duplicado con su acento.
+
+## Verificación
+
+- **Render headless de los 9 envíos** (los renderers son funciones puras): sin `var(`, sin `oklch(`, sin clases de Tailwind, sin `undefined`, todas las declaraciones de color en hex, estructura de tabla y `color-scheme` presentes, y el contraste del botón medido en cada uno (6.45:1 a 18.88:1).
+- **Aserción de contraste** de las 7 paletas contra los valores reales del código: todas pasan AA.
+- `tsc`, `pnpm build` y lint OK (0 errores; los warnings son preexistentes).
+- **Prueba real enviada**: 36 emails (cada tipo × cada template aplicable, más el caso borde del acento claro de Editorial) a una casilla de Outlook, usando los renderers, el resolutor y `sendEmail` reales. Resend aceptó los 36. La verificación final en bandeja queda pendiente del lado del usuario: Gmail y Outlook aplican sus propias reglas de color y tipografía, y la key de Resend es send-only, así que no se puede consultar estado de entrega ni rebotes por API.

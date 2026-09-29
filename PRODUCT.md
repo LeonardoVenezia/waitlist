@@ -14,6 +14,7 @@ A founder subscribes once and gets a **suite of pre-launch tools** for their pro
 - **Showcase expiration (Free)**: el producto se publica al hacer click en "Publicar". En ese momento se setea `expires_at = now() + 1 año`. Un cron diario (pg_cron) flipea el status a `expired` cuando vence. Los datos persisten; al upgradear a Launch el producto vuelve a `published`.
 - **Waitlist overflow (Free)**: la waitlist acepta emails más allá del límite 100, pero los excedentes se guardan con `status = 'pending_unlock'` y no aparecen en el dashboard. Al upgradear a Launch, se hacen `active`.
 - **Emails recordatorios**: 30 días y 7 días antes del vencimiento se envía un email al owner del proyecto. Se enqueuean en `email_queue` y los envía un endpoint cron.
+- **Emails con la estética del proyecto**: los emails que tratan sobre la waitlist (bienvenida al suscriptor, verificación, aviso de nuevo signup al owner, hito de referidos, invitación a dejar un testimonio) se renderizan con el diseño de la waitlist de ese proyecto — template, secciones o branding, el mismo que ve el visitante en `/p/[slug]`, incluido el logo. Los que son sobre el proyecto en general (resultado de un claim) usan su branding. Los de plataforma (cuenta, avisos internos, vencimiento de showcase) usan la marca de la app. Los clientes de email no soportan variables CSS ni `oklch`, así que cada template declara una paleta plana propia y los fondos oscuros se adaptan a claro.
 
 ## Users
 

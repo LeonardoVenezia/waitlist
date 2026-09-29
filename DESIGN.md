@@ -75,6 +75,16 @@ A template is a **replacement visual world**, not a themed surface: the user pic
 
 Everything outside a template — dashboard, public shells, forms, empty states — uses the tokens, as always.
 
+### Emails
+
+Transactional email is a third surface, and the most constrained one: clients strip CSS variables, don't understand `oklch()`, drop gradients, ignore stylesheets, and can't load Geist or Italiana. So an email never derives its look from the app tokens or from a template's Tailwind classes — it renders from a flat, all-hex `EmailBrand`.
+
+- **Which brand.** Emails about the waitlist carry the waitlist's design, resolved in the same order as `/p/[slug]` (template → custom sections → branding). Other project emails carry the project's `branding` (logo + primary color). Platform emails — account, admin, lifecycle — carry the app brand, which is the single copy of the accent in email (`EMAIL_FONTS`/`APP_EMAIL_BRAND` in `src/lib/email-brand.ts`).
+- **Curated, not copied.** Each template declares an `emailPalette` next to its `thumbnail`. The values are chosen so every text/background pair clears AA — the page classes do not: white on Neon's `#22c563` is 2.27:1.
+- **Dark templates are adapted.** Neon and Carbon keep their accent and their mono labels on a light page; dark transactional email renders badly in clients that force their own dark mode.
+- **Fonts are approximated.** A template's type character is suggested with a system stack (sans / mono / Georgia), never reproduced exactly.
+- Colors are always inline, the background sits on a wrapper `<table>` rather than `<body>`, and the document declares `color-scheme: light only` so clients don't invert the design.
+
 ## Spacing & Rhythm
 
 - **Page padding**: `p-8` (2rem) instead of `p-6`

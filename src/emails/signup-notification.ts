@@ -1,27 +1,40 @@
+import { EMAIL_FONTS } from "@/lib/templates";
+import type { EmailBrand } from "@/lib/email-brand";
+import {
+  emailHeading,
+  emailP,
+  emailPanel,
+  escapeHtml,
+  renderEmailDocument,
+} from "./layout";
+
 export function renderSignupNotificationEmail({
+  brand,
   waitlistName,
   subscriberEmail,
   referralCode,
   totalCount,
 }: {
+  brand: EmailBrand;
   waitlistName: string;
   subscriberEmail: string;
   referralCode: string;
   totalCount: number;
 }) {
-  return `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:32px;max-width:480px;margin:0 auto;">
-  <h1 style="font-size:20px;font-weight:600;margin:0 0 8px;">New signup!</h1>
-  <p style="font-size:14px;color:#555;margin:0 0 16px;">
-    ${subscriberEmail} just joined <strong>${waitlistName}</strong>.
-    Total signups: <strong>${totalCount}</strong>
-  </p>
-  <p style="font-size:14px;color:#555;margin:0 0 16px;">
-    Referral code: <code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;">${referralCode}</code>
-  </p>
-</body>
-</html>`;
+  return renderEmailDocument({
+    brand,
+    preheader: `${subscriberEmail} just joined ${waitlistName}`,
+    content: [
+      emailHeading(brand, "New signup!"),
+      emailP(
+        brand,
+        `<strong>${escapeHtml(subscriberEmail)}</strong> just joined <strong>${escapeHtml(waitlistName)}</strong>. Total signups: <strong>${totalCount}</strong>`,
+        { color: brand.text },
+      ),
+      emailPanel(
+        brand,
+        `Referral code: <span style="font-family:${EMAIL_FONTS.mono};font-size:13px;">${escapeHtml(referralCode)}</span>`,
+      ),
+    ].join("\n"),
+  });
 }

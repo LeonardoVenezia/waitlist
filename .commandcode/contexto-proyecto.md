@@ -163,6 +163,18 @@ Emails implementados:
 
 Configuración por proyecto guardada en `settings.email` y parseada por `src/lib/email-settings.ts`. Remitente global vía `EMAIL_FROM`.
 
+### Estética
+
+Cada email se renderiza con un `EmailBrand` (paleta plana, todo hex) resuelto según a quién pertenece el email:
+
+- **Emails de la waitlist** (welcome, verificación, aviso al owner, hito de referidos, invitación a testimonio) → `resolveWaitlistEmailBrand`, que espeja los 3 niveles de `p/[slug]`: template → secciones custom → branding. Los 4 primeros se resuelven inline (el proyecto está en scope); los 2 últimos viajan **dentro del payload** de `email_queue`, porque el cron renderiza después.
+- **Resto de emails del proyecto** (claim-result) → `resolveProjectEmailBrand`: el `branding` (logo + color primario).
+- **Emails de sistema** (claim-notification al staff, showcase-expiry) → `APP_EMAIL_BRAND`.
+
+Piezas: `src/lib/email-brand.ts` (resolvers, conversión `oklch()` → hex, `contrastTextOn`), `src/lib/brand.ts` (los literales del acento web, a sincronizar con `--primary`), y `src/emails/layout.ts` (shell de tablas, `color-scheme: light only`, `escapeHtml`). Los `emailPalette` por template viven en `src/lib/templates.ts`, al lado de `thumbnail`.
+
+Los clientes de email no soportan `var()`, `oklch()`, gradientes ni `@font-face`: por eso la paleta se cura (todos los pares pasan AA, cosa que los colores de la página no hacen) y las fuentes se aproximan con stacks del sistema.
+
 ---
 
 ## Widget

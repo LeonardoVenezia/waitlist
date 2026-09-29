@@ -8,7 +8,9 @@ import type { NeonTemplateData } from "@/lib/templates";
 // is its own thing, and the user picks this template exactly for the glow.
 
 const INITIALS = ["J", "M", "A", "S", "R", "L"];
-const AVATAR_COLORS = ["#6366f1", "#22c55e", "#eab308", "#ec4899", "#0ea5e9", "#f97316"];
+// Teal, not green: a second green one hex digit from ACCENT (#22c563 vs the
+// Tailwind green-500 #22c55e) read as a duplicate of the accent.
+const AVATAR_COLORS = ["#6366f1", "#14b8a6", "#eab308", "#ec4899", "#0ea5e9", "#f97316"];
 const ACCENT = "#22c563";
 
 export function NeonTemplate({

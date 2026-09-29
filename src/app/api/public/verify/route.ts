@@ -5,6 +5,7 @@ import { getSubscriberPosition } from "@/lib/api/position";
 import { sendEmail } from "@/lib/email";
 import { parseEmailSettings } from "@/lib/email-settings";
 import { renderWelcomeEmail } from "@/emails/welcome";
+import { resolveWaitlistEmailBrand } from "@/lib/email-brand";
 import { hasFeature } from "@/lib/plans";
 import { jsonResponse, corsOptionsResponse } from "@/lib/api/cors";
 
@@ -69,9 +70,9 @@ export async function GET(request: Request) {
 
     if (waitlist) {
       const plan = waitlist.plan as "free" | "launch" | "grow";
-      const emailSettings = parseEmailSettings(
-        (waitlist.settings as Record<string, unknown> | null)?.email,
-      );
+      const waitlistSettings = (waitlist.settings as Record<string, unknown> | null) ?? {};
+      const emailSettings = parseEmailSettings(waitlistSettings.email);
+      const emailBrand = resolveWaitlistEmailBrand(waitlistSettings);
 
       if (
         hasFeature(plan, "welcome_email") &&
@@ -93,6 +94,7 @@ export async function GET(request: Request) {
           to: subscriber.email,
           subject: emailSettings.welcomeSubject ?? `You're on the waitlist for ${waitlist.name}!`,
           html: renderWelcomeEmail({
+            brand: emailBrand,
             email: subscriber.email,
             waitlistName: waitlist.name,
             referralLink,
