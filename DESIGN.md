@@ -20,7 +20,7 @@ Warm editorial. Think a refined indie publisher or a boutique creative studio's 
 | Monospace (codes, positions) | Geist Mono | 400 | 0.75rem |
 
 - **Headings**: Italiana (loaded as `--font-heading`) at `font-semibold` for every `h1`–`h4`. Declared **once** in `globals.css`'s base layer so all headings inherit it — don't re-declare a weight per component, and don't override it unless a surface deliberately opts out. (Italiana ships only weight 400, so the bold is browser-synthesized.)
-- **Template surfaces opt out of the heading family.** Every template renders inside a `data-surface="template"` wrapper, where a base-layer rule resets `h1`–`h4` to `font-family: inherit` so the app's serif never leaks into a template's own world. Utility classes still win (later layer), so a template declares its own family: Editorial and Split use `font-heading`, Mono uses `font-sans`, and Neon / Carbon / Pastel inherit Geist. New templates are protected automatically.
+- **Template surfaces opt out of the heading family.** Every template renders inside a `data-surface="template"` wrapper, where a base-layer rule resets `h1`–`h4` to `font-family: inherit` so the app's serif never leaks into a template's own world. Utility classes still win (later layer), so a template declares its own family: Editorial, Split and Aurora use `font-heading`, Mono uses `font-sans`, and Neon / Carbon / Pastel inherit Geist. New templates are protected automatically.
 - **Body**: Geist at 400. Keep it crisp and legible for dense UI.
 - **Scale**: Use a 1.25 minor third for prose, but let the UI use fixed sizes (xs/sm/base/lg/xl) for consistency.
 
@@ -70,7 +70,7 @@ A template is a **replacement visual world**, not a themed surface: the user pic
 
 - **Explicitness.** Declare your own colors *and* typography inside the template. Never inherit them from the app — that is the bug that silently put Italiana in Neon, Carbon and Pastel's headlines (see **Typography**).
 - **Coherence.** One neutral ramp — `zinc` for cool, `neutral` for warm — plus **one** accent hue. A second hue is allowed only as a deliberate pair (Carbon's emerald + cyan), never as an ad-hoc grab bag.
-- **Contrast (WCAG AA).** Every text/background pair clears **4.5:1** for body and label text, and **3:1** for large text (≥24px, or ≥18.66px bold). Inactive/disabled controls are exempt; placeholders are not, because low-contrast hint text is exactly what low-vision users can't read.
+- **Contrast (WCAG AA).** Every text/background pair clears **4.5:1** for body and label text, and **3:1** for large text (≥24px, or ≥18.66px bold). Inactive/disabled controls are exempt; placeholders are not, because low-contrast hint text is exactly what low-vision users can't read. This includes text over a template's own decoration: white type over a light gradient cannot pass on its own, which is why Aurora puts a scrim between its gradient and its content, and tints its glass ink rather than white.
 - **Immunity.** A template must render correctly regardless of ambient state. Nothing applies `.dark` today, but a template built on `text-foreground` would invert the day a theme toggle ships — hardcoding its own surface is what keeps it safe.
 
 Everything outside a template — dashboard, public shells, forms, empty states — uses the tokens, as always.

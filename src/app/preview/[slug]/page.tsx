@@ -7,7 +7,14 @@ import { createClient } from "@/lib/supabase/client";
 import { TemplateRenderer } from "@/components/templates/template-renderer";
 import { getSubscriberCount } from "@/lib/api/position";
 
-type TemplateId = "neon" | "carbon" | "pastel" | "editorial" | "split" | "mono";
+type TemplateId =
+  | "neon"
+  | "carbon"
+  | "pastel"
+  | "editorial"
+  | "split"
+  | "mono"
+  | "aurora";
 
 interface Draft {
   templateId: TemplateId | null;

@@ -1,6 +1,13 @@
 import type { Plan } from "@/lib/plans";
 
-export type TemplateId = "neon" | "carbon" | "pastel" | "editorial" | "split" | "mono";
+export type TemplateId =
+  | "neon"
+  | "carbon"
+  | "pastel"
+  | "editorial"
+  | "split"
+  | "mono"
+  | "aurora";
 
 export interface NeonTemplateData {
   badge_text: string;
@@ -69,13 +76,25 @@ export interface MonoTemplateData {
   show_social_proof: boolean;
 }
 
+export interface AuroraTemplateData {
+  badge_text: string;
+  /** Supports `*asterisks*` around a word to render it in serif italics. */
+  title: string;
+  subtitle: string;
+  cta_label: string;
+  social_count_override: string;
+  show_social_proof: boolean;
+  floating_tags: string[];
+}
+
 export type TemplateData =
   | NeonTemplateData
   | CarbonTemplateData
   | PastelTemplateData
   | EditorialTemplateData
   | SplitTemplateData
-  | MonoTemplateData;
+  | MonoTemplateData
+  | AuroraTemplateData;
 
 /**
  * Email-safe representation of a template. Emails are a surface where the
@@ -209,6 +228,16 @@ const monoDefaults: MonoTemplateData = {
   cta_label: "Request access",
   social_count_override: "",
   show_social_proof: true,
+};
+
+const auroraDefaults: AuroraTemplateData = {
+  badge_text: "Now in private beta",
+  title: "Launch something *worth* waiting for",
+  subtitle: "A waitlist that looks as good as the thing you're building.",
+  cta_label: "Get early access",
+  social_count_override: "",
+  show_social_proof: true,
+  floating_tags: ["Launch updates", "Founder perks", "Zero noise"],
 };
 
 export const TEMPLATE_DEFINITIONS: Record<TemplateId, TemplateDefinition> = {
@@ -368,6 +397,33 @@ export const TEMPLATE_DEFINITIONS: Record<TemplateId, TemplateDefinition> = {
     },
     defaultData: monoDefaults,
   },
+  aurora: {
+    id: "aurora",
+    name: "Aurora",
+    description: "Full-viewport dawn gradient, glassmorphism, and an editorial serif headline.",
+    thumbnail: {
+      bg: "bg-gradient-to-br from-[#FFD9B7] via-[#FFB8C8] to-[#8E7BF0]",
+      text: "text-white",
+    },
+    // Aurora is a saturated gradient with white text, which email cannot
+    // reproduce (gradients get dropped, white on a tint would not read). So the
+    // page becomes a warm flat tint with an ink CTA — the same editorial
+    // character, legible everywhere.
+    emailPalette: {
+      background: "#FFF4EE",
+      surface: "#FFFFFF",
+      border: "#F2D9C9",
+      text: "#1A1523",
+      muted: "#5B5462",
+      accent: "#141019",
+      accentText: "#FFFFFF",
+      linkColor: "#6D28D9",
+      radius: "18px",
+      headingFamily: EMAIL_FONTS.serif,
+      labelFamily: EMAIL_FONTS.sans,
+    },
+    defaultData: auroraDefaults,
+  },
 };
 
 export function hasTemplateAccess(plan: Plan): boolean {
@@ -477,6 +533,22 @@ export function normalizeTemplateData(id: TemplateId, value: unknown): TemplateD
       cta_label: asString(raw.cta_label) || defaults.cta_label,
       social_count_override: asString(raw.social_count_override),
       show_social_proof: asBool(raw.show_social_proof, defaults.show_social_proof),
+    };
+  }
+
+  if (id === "aurora") {
+    const defaults = def.defaultData as AuroraTemplateData;
+    return {
+      ...defaults,
+      badge_text: asString(raw.badge_text) || defaults.badge_text,
+      title: asString(raw.title) || defaults.title,
+      subtitle: asString(raw.subtitle) || defaults.subtitle,
+      cta_label: asString(raw.cta_label) || defaults.cta_label,
+      social_count_override: asString(raw.social_count_override),
+      show_social_proof: asBool(raw.show_social_proof, defaults.show_social_proof),
+      floating_tags: asStringArray(raw.floating_tags).length
+        ? asStringArray(raw.floating_tags)
+        : defaults.floating_tags,
     };
   }
 

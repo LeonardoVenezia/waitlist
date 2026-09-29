@@ -6,6 +6,7 @@ import { PastelTemplate } from "./pastel-template";
 import { EditorialTemplate } from "./editorial-template";
 import { SplitTemplate } from "./split-template";
 import { MonoTemplate } from "./mono-template";
+import { AuroraTemplate } from "./aurora-template";
 import {
   normalizeTemplateData,
   type TemplateId,
@@ -15,6 +16,7 @@ import {
   type EditorialTemplateData,
   type SplitTemplateData,
   type MonoTemplateData,
+  type AuroraTemplateData,
 } from "@/lib/templates";
 
 export function TemplateRenderer({
@@ -96,6 +98,21 @@ export function TemplateRenderer({
         className={`${shell} bg-[#FAFAFA] px-4 py-16 flex items-center justify-center`}
       >
         <MonoTemplate publicKey={publicKey} data={data} realCount={realCount} preview={preview} />
+      </div>
+    );
+  }
+
+  if (templateId === "aurora") {
+    const data = normalizeTemplateData("aurora", templateData) as AuroraTemplateData;
+    return (
+      <div data-surface="template" className={shell}>
+        <AuroraTemplate
+          publicKey={publicKey}
+          data={data}
+          realCount={realCount}
+          embedded={embedded}
+          preview={preview}
+        />
       </div>
     );
   }

@@ -23,6 +23,7 @@ const TEMPLATE_ACCENT_COLOR: Record<TemplateId, string> = {
   editorial: "#1a1a1a",
   split: "#111111",
   mono: "#2540FF",
+  aurora: "#141019",
 };
 
 // ── Types ──────────────────────────────────────────────

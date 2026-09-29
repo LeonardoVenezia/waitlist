@@ -331,6 +331,63 @@ export function TemplateEditor({
     );
   }
 
+  if (templateId === "aurora") {
+    return (
+      <div className="space-y-4">
+        <Field label="Badge text">
+          <Input
+            value={(data.badge_text as string) ?? ""}
+            onChange={(e) => set("badge_text", e.target.value)}
+            placeholder="Now in private beta"
+          />
+        </Field>
+        <Field label="Title">
+          <Input
+            value={(data.title as string) ?? ""}
+            onChange={(e) => set("title", e.target.value)}
+            placeholder="Launch something *worth* waiting for"
+          />
+        </Field>
+        <p className="-mt-2 text-xs text-muted-foreground">
+          Wrap a word in *asterisks* to set it in italics.
+        </p>
+        <Field label="Subtitle">
+          <Input
+            value={(data.subtitle as string) ?? ""}
+            onChange={(e) => set("subtitle", e.target.value)}
+            placeholder="A waitlist that looks as good as the thing you're building."
+          />
+        </Field>
+        <Field label="CTA label">
+          <Input
+            value={(data.cta_label as string) ?? ""}
+            onChange={(e) => set("cta_label", e.target.value)}
+            placeholder="Get early access"
+          />
+        </Field>
+        <Field label="Floating tags (comma separated)">
+          <FloatingTagsInput
+            value={(data.floating_tags as string[]) ?? []}
+            onChange={(v) => set("floating_tags", v)}
+          />
+        </Field>
+        <Field label="Social count override">
+          <Input
+            value={(data.social_count_override as string) ?? ""}
+            onChange={(e) => set("social_count_override", e.target.value)}
+            placeholder="Leave empty to use real count"
+          />
+        </Field>
+        <ToggleField
+          label="Show social proof"
+          checked={(data.show_social_proof as boolean) ?? true}
+          onChange={(v) => set("show_social_proof", v)}
+        />
+        {saveButton}
+      </div>
+    );
+  }
+
   const benefits = (data.benefits as string[]) ?? [];
   const tabs = (data.tabs as Array<{ label: string; title: string; description: string }>) ?? [];
   const testimonials = (data.testimonials as Array<{ quote: string; author: string }>) ?? [];

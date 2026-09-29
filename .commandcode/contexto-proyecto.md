@@ -200,7 +200,7 @@ Los clientes de email no soportan `var()`, `oklch()`, gradientes ni `@font-face`
 
 ```json
 {
-  "template_id": "neon" | "carbon" | "pastel" | "editorial" | "split" | "mono" | null,
+  "template_id": "neon" | "carbon" | "pastel" | "editorial" | "split" | "mono" | "aurora" | null,
   "template_data": { ... },
   "sections": [ ... ],
   "global": { ... }
