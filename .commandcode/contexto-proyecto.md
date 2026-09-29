@@ -88,8 +88,9 @@ El showcase del plan Free expira al año (`expires_at`); el job diario `expire_d
 | `/dashboard/projects` | Lista de proyectos |
 | `/dashboard/projects/new` | Crear proyecto |
 | `/dashboard/projects/[id]` | Detalle del proyecto |
-| `/dashboard/projects/[id]/settings` | Branding, hero, thank-you, submissions, post-signup, email, notifications, team, block |
+| `/dashboard/projects/[id]/settings` | Branding, hero, submissions, post-signup, email, notifications, team, block |
 | `/dashboard/projects/[id]/page-builder` | Page builder + selector de templates |
+| `/dashboard/projects/[id]/thank-you` | Pantalla post-registro: experiencia, copy, compartir, preview en vivo |
 | `/dashboard/projects/[id]/integration` | Widget, custom form, leaderboard |
 | `/dashboard/projects/[id]/subscribers` | Gestión de suscriptores |
 | `/dashboard/projects/[id]/analytics` | Analíticas |
@@ -219,7 +220,7 @@ Los clientes de email no soportan `var()`, `oklch()`, gradientes ni `@font-face`
 
 ## Pantalla post-registro ("Embajadores")
 
-La pantalla que ve el visitante **después** de dejar su email. Es una superficie propia: **no** es un template de landing, no aparece en el picker del Page Builder y no comparte `TemplateId`. Se elige por proyecto en `settings.thank_you.experience` (`classic` default = comportamiento actual; tab **Thank You**, con preview en vivo).
+La pantalla que ve el visitante **después** de dejar su email. Es una superficie propia: **no** es un template de landing, no aparece en el picker del Page Builder y no comparte `TemplateId`. Se configura en su **propia sección** (`/dashboard/projects/[id]/thank-you`, en la nav junto a Page Builder), con panel + preview en vivo. Se guarda en `settings.thank_you.experience` (`classic` default = comportamiento actual).
 
 - `src/lib/thank-you-experiences.ts` — registro (mismo patrón que `templates.ts`) y **toda la lógica pura**: `resolveThankYouConfig`, `milestoneStates`, `buildShareLinks`, `thankYouLabels`, `formatPositionLine`, `defaultMilestones`. El estado post-registro solo existe en el cliente después de un submit, así que este módulo es la única superficie verificable.
 - `src/components/thank-you/embajadores.tsx` — la pantalla (presentación). Se renderiza como **capa propia** (`fixed inset-0`) porque el estado `done` vive dentro del shell del template y 5 de los 7 shells tienen fondo y padding propios.
@@ -227,6 +228,13 @@ La pantalla que ve el visitante **después** de dejar su email. Es una superfici
 - Config que consume: `thank_you.experience` / `title` / `subtitle` / `message` / `social_message` / `social_buttons` / `brand_color`, `branding.logo_url` y `primary_color`, `settings.language` (en/es) y `referral.milestones` (`{count, reward}`, default 3/10/25 localizado).
 - `SubscribeResult.total` viene de `/api/public/subscribe` (el total ya se calculaba; sólo no se devolvía) y es lo que permite "Sos el #482 de 2.314".
 - Límites: el widget embebido en modo **custom** conserva su pantalla propia (plantilla de string con JS vanilla, no React); el paso de preguntas post-signup sigue siendo el de cada template.
+- **Guardado**: la sección tiene su propia action (`saveThankYouSettings`), que escribe **solo** `settings.thank_you`. Valida la experiencia contra el registro y fuerza `hide_branding: false` si el plan no es `launch`.
+
+## Guardado de settings (patrón obligatorio)
+
+Los tabs de Settings se renderizan condicionalmente, así que un submit **solo lleva los campos del tab activo**. Por eso la construcción de `settings` vive en `src/lib/project-settings.ts` (`buildProjectSettings`) y cada sección se reconstruye **solo si su tab es el activo**, preservándose desde la fila guardada en caso contrario. Antes solo `email` tenía ese guard y guardar desde cualquier tab reseteaba las demás secciones.
+
+Sin dueño (siempre se preservan): `thank_you` (ahora tiene su propia sección), `form` y `remove_branding` (no tienen UI), más los pass-through `widget`, `page_sections` y `leaderboard`. Al agregar una sección nueva al form, hay que sumarla a esa función con su guard.
 
 ---
 

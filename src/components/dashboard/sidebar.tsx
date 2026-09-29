@@ -17,6 +17,7 @@ import {
   IconTarget,
   IconChat,
   IconForm,
+  IconSparkles,
 } from "@/components/ui/icon";
 
 interface ProjectSummary {
@@ -36,6 +37,7 @@ const waitlistSubNav: SubNavItem[] = [
   { label: "Overview", href: (id) => `/dashboard/projects/${id}`, icon: <IconChart /> },
   { label: "Submissions", href: (id) => `/dashboard/projects/${id}/subscribers`, icon: <IconMail /> },
   { label: "Page Builder", href: (id) => `/dashboard/projects/${id}/page-builder`, icon: <IconPage /> },
+  { label: "Thank You", href: (id) => `/dashboard/projects/${id}/thank-you`, icon: <IconSparkles /> },
   { label: "Integration", href: (id) => `/dashboard/projects/${id}/integration`, icon: <IconPlug /> },
   { label: "Analytics", href: (id) => `/dashboard/projects/${id}/analytics`, icon: <IconTrending /> },
   { label: "Export", href: (id) => `/dashboard/projects/${id}/export`, icon: <IconDownload /> },

@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
-import { BRAND_ACCENT_OKLCH } from "@/lib/brand";
+import { buildProjectSettings } from "@/lib/project-settings";
 import type { Database } from "@/lib/supabase/types";
 
 type Settings = Database["public"]["Tables"]["projects"]["Row"]["settings"];
@@ -15,155 +15,31 @@ export async function updateProjectSettings(
 ) {
   const supabase = await createClient();
 
-  const nameInput = formData.get("name") as string | null;
-  const slugInput = formData.get("slug") as string | null;
-
-  // Get existing values to preserve them when saving from a tab that doesn't include name/slug
   const { data: current } = await supabase
     .from("projects")
     .select("name, slug, settings")
     .eq("id", waitlistId)
     .single();
 
-  const name = nameInput ?? current?.name ?? "";
-  const slug = slugInput ?? current?.slug ?? "";
+  // Only the active tab's inputs are mounted, so name/slug are read only when
+  // the tab that owns them is the one being saved.
+  const name = formData.has("name")
+    ? (formData.get("name") as string)
+    : (current?.name ?? "");
 
-  // Thank You Page
-  const thankYou = {
-    // Which post-signup screen the project uses. Lives inside thank_you so the
-    // config shape stays the same.
-    experience: (formData.get("thank_you.experience") as string) || "classic",
-    message: formData.get("thank_you.message") as string || "",
-    show_position: formData.get("thank_you.show_position") !== "off",
-    show_referral_link: formData.get("thank_you.show_referral_link") !== "off",
-    show_leaderboard: formData.get("thank_you.show_leaderboard") !== "off",
-    title: formData.get("thank_you.title") as string || "",
-    subtitle: formData.get("thank_you.subtitle") as string || "",
-    description: formData.get("thank_you.description") as string || "",
-    position_text: formData.get("thank_you.position_text") as string || "",
-    referred_text: formData.get("thank_you.referred_text") as string || "",
-    social_message: formData.get("thank_you.social_message") as string || "",
-    social_buttons: formData.getAll("thank_you.social_buttons") as string[],
-    brand_color: formData.get("thank_you.brand_color") as string || "#0ea5e9",
-    cta_label: formData.get("thank_you.cta_label") as string || "",
-    cta_url: formData.get("thank_you.cta_url") as string || "",
-    hide_confetti: formData.get("thank_you.hide_confetti") === "on",
-    hide_referral: formData.get("thank_you.hide_referral") === "on",
-    hide_branding: formData.get("thank_you.hide_branding") === "on",
-    hide_until_verified: formData.get("thank_you.hide_until_verified") === "on",
-    tracking_code: formData.get("thank_you.tracking_code") as string || "",
-    social_twitter: formData.get("thank_you.social_twitter") as string || "",
-    social_instagram: formData.get("thank_you.social_instagram") as string || "",
-    social_threads: formData.get("thank_you.social_threads") as string || "",
-    social_linkedin: formData.get("thank_you.social_linkedin") as string || "",
-    social_facebook: formData.get("thank_you.social_facebook") as string || "",
-    social_reddit: formData.get("thank_you.social_reddit") as string || "",
-    social_telegram: formData.get("thank_you.social_telegram") as string || "",
-    social_whatsapp: formData.get("thank_you.social_whatsapp") as string || "",
-    social_tiktok: formData.get("thank_you.social_tiktok") as string || "",
-    social_youtube: formData.get("thank_you.social_youtube") as string || "",
-    social_discord: formData.get("thank_you.social_discord") as string || "",
-  };
+  const slug = formData.has("slug")
+    ? (formData.get("slug") as string).toLowerCase().replace(/[^a-z0-9-]/g, "")
+    : (current?.slug ?? "");
 
-  // Submissions
-  const initialPosition = Number(formData.get("submissions.initial_position")) || 0;
-  const positionToMove = Number(formData.get("submissions.position_to_move")) || 10;
-
-  // Email — preserve existing values unless the Email tab is active
-  const activeTab = formData.get("active_tab") as string | null;
-  const existingEmail = ((current?.settings as Record<string, unknown>)?.email ??
-    {}) as Record<string, unknown>;
-
-  const emailSettings = activeTab === "Email"
-    ? {
-        welcome_email: formData.has("email.welcome_email")
-          ? formData.get("email.welcome_email") === "on"
-          : existingEmail.welcome_email !== false,
-        welcome_subject: formData.has("email.welcome_subject")
-          ? (formData.get("email.welcome_subject") as string) || ""
-          : (existingEmail.welcome_subject as string) ?? "",
-        welcome_message: formData.has("email.welcome_message")
-          ? (formData.get("email.welcome_message") as string) || ""
-          : (existingEmail.welcome_message as string) ?? "",
-        hide_welcome_cta: formData.has("email.hide_welcome_cta")
-          ? formData.get("email.hide_welcome_cta") === "on"
-          : existingEmail.hide_welcome_cta === true,
-        customize_welcome_cta: formData.has("email.customize_welcome_cta")
-          ? formData.get("email.customize_welcome_cta") === "on"
-          : existingEmail.customize_welcome_cta === true,
-        welcome_cta_url: formData.has("email.welcome_cta_url")
-          ? (formData.get("email.welcome_cta_url") as string) || ""
-          : (existingEmail.welcome_cta_url as string) ?? "",
-        welcome_after_verification: formData.has("email.welcome_after_verification")
-          ? formData.get("email.welcome_after_verification") === "on"
-          : existingEmail.welcome_after_verification === true,
-        verify_email: formData.has("email.verify_email")
-          ? formData.get("email.verify_email") === "on"
-          : existingEmail.verify_email !== false,
-        verify_message: formData.has("email.verify_message")
-          ? (formData.get("email.verify_message") as string) || ""
-          : (existingEmail.verify_message as string) ?? "",
-        signature: formData.has("email.signature")
-          ? (formData.get("email.signature") as string) || ""
-          : (existingEmail.signature as string) ?? "",
-        reply_to_name: formData.has("email.reply_to_name")
-          ? (formData.get("email.reply_to_name") as string) || ""
-          : (existingEmail.reply_to_name as string) ?? "",
-        reply_to_email: formData.has("email.reply_to_email")
-          ? (formData.get("email.reply_to_email") as string) || ""
-          : (existingEmail.reply_to_email as string) ?? "",
-      }
-    : existingEmail;
-
-  // Notifications
-  const notifications = {
-    email_on_signup: formData.get("notifications.email_on_signup") !== "off",
-    slack_webhook_url: formData.get("notifications.slack_webhook_url") as string || null,
-  };
-
-  // Block list
-  const blockedEmails = formData.get("blocked_emails") as string || "";
-
-  // Build settings preserving existing data
-  const existing = (current?.settings as Record<string, unknown>) ?? {};
-
-  const settings = {
-    branding: {
-      logo_url: formData.get("branding.logo_url") as string || null,
-      primary_color: (formData.get("branding.primary_color") as string) || BRAND_ACCENT_OKLCH,
-      font: formData.get("branding.font") as string || null,
-    },
-    hero: {
-      title: (formData.get("hero.title") as string) || "",
-      subtitle: (formData.get("hero.subtitle") as string) || "",
-      cta_label: (formData.get("hero.cta_label") as string) || "Join the waitlist",
-    },
-    form: {
-      fields: [{ name: "email", type: "email", required: true }],
-      collect_name: formData.get("form.collect_name") === "on",
-    },
-    thank_you: thankYou,
-    referral: {
-      enabled: formData.get("referral.enabled") !== "off",
-      positions_per_referral: positionToMove,
-      starting_position_offset: initialPosition,
-      reward_text: (formData.get("referral.reward_text") as string) || "",
-      milestones: parseMilestones(formData.get("referral.milestones") as string),
-    },
-    notifications,
-    email: emailSettings,
-    blocked_emails: blockedEmails ? blockedEmails.split(",").map((e: string) => e.trim()).filter(Boolean) : [],
-    language: (formData.get("language") as string) || "en",
-    remove_branding: formData.get("remove_branding") === "on",
-    post_signup: parsePostSignup(formData.get("post_signup") as string),
-    widget: existing.widget,
-    page_sections: existing.page_sections,
-    leaderboard: existing.leaderboard,
-  } as unknown as Settings;
+  const settings = buildProjectSettings({
+    current: (current?.settings as Record<string, unknown>) ?? {},
+    formData,
+    activeTab: formData.get("active_tab") as string | null,
+  }) as unknown as Settings;
 
   const { error } = await supabase
     .from("projects")
-    .update({ name, slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, ""), settings })
+    .update({ name, slug, settings })
     .eq("id", waitlistId);
 
   if (error) {
@@ -230,24 +106,4 @@ export async function removeTeamMember(waitlistId: string, memberId: string) {
   if (error) return { error: error.message };
   revalidatePath(`/dashboard/projects/${waitlistId}/settings`);
   return { success: true };
-}
-
-function parseMilestones(raw: string | null): Array<{ count: number; reward: string }> {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed.filter((m: { count: number; reward: string }) => m.count > 0 && m.reward);
-    return [];
-  } catch {
-    return [];
-  }
-}
-
-function parsePostSignup(raw: string | null): Record<string, unknown> | undefined {
-  if (!raw) return undefined;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return undefined;
-  }
 }

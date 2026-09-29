@@ -290,3 +290,22 @@ Nueva pantalla post-registro seleccionable, la que ve el visitante **después** 
 - **El widget embebido en modo custom** conserva su propia pantalla: es una plantilla de string con JS vanilla y no puede renderizar la experiencia sin duplicar el diseño. En modo `template` redirige a `/p/[slug]?embed=1`, así que ese camino sí la muestra.
 - **El paso de preguntas post-signup** sigue siendo el de cada template; la experiencia es dueña del "done".
 - La pantalla es deliberadamente clara y **no combina con un landing oscuro** (Neon, Carbon): es la consecuencia aceptada de que el proyecto la elija por encima del look del template.
+
+## El thank-you pasa a ser una sección propia (y se arregla una pérdida de datos en Settings)
+
+El thank-you se configuraba en un tab de Settings, y la experiencia post-registro había quedado como una card dentro de ese tab. Ahora es una sección del proyecto, como el Page Builder.
+
+- **Nueva sección** `/dashboard/projects/[id]/thank-you`, en la nav del proyecto entre Page Builder e Integration: header + barra de guardado (con dirty tracking y `beforeunload`), panel izquierdo con la configuración agrupada (Experience, Confirmation, Referral, Sharing, Style & tracking, Visibility) y **preview en vivo** a la derecha, en el mismo chrome de navegador que el Page Builder.
+- **Se muda todo el thank-you**: la experiencia, el copy, el mensaje de compartir, los botones, el color de marca, el tracking code y los toggles. El tab "Thank You" de Settings **se elimina**.
+- El preview reacciona mientras escribís (campos controlados) y con `Embajadores` seleccionado muestra la pantalla real con números de ejemplo (posición #482 de 2.314, 5 referidos, hitos).
+- **Guardado acotado**: la sección tiene su propia action que escribe **solo** `settings.thank_you`, valida la experiencia contra el registro y fuerza `hide_branding: false` fuera del plan `launch`.
+
+### El bug que apareció en el camino
+
+Los tabs de Settings se renderizan condicionalmente, así que un submit solo lleva los campos del tab activo — pero la action reconstruía **cada sección desde `formData`**, con un solo guard para `email`. Guardar desde cualquier tab **reseteaba silenciosamente todas las demás secciones**: el Slack webhook, los milestones, el `post_signup`, el copy del hero, el color de marca, el idioma, la block list y los toggles de referidos.
+
+- La construcción de `settings` se extrajo a `src/lib/project-settings.ts` (`buildProjectSettings`), donde **cada sección se reconstruye solo si su tab es el activo** y se preserva desde la fila guardada en caso contrario.
+- Las secciones sin dueño se preservan siempre: `thank_you` (ahora tiene su sección), y `form` y `remove_branding`, que **no existen en ningún formulario** — la action los escribía desde campos ausentes en cada guardado.
+- **Verificado con 37 aserciones** sobre la función pura con `FormData` real: guardar desde cada tab actualiza solo lo suyo, preserva todo lo demás, un tab desconocido no rompe nada y un proyecto nuevo recibe defaults en vez de `undefined`.
+
+Docs: `contexto-proyecto.md` documenta el patrón de guardado como obligatorio para futuras secciones.

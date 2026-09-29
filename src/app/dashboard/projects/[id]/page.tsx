@@ -197,6 +197,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
         {[
           { label: "Subscribers", href: "subscribers" },
           { label: "Page Builder", href: "page-builder" },
+          { label: "Thank You", href: "thank-you" },
           { label: "Integration", href: "integration" },
           { label: "Analytics", href: "analytics" },
           { label: "Export", href: "export" },

@@ -87,7 +87,7 @@ Transactional email is a third surface, and the most constrained one: clients st
 
 ### Post-signup experience
 
-The screen a visitor sees *after* submitting their email is a fourth surface, and the only one the project chooses on its own axis (`thank_you.experience`): it is **not** the landing template, and picking a landing template does not pick this.
+The screen a visitor sees *after* submitting their email is a fourth surface, and the only one the project chooses on its own axis (`thank_you.experience`): it is **not** the landing template, and picking a landing template does not pick this. It has its own dashboard section (`/dashboard/projects/[id]/thank-you`), with the panel + live-preview layout of the Page Builder.
 
 - **It has its own world.** `Embajadores` is a light, cheerful referral hub — position in line, share buttons, progress to rewards. It deliberately does not try to match a dark landing template, because its job is the referral loop, not visual continuity.
 - **Theming comes from the project, not the template**: `thank_you.brand_color` (falling back to `branding.primary_color`) is the accent, and its text color is **computed** with `contrastTextOn`, never a fixed white — the owner can set any accent.

@@ -8,17 +8,10 @@ import { updateProjectSettings, inviteTeamMember, removeTeamMember } from "./act
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  THANK_YOU_EXPERIENCES,
-  normalizeMilestones,
-  resolveThankYouConfig,
-} from "@/lib/thank-you-experiences";
-import { Embajadores } from "@/components/thank-you/embajadores";
-import type { SubscribeResult } from "@/components/templates/use-waitlist-subscribe";
+import { ToggleRow } from "@/components/dashboard/settings-fields";
 
 type Project = Database["public"]["Tables"]["projects"]["Row"];
 type TeamMember = {
@@ -42,36 +35,6 @@ function ColorInput({ id, name, defaultValue, label }: { id: string; name: strin
   );
 }
 
-// ── ToggleRow ──
-function ToggleRow({ id, name, label, description, defaultChecked, disabled }: {
-  id: string; name: string; label: string; description?: string; defaultChecked?: boolean; disabled?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <div>
-        <Label htmlFor={id}>{label}</Label>
-        {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
-      </div>
-      <div>
-        <Switch id={id} name={name} defaultChecked={defaultChecked} disabled={disabled} />
-        <input type="hidden" name={name} value="off" disabled={disabled} />
-      </div>
-    </div>
-  );
-}
-
-// ── SocialInput ──
-function SocialInput({ id, name, label, placeholder, defaultValue }: {
-  id: string; name: string; label: string; placeholder: string; defaultValue: string;
-}) {
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
-      <Input id={id} name={name} defaultValue={defaultValue} placeholder={placeholder} />
-    </div>
-  );
-}
-
 // ── Upgrade Badge ──
 function UpgradeBadge({ plan }: { plan: string }) {
   return (
@@ -84,7 +47,7 @@ function UpgradeBadge({ plan }: { plan: string }) {
 
 // ── Tab list ──
 const TABS = [
-  "Branding", "Hero", "Thank You", "Submissions", "Post-signup", "Email", "Notifications", "Team", "Block",
+  "Branding", "Hero", "Submissions", "Post-signup", "Email", "Notifications", "Team", "Block",
 ] as const;
 
 // ── Milestones Editor ──
@@ -242,86 +205,6 @@ function PlanExpiryNote({ expiresAt, projectId }: { expiresAt: string; projectId
   );
 }
 
-// ── Post-signup experience ──
-function PostSignupExperienceCard({
-  settings,
-  slug,
-}: {
-  settings: Record<string, unknown>;
-  slug: string;
-}) {
-  const saved = (settings.thank_you ?? {}) as Record<string, unknown>;
-  const [experience, setExperience] = useState<string>(
-    (saved.experience as string) ?? "classic",
-  );
-  // Saved copy + the selected experience, so the preview reacts before saving.
-  const config = resolveThankYouConfig({
-    ...settings,
-    thank_you: { ...saved, experience },
-  });
-  const milestones = normalizeMilestones(
-    ((settings.referral ?? {}) as Record<string, unknown>).milestones,
-  );
-  const previewResult: SubscribeResult = {
-    id: "preview",
-    email: "you@example.com",
-    position: 482,
-    referral_code: "preview",
-    referral_link: `/p/${slug}?ref=preview`,
-    referral_count: 5,
-    total: 2314,
-    milestones: milestones.length > 0 ? milestones : undefined,
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Post-signup experience</CardTitle>
-        <CardDescription>
-          What people see right after they leave their email.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <input type="hidden" name="thank_you.experience" value={experience} />
-        <div className="grid gap-3 sm:grid-cols-2">
-          {Object.values(THANK_YOU_EXPERIENCES).map((def) => {
-            const active = experience === def.id;
-            return (
-              <button
-                key={def.id}
-                type="button"
-                onClick={() => setExperience(def.id)}
-                className={`w-full overflow-hidden rounded-xl border text-left transition ${
-                  active ? "border-primary bg-primary/5" : "hover:bg-muted"
-                }`}
-              >
-                <div
-                  className={`flex h-16 items-center justify-center px-4 ${def.thumbnail.bg} ${def.thumbnail.text}`}
-                >
-                  <span className="truncate font-heading text-lg">{def.name}</span>
-                </div>
-                <p className="px-3 py-2 text-xs text-muted-foreground">{def.description}</p>
-              </button>
-            );
-          })}
-        </div>
-
-        {experience === "embajadores" && (
-          <div className="space-y-2">
-            <div className="max-h-[620px] overflow-y-auto rounded-xl border">
-              <Embajadores config={config} result={previewResult} layout="inline" />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Preview with example numbers. Rewards come from the Submissions tab and the copy from
-              this one — save to refresh.
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
 // ── Main ──
 export function SettingsForm({
   project,
@@ -337,7 +220,6 @@ export function SettingsForm({
   const settings = project.settings as Record<string, unknown>;
   const branding = (settings.branding ?? {}) as Record<string, unknown>;
   const hero = (settings.hero ?? {}) as Record<string, unknown>;
-  const thankYou = (settings.thank_you ?? {}) as Record<string, unknown>;
   const referral = (settings.referral ?? {}) as Record<string, unknown>;
   const notifications = (settings.notifications ?? {}) as Record<string, unknown>;
   const email = (settings.email ?? {}) as Record<string, unknown>;
@@ -446,104 +328,6 @@ export function SettingsForm({
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {/* ── THANK YOU ── */}
-      {tab === "Thank You" && (
-        <div className="space-y-6">
-          <PostSignupExperienceCard settings={settings} slug={project.slug} />
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">Thank You Page <UpgradeBadge plan="Launch" /></CardTitle>
-              <CardDescription>What subscribers see after signing up.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="thank_you.message">Custom message</Label>
-                <Input id="thank_you.message" name="thank_you.message" defaultValue={(thankYou.message as string) ?? ""} placeholder="You're on the list!" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="thank_you.title">Title</Label>
-                <Input id="thank_you.title" name="thank_you.title" defaultValue={(thankYou.title as string) ?? ""} placeholder="You're on the waitlist!" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="thank_you.subtitle">Subtitle</Label>
-                <Input id="thank_you.subtitle" name="thank_you.subtitle" defaultValue={(thankYou.subtitle as string) ?? ""} placeholder="Want to get access sooner?" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="thank_you.description">Reward description</Label>
-                <Input id="thank_you.description" name="thank_you.description" defaultValue={(thankYou.description as string) ?? ""} placeholder="Move up the waitlist by sharing..." />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="thank_you.position_text">Position text <span className="text-xs text-muted-foreground">(use {"{POSITION}"} and {"{TOTAL}"})</span></Label>
-                <Input id="thank_you.position_text" name="thank_you.position_text" defaultValue={(thankYou.position_text as string) ?? ""} placeholder="Your current position is #{POSITION}" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="thank_you.referred_text">Referred text <span className="text-xs text-muted-foreground">(use {"{REFERRED}"})</span></Label>
-                <Input id="thank_you.referred_text" name="thank_you.referred_text" defaultValue={(thankYou.referred_text as string) ?? ""} placeholder="You have referred {REFERRED} friends" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="thank_you.social_message">Social share message</Label>
-                <Input id="thank_you.social_message" name="thank_you.social_message" defaultValue={(thankYou.social_message as string) ?? ""} placeholder="I just joined the waitlist!" />
-              </div>
-              <div>
-                <Label>Social share buttons</Label>
-                <div className="grid grid-cols-3 gap-2 mt-2">
-                  {["twitter", "threads", "whatsapp", "facebook", "linkedin", "reddit", "telegram", "vk", "email"].map((s) => (
-                    <Checkbox
-                      key={s}
-                      name="thank_you.social_buttons"
-                      value={s}
-                      defaultChecked={((thankYou.social_buttons as string[]) ?? []).includes(s)}
-                      label={s.charAt(0).toUpperCase() + s.slice(1)}
-                    />
-                  ))}
-                </div>
-              </div>
-              <ColorInput id="thank_you.brand_color" name="thank_you.brand_color" defaultValue={(thankYou.brand_color as string) ?? "#0ea5e9"} label="Background color" />
-              <div className="space-y-2">
-                <Label htmlFor="thank_you.cta_label">CTA button text</Label>
-                <Input id="thank_you.cta_label" name="thank_you.cta_label" defaultValue={(thankYou.cta_label as string) ?? ""} placeholder="Back to site" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="thank_you.cta_url">CTA button URL</Label>
-                <Input id="thank_you.cta_url" name="thank_you.cta_url" defaultValue={(thankYou.cta_url as string) ?? ""} placeholder="https://example.com" />
-              </div>
-
-              {/* Social links */}
-              <div className="border-t pt-4 mt-4">
-                <Label className="mb-2 block">Social links</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <SocialInput id="thank_you.social_twitter" name="thank_you.social_twitter" label="X/Twitter" placeholder="https://twitter.com/username" defaultValue={(thankYou.social_twitter as string) ?? ""} />
-                  <SocialInput id="thank_you.social_instagram" name="thank_you.social_instagram" label="Instagram" placeholder="https://instagram.com/username" defaultValue={(thankYou.social_instagram as string) ?? ""} />
-                  <SocialInput id="thank_you.social_threads" name="thank_you.social_threads" label="Threads" placeholder="https://threads.net/@username" defaultValue={(thankYou.social_threads as string) ?? ""} />
-                  <SocialInput id="thank_you.social_linkedin" name="thank_you.social_linkedin" label="LinkedIn" placeholder="https://linkedin.com/in/username" defaultValue={(thankYou.social_linkedin as string) ?? ""} />
-                  <SocialInput id="thank_you.social_facebook" name="thank_you.social_facebook" label="Facebook" placeholder="https://facebook.com/username" defaultValue={(thankYou.social_facebook as string) ?? ""} />
-                  <SocialInput id="thank_you.social_reddit" name="thank_you.social_reddit" label="Reddit" placeholder="https://reddit.com/s/name" defaultValue={(thankYou.social_reddit as string) ?? ""} />
-                  <SocialInput id="thank_you.social_telegram" name="thank_you.social_telegram" label="Telegram" placeholder="https://t.me/username" defaultValue={(thankYou.social_telegram as string) ?? ""} />
-                  <SocialInput id="thank_you.social_whatsapp" name="thank_you.social_whatsapp" label="WhatsApp" placeholder="https://wa.me/phone" defaultValue={(thankYou.social_whatsapp as string) ?? ""} />
-                  <SocialInput id="thank_you.social_tiktok" name="thank_you.social_tiktok" label="TikTok" placeholder="https://tiktok.com/@username" defaultValue={(thankYou.social_tiktok as string) ?? ""} />
-                  <SocialInput id="thank_you.social_youtube" name="thank_you.social_youtube" label="YouTube" placeholder="https://youtube.com/channel/name" defaultValue={(thankYou.social_youtube as string) ?? ""} />
-                  <SocialInput id="thank_you.social_discord" name="thank_you.social_discord" label="Discord" placeholder="https://discord.gg/name" defaultValue={(thankYou.social_discord as string) ?? ""} />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="thank_you.tracking_code">Tracking code <span className="text-xs text-muted-foreground">(JS, before &lt;/head&gt;)</span></Label>
-                <textarea id="thank_you.tracking_code" name="thank_you.tracking_code" rows={3} defaultValue={(thankYou.tracking_code as string) ?? ""} className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm" placeholder="Google Analytics, Ads, etc." />
-              </div>
-
-              <ToggleRow id="thank_you.show_position" name="thank_you.show_position" label="Show position" defaultChecked={(thankYou.show_position as boolean) ?? true} />
-              <ToggleRow id="thank_you.show_referral_link" name="thank_you.show_referral_link" label="Show referral link" defaultChecked={(thankYou.show_referral_link as boolean) ?? true} />
-              <ToggleRow id="thank_you.show_leaderboard" name="thank_you.show_leaderboard" label="Show leaderboard" defaultChecked={(thankYou.show_leaderboard as boolean) ?? true} />
-              <ToggleRow id="thank_you.hide_confetti" name="thank_you.hide_confetti" label="Hide confetti" defaultChecked={(thankYou.hide_confetti as boolean) ?? false} />
-              <ToggleRow id="thank_you.hide_referral" name="thank_you.hide_referral" label="Hide referral" defaultChecked={(thankYou.hide_referral as boolean) ?? false} />
-              <ToggleRow id="thank_you.hide_branding" name="thank_you.hide_branding" label="Hide powered by" disabled={project.plan !== "launch"} defaultChecked={(thankYou.hide_branding as boolean) ?? false} />
-              {project.plan !== "launch" && <p className="text-xs text-primary">Upgrade to Launch to hide branding</p>}
-              <ToggleRow id="thank_you.hide_until_verified" name="thank_you.hide_until_verified" label="Hide success until verified" defaultChecked={(thankYou.hide_until_verified as boolean) ?? false} />
-            </CardContent>
-          </Card>
-        </div>
       )}
 
       {/* ── SUBMISSIONS ── */}
