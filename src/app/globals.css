@@ -103,6 +103,20 @@
     @apply font-heading font-semibold tracking-tight;
   }
   /*
+   * Sizes live here too, not one class at a time. The app's convention is h1 for
+   * page titles and h3 for card / section titles, and every other heading
+   * declares its own size anyway, so encoding the default only decides the ones
+   * that don't — which otherwise land on the browser default (h3 at 1.17em).
+   * h2 is deliberately left open: it is used both for public-page section titles
+   * and for smaller card headings, so there is no honest default.
+   */
+  h1 {
+    @apply text-2xl;
+  }
+  h3 {
+    @apply text-lg;
+  }
+  /*
    * Templates are self-contained visual worlds: the app's heading typography
    * must not leak into them. This sits in the same layer as the rule above so
    * its higher specificity wins for un-styled headings, but it still loses to

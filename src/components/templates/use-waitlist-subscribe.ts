@@ -3,6 +3,20 @@
 import { useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { TURNSTILE_ENABLED } from "@/lib/turnstile";
+import { usePreviewDone } from "./preview-done";
+
+/** The fake result a preview renders, so it reads like the real thing. */
+function buildPreviewResult(email: string): SubscribeResult {
+  return {
+    id: "preview",
+    email,
+    position: 482,
+    referral_code: "preview",
+    referral_link: "/preview",
+    referral_count: 5,
+    total: 2314,
+  };
+}
 
 export interface SubscribeResult {
   id: string;
@@ -43,6 +57,8 @@ export function useWaitlistSubscribe(
   options?: { preview?: boolean },
 ) {
   const isPreview = options?.preview ?? false;
+  // Dashboard previews that want the post-signup screen land on it directly.
+  const startAtDone = usePreviewDone() && isPreview;
   const searchParams = useSearchParams();
   const refCode = searchParams.get("ref") ?? undefined;
   const errorParam = searchParams.get("error");
@@ -50,8 +66,12 @@ export function useWaitlistSubscribe(
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(errorParam ?? null);
-  const [result, setResult] = useState<SubscribeResult | null>(null);
-  const [step, setStep] = useState<"subscribe" | "questions" | "done">("subscribe");
+  const [result, setResult] = useState<SubscribeResult | null>(
+    startAtDone ? buildPreviewResult("") : null,
+  );
+  const [step, setStep] = useState<"subscribe" | "questions" | "done">(
+    startAtDone ? "done" : "subscribe",
+  );
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [savingAnswers, setSavingAnswers] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -62,16 +82,7 @@ export function useWaitlistSubscribe(
   // the subscribers table.
   async function doPreviewSubmit() {
     await new Promise((r) => setTimeout(r, 600));
-    setResult({
-      id: "preview",
-      email,
-      position: 482,
-      referral_code: "preview",
-      referral_link: "/preview",
-      referral_count: 5,
-      // Plausible numbers so the post-signup preview reads like the real thing.
-      total: 2314,
-    });
+    setResult(buildPreviewResult(email));
     setStep("done");
     setLoading(false);
   }

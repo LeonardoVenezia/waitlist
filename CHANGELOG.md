@@ -326,3 +326,17 @@ Se revierte la experiencia post-registro seleccionable. La pantalla que sigue al
 - El mock de preview del Page Builder con números plausibles (#482 de 2.314), para que el bloque `done` de cada template se vea realista al probarlo.
 
 Docs actualizados a lo que hay hoy: `DESIGN.md`, `PRODUCT.md` y `contexto-proyecto.md` describen la pantalla como parte del template, no como una superficie elegible.
+
+## Sección Thank You: preview real, títulos y defaults
+
+Cuatro ajustes sobre la sección que quedó después del rollback de Embajadores.
+
+- **Títulos de sección más grandes**: los encabezados de los grupos (Confirmation, Referral, Sharing, Style & tracking, Visibility) pasan de `text-sm font-semibold` a `font-semibold text-lg`, el mismo estándar al que llevamos los títulos del editor de formularios.
+- **Preview real en vez de una nota.** El panel derecho ahora renderiza **la pantalla tal como se va a ver**:
+  - Con template de landing, el propio post-registro de ese template. Para lograrlo sin tocar los 7 templates, se agregó `PreviewDoneContext`: un contexto que el hook `useWaitlistSubscribe` lee para arrancar directo en el estado `done` con un result mock. La sección envuelve al `TemplateRenderer` en el provider y listo — ningún template sabe que existe un preview.
+  - Sin template, la pantalla clásica con el **estado vivo** del formulario, así que reacciona mientras escribís. Para eso se extrajo `ClassicThankYou` (`src/components/thank-you/classic-thank-you.tsx`), que ahora usan tanto `public-waitlist-form.tsx` como el preview, en vez de duplicar el markup.
+  - Se quitaron los links de "Open live" (header y panel) y no se agregó ningún link de preview.
+- **Defaults en un solo lugar**: `src/lib/thank-you.ts` (`CLASSIC_THANK_YOU_DEFAULTS`) es ahora la fuente de los textos por defecto de la pantalla clásica. La usan `ClassicThankYou`, `widget-html.ts` y los `placeholder`/`hint` de la sección, así que un placeholder dice exactamente lo que se vería por defecto. De paso quedó alineado un default que estaba duplicado y **desincronizado** en el widget: decía "Share your referral link:" mientras la página decía "Share your referral link to climb the ranks:".
+- **Copy**: se reescribió la frase del panel para que el nombre del template no quede pegado a la palabra siguiente. En la fuente el espacio estaba, así que no pude reproducir el pegado, pero la construí de forma que no dependa de un espacio entre un `<strong>` y el texto contiguo.
+
+**Verificación**: widget (que sí es SSR) comprobado contra los defaults compartidos y los tokens `{POSITION}`/`{TOTAL}`; página pública renderizando; la ruta de la sección sigue protegida; `tsc`, `build` y lint (13 errores preexistentes). El preview en sí y la pantalla clásica viven en el cliente después de un submit, así que el pixel queda para el navegador.

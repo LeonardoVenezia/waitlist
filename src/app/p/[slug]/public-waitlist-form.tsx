@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { TURNSTILE_ENABLED } from "@/lib/turnstile";
+import { ClassicThankYou } from "@/components/thank-you/classic-thank-you";
+import type { SubscribeResult } from "@/components/templates/use-waitlist-subscribe";
 
 interface WaitlistFormProps {
   publicKey: string;
@@ -19,28 +21,6 @@ interface WaitlistFormProps {
   buttonTextColor?: string;
   showCount?: boolean;
   showLeaderboard?: boolean;
-}
-
-interface SubscribeResult {
-  id: string;
-  email: string;
-  position: number;
-  referral_code: string;
-  referral_link: string;
-  referral_count: number;
-  total?: number;
-  leaderboard?: Array<{ position: number; email: string; referral_count: number }>;
-  milestones?: Array<{ count: number; reward: string }>;
-  reward_text?: string | null;
-  post_signup?: {
-    title: string;
-    questions: Array<{
-      type: "text" | "textarea" | "select";
-      label: string;
-      required?: boolean;
-      options?: string[];
-    }>;
-  } | null;
 }
 
 declare global {
@@ -239,82 +219,14 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
 
   // Success state
   if (step === "done" && result) {
-    const showMilestones = result.milestones && result.milestones.length > 0;
-    const positionTemplate = (thankYou.position_text as string) || "Your position: #{POSITION}";
-    // The editor advertises {POSITION} and {TOTAL}; both are filled here.
-    const positionText = result.position
-      ? positionTemplate
-          .replace("{POSITION}", String(result.position))
-          .replace("{TOTAL}", result.total ? String(result.total) : "")
-      : "";
-    const referralPrompt = (thankYou.description as string) || "Share your referral link to climb the ranks:";
     return (
-      <div className="space-y-4">
-        {(thankYou.title as string) && (
-          <p className="text-lg font-semibold">{thankYou.title as string}</p>
-        )}
-        {(thankYou.subtitle as string) && (
-          <p className="text-sm text-muted-foreground">{thankYou.subtitle as string}</p>
-        )}
-        {(thankYou.message as string) ? (
-          <p className="text-sm text-muted-foreground">{thankYou.message as string}</p>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            You&apos;re on the list!
-            {thankYou.show_position !== false ? ` ${positionText}` : ""}
-          </p>
-        )}
-
-        {result.reward_text && (
-          <p className="text-sm font-medium text-primary">{result.reward_text}</p>
-        )}
-
-        {thankYou.show_referral_link !== false && (
-          <div className="space-y-2">
-            <p className="text-sm font-medium">{referralPrompt}</p>
-            <div className="flex gap-2">
-              <Input
-                value={result.referral_link}
-                readOnly
-                className="font-mono text-xs"
-              />
-              <Button onClick={copyReferralLink} variant="outline" size="sm">
-                {copied ? "Copied!" : "Copy"}
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {showLeaderboard && thankYou.show_leaderboard !== false && result.leaderboard && result.leaderboard.length > 0 && (
-          <div className="rounded-lg border p-4 text-left">
-            <h3 className="mb-2 text-sm font-medium">Leaderboard</h3>
-            <div className="space-y-1 text-sm">
-              {result.leaderboard.map((entry) => (
-                <div key={entry.position} className="flex items-center justify-between">
-                  <span>
-                    <span className="font-medium">#{entry.position}</span>{" "}
-                    {entry.email.split("@")[0]}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {entry.referral_count} referral{entry.referral_count !== 1 ? "s" : ""}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showMilestones && (
-          <div className="rounded-lg border p-4 text-left">
-            <h3 className="mb-2 text-sm font-medium">Rewards</h3>
-            <ul className="space-y-1 text-sm text-muted-foreground">
-              {result.milestones!.map((m, i) => (
-                <li key={i}>🎁 {m.reward} at {m.count} referrals</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+      <ClassicThankYou
+        thankYou={thankYou}
+        result={result}
+        showLeaderboard={showLeaderboard}
+        copied={copied}
+        onCopy={copyReferralLink}
+      />
     );
   }
 

@@ -8,6 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, ToggleRow } from "@/components/dashboard/settings-fields";
 import { toHexColor } from "@/lib/color";
+import { CLASSIC_THANK_YOU_DEFAULTS } from "@/lib/thank-you";
+import { PreviewDoneContext } from "@/components/templates/preview-done";
+import { TemplateRenderer } from "@/components/templates/template-renderer";
+import { ClassicThankYou } from "@/components/thank-you/classic-thank-you";
+import type { SubscribeResult } from "@/components/templates/use-waitlist-subscribe";
+import type { TemplateId } from "@/lib/templates";
 import type { Plan } from "@/lib/plans";
 import { saveThankYouSettings } from "./actions";
 
@@ -44,6 +50,10 @@ export function ThankYouClient({
   initialThankYou,
   branding,
   templateName,
+  templateId,
+  templateData,
+  publicKey,
+  realCount,
 }: {
   waitlistId: string;
   slug: string;
@@ -51,11 +61,16 @@ export function ThankYouClient({
   initialThankYou: Record<string, unknown>;
   branding: Record<string, unknown>;
   templateName: string | null;
+  templateId: TemplateId | null;
+  templateData: unknown;
+  publicKey: string;
+  realCount: number;
 }) {
   const router = useRouter();
   const [thankYou, setThankYou] = useState<Record<string, unknown>>(initialThankYou);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [previewCopied, setPreviewCopied] = useState(false);
 
   const snapshot = JSON.stringify(thankYou);
   const [savedSnapshot, setSavedSnapshot] = useState(snapshot);
@@ -95,28 +110,31 @@ export function ThankYouClient({
     router.refresh();
   }, [waitlistId, slug, thankYou, router]);
 
+  const copyPreviewLink = useCallback(() => {
+    void navigator.clipboard.writeText(`/p/${slug}?ref=preview`);
+    setPreviewCopied(true);
+    setTimeout(() => setPreviewCopied(false), 2000);
+  }, [slug]);
+
+  const previewResult: SubscribeResult = {
+    id: "preview",
+    email: "you@example.com",
+    position: 482,
+    referral_code: "preview",
+    referral_link: `/p/${slug}?ref=preview`,
+    referral_count: 5,
+    total: 2314,
+  };
   const accentSwatch =
-    toHexColor(str("brand_color")) ??
-    toHexColor(branding.primary_color) ??
-    "#9D3E00";
+    toHexColor(str("brand_color")) ?? toHexColor(branding.primary_color) ?? "#9D3E00";
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold">Thank You</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            The screen people see right after they join your waitlist.
-          </p>
-        </div>
-        <a
-          href={`/p/${slug}`}
-          target="_blank"
-          rel="noopener"
-          className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
-        >
-          Open live
-        </a>
+      <div className="min-w-0">
+        <h1 className="text-2xl font-semibold">Thank You</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          The screen people see right after they join your waitlist.
+        </p>
       </div>
 
       {/* Save + status */}
@@ -139,16 +157,20 @@ export function ThankYouClient({
         {/* Left: settings */}
         <div className="space-y-4 lg:col-span-5">
           <section className="space-y-4 rounded-xl border bg-card p-5">
-            <h3 className="text-sm font-semibold">Confirmation</h3>
-            <Field label="Message" htmlFor="thank_you.message">
+            <h3 className="font-semibold text-lg">Confirmation</h3>
+            <Field
+              label="Message"
+              htmlFor="thank_you.message"
+              hint={`Empty shows: “${CLASSIC_THANK_YOU_DEFAULTS.message}”`}
+            >
               <Input
                 id="thank_you.message"
                 value={str("message")}
                 onChange={(e) => update("message", e.target.value)}
-                placeholder="You're on the list!"
+                placeholder={CLASSIC_THANK_YOU_DEFAULTS.message}
               />
             </Field>
-            <Field label="Title" htmlFor="thank_you.title">
+            <Field label="Title" htmlFor="thank_you.title" hint="Optional, no default.">
               <Input
                 id="thank_you.title"
                 value={str("title")}
@@ -156,7 +178,7 @@ export function ThankYouClient({
                 placeholder="You're on the waitlist!"
               />
             </Field>
-            <Field label="Subtitle" htmlFor="thank_you.subtitle">
+            <Field label="Subtitle" htmlFor="thank_you.subtitle" hint="Optional, no default.">
               <Input
                 id="thank_you.subtitle"
                 value={str("subtitle")}
@@ -167,25 +189,29 @@ export function ThankYouClient({
           </section>
 
           <section className="space-y-4 rounded-xl border bg-card p-5">
-            <h3 className="text-sm font-semibold">Referral</h3>
-            <Field label="Referral prompt" htmlFor="thank_you.description">
+            <h3 className="font-semibold text-lg">Referral</h3>
+            <Field
+              label="Referral prompt"
+              htmlFor="thank_you.description"
+              hint={`Empty shows: “${CLASSIC_THANK_YOU_DEFAULTS.description}”`}
+            >
               <Input
                 id="thank_you.description"
                 value={str("description")}
                 onChange={(e) => update("description", e.target.value)}
-                placeholder="Share your referral link to climb the ranks:"
+                placeholder={CLASSIC_THANK_YOU_DEFAULTS.description}
               />
             </Field>
             <Field
               label="Position text"
               htmlFor="thank_you.position_text"
-              hint="Tokens: {POSITION} and {TOTAL}."
+              hint={`Tokens: {POSITION} and {TOTAL}. Empty shows: “${CLASSIC_THANK_YOU_DEFAULTS.position_text}”`}
             >
               <Input
                 id="thank_you.position_text"
                 value={str("position_text")}
                 onChange={(e) => update("position_text", e.target.value)}
-                placeholder="You're #482 of 2,314"
+                placeholder={CLASSIC_THANK_YOU_DEFAULTS.position_text}
               />
             </Field>
             <Field
@@ -203,8 +229,8 @@ export function ThankYouClient({
           </section>
 
           <section className="space-y-4 rounded-xl border bg-card p-5">
-            <h3 className="text-sm font-semibold">Sharing</h3>
-            <Field label="Share message" htmlFor="thank_you.social_message">
+            <h3 className="font-semibold text-lg">Sharing</h3>
+            <Field label="Share message" htmlFor="thank_you.social_message" hint="No consumer yet.">
               <Input
                 id="thank_you.social_message"
                 value={str("social_message")}
@@ -251,7 +277,7 @@ export function ThankYouClient({
           </section>
 
           <section className="space-y-4 rounded-xl border bg-card p-5">
-            <h3 className="text-sm font-semibold">Style &amp; tracking</h3>
+            <h3 className="font-semibold text-lg">Style &amp; tracking</h3>
             <Field
               label="Brand color"
               htmlFor="thank_you.brand_color"
@@ -312,7 +338,7 @@ export function ThankYouClient({
 
           <section className="space-y-4 rounded-xl border bg-card p-5">
             <div>
-              <h3 className="text-sm font-semibold">Visibility</h3>
+              <h3 className="font-semibold text-lg">Visibility</h3>
               <p className="mt-1 text-xs text-muted-foreground">
                 Position, referral link and leaderboard apply to the classic screen.
               </p>
@@ -369,43 +395,60 @@ export function ThankYouClient({
           </section>
         </div>
 
-        {/* Right: where the screen comes from */}
+        {/* Right: the real post-signup screen */}
         <div className="lg:col-span-7">
-          <div className="sticky top-24 space-y-4 rounded-2xl border bg-card p-6 shadow-sm">
-            <h3 className="text-sm font-semibold">Where this screen comes from</h3>
-            {templateName ? (
-              <p className="text-sm text-muted-foreground">
-                Your landing uses the{" "}
-                <strong className="text-foreground">{templateName}</strong> template, which ships its
-                own post-signup screen — so the same look carries through after someone joins. These
-                texts are the classic screen&apos;s, so with a template active they don&apos;t change
-                what people see.
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Your page has no landing template, so the post-signup screen is the classic one — and
-                it does read these texts: position, referral link, rewards and the visibility
-                toggles.
-              </p>
-            )}
-            <div className="flex flex-wrap gap-2">
+          <div className="sticky top-24 overflow-hidden rounded-2xl border bg-card shadow-sm">
+            <div className="flex items-center justify-between gap-3 border-b px-5 py-3.5">
+              <div>
+                <h3 className="text-sm font-semibold">Post-signup preview</h3>
+                <p className="text-xs text-muted-foreground">
+                  {templateName ? `${templateName} template` : "Classic screen"} · example numbers
+                </p>
+              </div>
               <Link
                 href={`/dashboard/projects/${waitlistId}/page-builder`}
-                className="inline-flex items-center justify-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+                className="shrink-0 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 {templateName ? "Change template" : "Pick a template"}
               </Link>
-              <a
-                href={`/p/${slug}`}
-                target="_blank"
-                rel="noopener"
-                className="inline-flex items-center justify-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
-              >
-                Open live
-              </a>
             </div>
-            <p className="text-xs text-muted-foreground">
-              To see it for real, open your public page and subscribe with any email.
+            <div className="flex items-center border-b bg-muted/50 px-4 py-2">
+              <span className="mr-1.5 size-2.5 rounded-full bg-red-400/70" />
+              <span className="mr-1.5 size-2.5 rounded-full bg-yellow-400/70" />
+              <span className="mr-3 size-2.5 rounded-full bg-green-400/70" />
+              <span className="truncate font-mono text-[11px] text-muted-foreground">
+                /p/{slug}
+              </span>
+            </div>
+            <div className="min-h-[500px] max-h-[700px] overflow-y-auto">
+              {templateId ? (
+                <PreviewDoneContext.Provider value={true}>
+                  <TemplateRenderer
+                    templateId={templateId}
+                    templateData={templateData}
+                    publicKey={publicKey}
+                    realCount={realCount}
+                    embedded
+                    preview
+                  />
+                </PreviewDoneContext.Provider>
+              ) : (
+                <div className="p-6">
+                  <ClassicThankYou
+                    thankYou={thankYou}
+                    result={previewResult}
+                    copied={previewCopied}
+                    onCopy={copyPreviewLink}
+                  />
+                </div>
+              )}
+            </div>
+            <p className="border-t px-5 py-3 text-xs text-muted-foreground">
+              {templateId
+                ? `Your landing template renders its own confirmation, so it carries ${
+                    templateName ?? "its"
+                  }'s look through the signup. The texts below are the classic screen's, so they don't change what people see here.`
+                : "This is the classic screen: it reads the fields on the left and updates as you type."}
             </p>
           </div>
         </div>

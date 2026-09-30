@@ -1,3 +1,5 @@
+import { CLASSIC_THANK_YOU_DEFAULTS } from "@/lib/thank-you";
+
 export function buildWidgetHtml(params: {
   publicKey: string;
   appUrl: string;
@@ -30,8 +32,9 @@ export function buildWidgetHtml(params: {
   const thankTitle = (thankYou.title as string) || "";
   const thankSubtitle = (thankYou.subtitle as string) || "";
   const thankMessage = (thankYou.message as string) || "";
-  const thankDescription = (thankYou.description as string) || "Share your referral link:";
-  const thankPositionText = (thankYou.position_text as string) || "Your position: #{POSITION}";
+  const thankDescription = (thankYou.description as string) || CLASSIC_THANK_YOU_DEFAULTS.description;
+  const thankPositionText =
+    (thankYou.position_text as string) || CLASSIC_THANK_YOU_DEFAULTS.position_text;
   const thankShowPosition = (thankYou.show_position as boolean) ?? true;
   const thankShowReferral = (thankYou.show_referral_link as boolean) ?? true;
 
