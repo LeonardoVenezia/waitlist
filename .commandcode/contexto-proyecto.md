@@ -216,19 +216,15 @@ Los clientes de email no soportan `var()`, `oklch()`, gradientes ni `@font-face`
 - `saveTemplateData` sigue existiendo y es independiente: la usa la página de integración del widget embebido, que solo escribe `template_data` (nunca `template_id`).
 - `global.page_enabled` y `global.seo_*` se aplican aunque haya un template activo; el resto de `global` (colores, toggles de display) solo lo consume el render por secciones.
 - `src/components/templates/template-renderer.tsx` es la **única fuente** de layout/switch de templates, usada tanto por la página pública como por el preview del Page Builder.
-- Otras 2 superficies derivadas del mismo sistema: `emailPalette` por template (ver **Email → Estética**) y la **experiencia post-registro** (abajo).
+- Superficie derivada del mismo sistema: `emailPalette` por template (ver **Email → Estética**).
 
-## Pantalla post-registro ("Embajadores")
+## Pantalla post-registro
 
-La pantalla que ve el visitante **después** de dejar su email. Es una superficie propia: **no** es un template de landing, no aparece en el picker del Page Builder y no comparte `TemplateId`. Se configura en su **propia sección** (`/dashboard/projects/[id]/thank-you`, en la nav junto a Page Builder), con panel + preview en vivo. Se guarda en `settings.thank_you.experience` (`classic` default = comportamiento actual).
+La pantalla que ve el visitante después del alta la define el **template de landing** (`page_sections.template_id`): cada uno de los 7 templates tiene su propio bloque `done` hardcodeado, así que la identidad visual continúa después del submit. No es una superficie restylable por el dueño, y los 8 bloques (7 templates + `public-waitlist-form`) siguen duplicados: no hay componente compartido.
 
-- `src/lib/thank-you-experiences.ts` — registro (mismo patrón que `templates.ts`) y **toda la lógica pura**: `resolveThankYouConfig`, `milestoneStates`, `buildShareLinks`, `thankYouLabels`, `formatPositionLine`, `defaultMilestones`. El estado post-registro solo existe en el cliente después de un submit, así que este módulo es la única superficie verificable.
-- `src/components/thank-you/embajadores.tsx` — la pantalla (presentación). Se renderiza como **capa propia** (`fixed inset-0`) porque el estado `done` vive dentro del shell del template y 5 de los 7 shells tienen fondo y padding propios.
-- **Cómo se activa**: los 7 templates + `public-waitlist-form.tsx` tienen un branch de una línea al inicio de su estado `done` que delega en la experiencia cuando `experience === "embajadores"`. La prop `thankYou` viaja desde `p/[slug]` vía `TemplateRenderer` (los 7 templates); el form de secciones la resuelve por su cuenta desde `settings`.
-- Config que consume: `thank_you.experience` / `title` / `subtitle` / `message` / `social_message` / `social_buttons` / `brand_color`, `branding.logo_url` y `primary_color`, `settings.language` (en/es) y `referral.milestones` (`{count, reward}`, default 3/10/25 localizado).
-- `SubscribeResult.total` viene de `/api/public/subscribe` (el total ya se calculaba; sólo no se devolvía) y es lo que permite "Sos el #482 de 2.314".
-- Límites: el widget embebido en modo **custom** conserva su pantalla propia (plantilla de string con JS vanilla, no React); el paso de preguntas post-signup sigue siendo el de cada template.
-- **Guardado**: la sección tiene su propia action (`saveThankYouSettings`), que escribe **solo** `settings.thank_you`. Valida la experiencia contra el registro y fuerza `hide_branding: false` si el plan no es `launch`.
+- `settings.thank_you.*` es el **copy de la pantalla clásica** (proyectos sin template: secciones custom o página clásica), que sí lo leen `public-waitlist-form.tsx` y `widget-html.ts`. Con un template activo esos textos no aplican.
+- Se edita en su propia sección, `/dashboard/projects/[id]/thank-you` (panel con estado controlado + barra de guardado con dirty tracking), con su action `saveThankYouSettings`, que escribe **solo** `settings.thank_you` y fuerza `hide_branding: false` fuera del plan `launch`. El panel derecho no es un preview: explica de dónde sale la pantalla según si el proyecto tiene template o no.
+- Tokens implementados: `{POSITION}` y `{TOTAL}`. El total llega en `SubscribeResult.total` desde `/api/public/subscribe` (ya se calculaba en el servidor; solo no se devolvía). El resto de los campos sin consumidor están marcados en el panel.
 
 ## Guardado de settings (patrón obligatorio)
 

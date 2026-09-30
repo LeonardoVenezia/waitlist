@@ -2,8 +2,6 @@
 
 import { useWaitlistSubscribe } from "./use-waitlist-subscribe";
 import type { AuroraTemplateData } from "@/lib/templates";
-import type { ThankYouConfig } from "@/lib/thank-you-experiences";
-import { Embajadores } from "@/components/thank-you/embajadores";
 
 // Aurora is an editorial hero: the gradient IS the page, with a grain layer on
 // top so it doesn't read as a flat CSS gradient. Committed to dawn (peach →
@@ -44,14 +42,12 @@ export function AuroraTemplate({
   realCount,
   embedded = false,
   preview = false,
-  thankYou,
 }: {
   publicKey: string;
   data: AuroraTemplateData;
   realCount: number;
   embedded?: boolean;
   preview?: boolean;
-  thankYou: ThankYouConfig;
 }) {
   const {
     email,
@@ -81,14 +77,6 @@ export function AuroraTemplate({
 
   // `*word*` renders as serif italics; React escapes the rest for us.
   const titleParts = data.title.split(/\*([^*]+)\*/g);
-
-  // The project can override the post-signup screen: when it does, this
-  // template's own done state is skipped entirely.
-  if (step === "done" && result && thankYou.experience === "embajadores") {
-    return (
-      <Embajadores config={thankYou} result={result} copied={copied} onCopy={copyReferralLink} />
-    );
-  }
 
   return (
     <div

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import type { Plan } from "@/lib/plans";
-import { normalizeMilestones } from "@/lib/thank-you-experiences";
+import { getTemplateDefinition } from "@/lib/templates";
 import { ThankYouClient } from "./thank-you-client";
 
 export default async function ThankYouPage(props: {
@@ -21,7 +21,8 @@ export default async function ThankYouPage(props: {
   if (!waitlist) notFound();
 
   const settings = (waitlist.settings as Record<string, unknown>) ?? {};
-  const referral = (settings.referral as Record<string, unknown>) ?? {};
+  const pageSections = (settings.page_sections as Record<string, unknown>) ?? {};
+  const template = getTemplateDefinition(pageSections.template_id);
 
   return (
     <ThankYouClient
@@ -29,9 +30,8 @@ export default async function ThankYouPage(props: {
       slug={waitlist.slug}
       plan={waitlist.plan as Plan}
       initialThankYou={(settings.thank_you as Record<string, unknown>) ?? {}}
-      language={(settings.language as string) ?? "en"}
       branding={(settings.branding as Record<string, unknown>) ?? {}}
-      milestones={normalizeMilestones(referral.milestones)}
+      templateName={template?.name ?? null}
     />
   );
 }

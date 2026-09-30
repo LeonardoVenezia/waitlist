@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { useWaitlistSubscribe } from "./use-waitlist-subscribe";
 import type { CarbonTemplateData } from "@/lib/templates";
-import type { ThankYouConfig } from "@/lib/thank-you-experiences";
-import { Embajadores } from "@/components/thank-you/embajadores";
 
 // The carbon template is a developer-style product teaser with a macOS
 // mockup. Its identity is a near-black background, monospace eyebrow,
@@ -20,13 +18,11 @@ export function CarbonTemplate({
   data,
   realCount,
   preview = false,
-  thankYou,
 }: {
   publicKey: string;
   data: CarbonTemplateData;
   realCount: number;
   preview?: boolean;
-  thankYou: ThankYouConfig;
 }) {
   const {
     email,
@@ -120,14 +116,6 @@ export function CarbonTemplate({
           </form>
         </CarbonCard>
       </div>
-    );
-  }
-
-  // The project can override the post-signup screen: when it does, this
-  // template's own done state is skipped entirely.
-  if (step === "done" && result && thankYou.experience === "embajadores") {
-    return (
-      <Embajadores config={thankYou} result={result} copied={copied} onCopy={copyReferralLink} />
     );
   }
 

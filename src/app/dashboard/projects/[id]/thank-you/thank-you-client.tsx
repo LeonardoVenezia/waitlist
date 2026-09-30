@@ -1,18 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, ToggleRow } from "@/components/dashboard/settings-fields";
 import { toHexColor } from "@/lib/color";
-import {
-  THANK_YOU_EXPERIENCES,
-  resolveThankYouConfig,
-} from "@/lib/thank-you-experiences";
-import { Embajadores } from "@/components/thank-you/embajadores";
-import type { SubscribeResult } from "@/components/templates/use-waitlist-subscribe";
 import type { Plan } from "@/lib/plans";
 import { saveThankYouSettings } from "./actions";
 
@@ -47,17 +42,15 @@ export function ThankYouClient({
   slug,
   plan,
   initialThankYou,
-  language,
   branding,
-  milestones,
+  templateName,
 }: {
   waitlistId: string;
   slug: string;
   plan: Plan;
   initialThankYou: Record<string, unknown>;
-  language: string;
   branding: Record<string, unknown>;
-  milestones: Array<{ count: number; reward: string }>;
+  templateName: string | null;
 }) {
   const router = useRouter();
   const [thankYou, setThankYou] = useState<Record<string, unknown>>(initialThankYou);
@@ -102,18 +95,10 @@ export function ThankYouClient({
     router.refresh();
   }, [waitlistId, slug, thankYou, router]);
 
-  const config = resolveThankYouConfig({ thank_you: thankYou, language, branding });
-  const previewResult: SubscribeResult = {
-    id: "preview",
-    email: "you@example.com",
-    position: 482,
-    referral_code: "preview",
-    referral_link: `/p/${slug}?ref=preview`,
-    referral_count: 5,
-    total: 2314,
-    milestones: milestones.length > 0 ? milestones : undefined,
-  };
-  const accentSwatch = toHexColor(config.accent) ?? "#9D3E00";
+  const accentSwatch =
+    toHexColor(str("brand_color")) ??
+    toHexColor(branding.primary_color) ??
+    "#9D3E00";
 
   return (
     <div className="space-y-6">
@@ -153,46 +138,14 @@ export function ThankYouClient({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* Left: settings */}
         <div className="space-y-4 lg:col-span-5">
-          <section className="space-y-3 rounded-xl border bg-card p-5">
-            <div>
-              <h3 className="text-sm font-semibold">Experience</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Classic keeps the screen that ships with your landing template. Embajadores replaces
-                it with a referral hub.
-              </p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {Object.values(THANK_YOU_EXPERIENCES).map((def) => {
-                const active = config.experience === def.id;
-                return (
-                  <button
-                    key={def.id}
-                    type="button"
-                    onClick={() => update("experience", def.id)}
-                    className={`w-full overflow-hidden rounded-xl border text-left transition ${
-                      active ? "border-primary bg-primary/5" : "hover:bg-muted"
-                    }`}
-                  >
-                    <div
-                      className={`flex h-16 items-center justify-center px-3 ${def.thumbnail.bg} ${def.thumbnail.text}`}
-                    >
-                      <span className="truncate font-heading text-base">{def.name}</span>
-                    </div>
-                    <p className="px-3 py-2 text-xs text-muted-foreground">{def.description}</p>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-
           <section className="space-y-4 rounded-xl border bg-card p-5">
             <h3 className="text-sm font-semibold">Confirmation</h3>
-            <Field label="Message" htmlFor="thank_you.message" hint="Falls back to the built-in greeting.">
+            <Field label="Message" htmlFor="thank_you.message">
               <Input
                 id="thank_you.message"
                 value={str("message")}
                 onChange={(e) => update("message", e.target.value)}
-                placeholder="Your spot is saved."
+                placeholder="You're on the list!"
               />
             </Field>
             <Field label="Title" htmlFor="thank_you.title">
@@ -200,7 +153,7 @@ export function ThankYouClient({
                 id="thank_you.title"
                 value={str("title")}
                 onChange={(e) => update("title", e.target.value)}
-                placeholder="You're in"
+                placeholder="You're on the waitlist!"
               />
             </Field>
             <Field label="Subtitle" htmlFor="thank_you.subtitle">
@@ -208,18 +161,13 @@ export function ThankYouClient({
                 id="thank_you.subtitle"
                 value={str("subtitle")}
                 onChange={(e) => update("subtitle", e.target.value)}
-                placeholder="Share your link to move up."
+                placeholder="Want to get access sooner?"
               />
             </Field>
           </section>
 
           <section className="space-y-4 rounded-xl border bg-card p-5">
-            <div>
-              <h3 className="text-sm font-semibold">Referral</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Used by the classic screen. Landing templates render their own referral block.
-              </p>
-            </div>
+            <h3 className="text-sm font-semibold">Referral</h3>
             <Field label="Referral prompt" htmlFor="thank_you.description">
               <Input
                 id="thank_you.description"
@@ -237,10 +185,14 @@ export function ThankYouClient({
                 id="thank_you.position_text"
                 value={str("position_text")}
                 onChange={(e) => update("position_text", e.target.value)}
-                placeholder="Your position: #{POSITION}"
+                placeholder="You're #482 of 2,314"
               />
             </Field>
-            <Field label="Referred text" htmlFor="thank_you.referred_text" hint="Token: {REFERRED}. No consumer yet.">
+            <Field
+              label="Referred text"
+              htmlFor="thank_you.referred_text"
+              hint="Token: {REFERRED}. No consumer yet."
+            >
               <Input
                 id="thank_you.referred_text"
                 value={str("referred_text")}
@@ -261,7 +213,9 @@ export function ThankYouClient({
               />
             </Field>
             <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Share buttons</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Share buttons · no consumer yet
+              </p>
               <div className="grid grid-cols-3 gap-2">
                 {SHARE_PLATFORMS.map((platform) => (
                   <Checkbox
@@ -277,15 +231,11 @@ export function ThankYouClient({
                   />
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Empty means WhatsApp, X and LinkedIn. Platforms without a share URL are skipped.
-              </p>
             </div>
             <div className="space-y-3 border-t pt-4">
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">Profile links</p>
-                <p className="text-xs text-muted-foreground">Saved, but nothing renders them yet.</p>
-              </div>
+              <p className="text-xs font-medium text-muted-foreground">
+                Profile links · saved, nothing renders them yet
+              </p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {SOCIAL_LINKS.map(([key, label, placeholder]) => (
                   <Input
@@ -302,7 +252,11 @@ export function ThankYouClient({
 
           <section className="space-y-4 rounded-xl border bg-card p-5">
             <h3 className="text-sm font-semibold">Style &amp; tracking</h3>
-            <Field label="Brand color" htmlFor="thank_you.brand_color" hint="Falls back to the project's primary color.">
+            <Field
+              label="Brand color"
+              htmlFor="thank_you.brand_color"
+              hint="Falls back to the project's primary color."
+            >
               <div className="flex gap-2">
                 <input
                   type="color"
@@ -334,7 +288,11 @@ export function ThankYouClient({
                 placeholder="Google Analytics, Ads, etc."
               />
             </Field>
-            <Field label="Secondary CTA" htmlFor="thank_you.cta_label" hint="Label and URL, no consumer yet.">
+            <Field
+              label="Secondary CTA"
+              htmlFor="thank_you.cta_label"
+              hint="Label and URL, no consumer yet."
+            >
               <div className="flex gap-2">
                 <Input
                   id="thank_you.cta_label"
@@ -411,36 +369,44 @@ export function ThankYouClient({
           </section>
         </div>
 
-        {/* Right: preview */}
+        {/* Right: where the screen comes from */}
         <div className="lg:col-span-7">
-          <div className="sticky top-24 overflow-hidden rounded-2xl border bg-card shadow-sm">
-            <div className="flex items-center justify-between gap-3 border-b px-5 py-3.5">
-              <div>
-                <h3 className="text-sm font-semibold">Post-signup preview</h3>
-                <p className="text-xs text-muted-foreground">Example numbers</p>
-              </div>
+          <div className="sticky top-24 space-y-4 rounded-2xl border bg-card p-6 shadow-sm">
+            <h3 className="text-sm font-semibold">Where this screen comes from</h3>
+            {templateName ? (
+              <p className="text-sm text-muted-foreground">
+                Your landing uses the{" "}
+                <strong className="text-foreground">{templateName}</strong> template, which ships its
+                own post-signup screen — so the same look carries through after someone joins. These
+                texts are the classic screen&apos;s, so with a template active they don&apos;t change
+                what people see.
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Your page has no landing template, so the post-signup screen is the classic one — and
+                it does read these texts: position, referral link, rewards and the visibility
+                toggles.
+              </p>
+            )}
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/dashboard/projects/${waitlistId}/page-builder`}
+                className="inline-flex items-center justify-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+              >
+                {templateName ? "Change template" : "Pick a template"}
+              </Link>
+              <a
+                href={`/p/${slug}`}
+                target="_blank"
+                rel="noopener"
+                className="inline-flex items-center justify-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+              >
+                Open live
+              </a>
             </div>
-            <div className="flex items-center border-b bg-muted/50 px-4 py-2">
-              <span className="mr-1.5 size-2.5 rounded-full bg-red-400/70" />
-              <span className="mr-1.5 size-2.5 rounded-full bg-yellow-400/70" />
-              <span className="mr-3 size-2.5 rounded-full bg-green-400/70" />
-              <span className="truncate font-mono text-[11px] text-muted-foreground">
-                /p/{slug}
-              </span>
-            </div>
-            <div className="max-h-[700px] min-h-[500px] overflow-y-auto">
-              {config.experience === "embajadores" ? (
-                <Embajadores config={config} result={previewResult} layout="inline" />
-              ) : (
-                <div className="flex min-h-[500px] items-center justify-center p-8 text-center">
-                  <p className="max-w-sm text-sm text-muted-foreground">
-                    With <strong className="text-foreground">Classic</strong>, the post-signup
-                    screen belongs to your landing template. Pick a template and preview it in the
-                    Page Builder.
-                  </p>
-                </div>
-              )}
-            </div>
+            <p className="text-xs text-muted-foreground">
+              To see it for real, open your public page and subscribe with any email.
+            </p>
           </div>
         </div>
       </div>

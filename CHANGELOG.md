@@ -309,3 +309,20 @@ Los tabs de Settings se renderizan condicionalmente, así que un submit solo lle
 - **Verificado con 37 aserciones** sobre la función pura con `FormData` real: guardar desde cada tab actualiza solo lo suyo, preserva todo lo demás, un tab desconocido no rompe nada y un proyecto nuevo recibe defaults en vez de `undefined`.
 
 Docs: `contexto-proyecto.md` documenta el patrón de guardado como obligatorio para futuras secciones.
+
+## Marcha atrás de "Embajadores"
+
+Se revierte la experiencia post-registro seleccionable. La pantalla que sigue al alta vuelve a ser la del **template de landing**: cada template ya trae la suya, y la continuidad visual después del submit vale más que una pantalla propia — un proyecto Neon vuelve a confirmar en Neon.
+
+- Se restauran los 8 bloques `done`: se quitan el branch de delegación de los 7 templates y el de `public-waitlist-form`, más la prop `thankYou` en toda la cadena (`p/[slug]` → `TemplateRenderer` → los 7 templates).
+- Se borran `src/components/thank-you/embajadores.tsx` y `src/lib/thank-you-experiences.ts` (registro, hitos, links de compartir, etiquetas, formateo de posición): quedaban sin consumidor.
+
+**Lo que se queda, porque es independiente y sirve:**
+
+- La **sección propia** `/dashboard/projects/[id]/thank-you`, ahora para customizar el copy de la pantalla clásica: los mismos campos que tenía el tab, con estado controlado, barra de guardado con dirty tracking y su propia action (`saveThankYouSettings`), que escribe **solo** `settings.thank_you` y fuerza `hide_branding: false` fuera de Launch. El panel derecho ya no es un preview: explica de dónde sale la pantalla según si el proyecto tiene template o no.
+- El **arreglo del reseteo entre tabs de Settings** (37 aserciones), que era una pérdida silenciosa de datos y no tiene nada que ver con Embajadores.
+- `src/lib/color.ts` (helpers de color compartidos entre emails y web) y el **`total`** en la respuesta de subscribe.
+- **`{TOTAL}` implementado**: el token estaba anunciado en el editor pero nunca se reemplazaba, ni en la página ni en el widget. Ahora sí, con el total que el servidor ya calculaba.
+- El mock de preview del Page Builder con números plausibles (#482 de 2.314), para que el bloque `done` de cada template se vea realista al probarlo.
+
+Docs actualizados a lo que hay hoy: `DESIGN.md`, `PRODUCT.md` y `contexto-proyecto.md` describen la pantalla como parte del template, no como una superficie elegible.

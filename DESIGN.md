@@ -87,15 +87,12 @@ Transactional email is a third surface, and the most constrained one: clients st
 
 ### Post-signup experience
 
-The screen a visitor sees *after* submitting their email is a fourth surface, and the only one the project chooses on its own axis (`thank_you.experience`): it is **not** the landing template, and picking a landing template does not pick this. It has its own dashboard section (`/dashboard/projects/[id]/thank-you`), with the panel + live-preview layout of the Page Builder.
+The screen a visitor sees *after* submitting their email **belongs to the landing template**. Every template ships its own, so a Neon project gets Neon's confirmation and an editorial project gets editorial's: the visual world continues through the signup, which is worth more than a bespoke screen.
 
-- **It has its own world.** `Embajadores` is a light, cheerful referral hub — position in line, share buttons, progress to rewards. It deliberately does not try to match a dark landing template, because its job is the referral loop, not visual continuity.
-- **Theming comes from the project, not the template**: `thank_you.brand_color` (falling back to `branding.primary_color`) is the accent, and its text color is **computed** with `contrastTextOn`, never a fixed white — the owner can set any accent.
-- **Rewards reuse the existing config**: `settings.referral.milestones` (`{count, reward}`) with a localized default of 3 / 10 / 25. The first milestone must stay within reach (≤5) — an unreachable reward is decoration, not a mechanic.
-- **It renders as its own layer.** The post-signup state lives inside the landing template's shell, and 5 of the 7 shells carry their own background and padding, so the experience paints over them instead of being framed by them.
-- **Copy** follows `settings.language` (en/es), which finally has a consumer.
-
-Everything above lives in `src/lib/thank-you-experiences.ts` as pure functions — the state only exists client-side after a submit, so that module is the only testable surface.
+- **The project can still shape the copy.** `/dashboard/projects/[id]/thank-you` edits the *classic* screen's texts (confirmation, referral prompt, position text, visibility toggles) with a save bar and its own action. Those fields are what the sections/classic path renders; when a landing template is active the screen is the template's and those texts are inert — the section's side panel says exactly that instead of pretending otherwise.
+- **Tokens**: `{POSITION}` and `{TOTAL}` are both filled, on the hosted page and in the widget. `{REFERRED}`, the secondary CTA, the tracking code, the profile links and the `hide_confetti` / `hide_referral` / `hide_until_verified` toggles are stored but have no consumer yet, and the panel labels them as such.
+- **Not a themeable surface.** Unlike a template, this screen is not something the owner restyles — its look is the template's, and that is deliberate.
+- The classic screen is duplicated in 8 places (7 templates' `done` states plus `public-waitlist-form`); there is no shared component, and there shouldn't be one until the screens have a reason to converge.
 
 ## Spacing & Rhythm
 

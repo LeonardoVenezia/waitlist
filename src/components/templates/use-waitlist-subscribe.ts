@@ -69,13 +69,8 @@ export function useWaitlistSubscribe(
       referral_code: "preview",
       referral_link: "/preview",
       referral_count: 5,
-      // Plausible numbers so the post-signup preview shows a real-looking line.
+      // Plausible numbers so the post-signup preview reads like the real thing.
       total: 2314,
-      milestones: [
-        { count: 3, reward: "Early access" },
-        { count: 10, reward: "A free month" },
-        { count: 25, reward: "Merch" },
-      ],
     });
     setStep("done");
     setLoading(false);

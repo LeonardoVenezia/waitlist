@@ -2,8 +2,6 @@
 
 import { useWaitlistSubscribe } from "./use-waitlist-subscribe";
 import type { NeonTemplateData } from "@/lib/templates";
-import type { ThankYouConfig } from "@/lib/thank-you-experiences";
-import { Embajadores } from "@/components/thank-you/embajadores";
 
 // The neon template is a dark, focused single-card layout with an emerald
 // accent. It deliberately does NOT use the host app's tokens — the look
@@ -20,13 +18,11 @@ export function NeonTemplate({
   data,
   realCount,
   preview = false,
-  thankYou,
 }: {
   publicKey: string;
   data: NeonTemplateData;
   realCount: number;
   preview?: boolean;
-  thankYou: ThankYouConfig;
 }) {
   const {
     email,
@@ -108,14 +104,6 @@ export function NeonTemplate({
           </form>
         </NeonCard>
       </div>
-    );
-  }
-
-  // The project can override the post-signup screen: when it does, this
-  // template's own done state is skipped entirely.
-  if (step === "done" && result && thankYou.experience === "embajadores") {
-    return (
-      <Embajadores config={thankYou} result={result} copied={copied} onCopy={copyReferralLink} />
     );
   }
 

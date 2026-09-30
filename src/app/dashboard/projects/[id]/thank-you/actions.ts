@@ -2,7 +2,6 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
-import { getThankYouExperience } from "@/lib/thank-you-experiences";
 import type { Database } from "@/lib/supabase/types";
 
 type Json = Database["public"]["Tables"]["projects"]["Row"]["settings"];
@@ -30,12 +29,8 @@ export async function saveThankYouSettings(
 
   const current = (project.settings as Record<string, unknown>) ?? {};
 
-  // The accent is owner-configurable and the plan gates "hide powered by", so
-  // neither the experience id nor that flag is trusted from the client.
-  const next: Record<string, unknown> = {
-    ...thankYou,
-    experience: getThankYouExperience(thankYou.experience)?.id ?? "classic",
-  };
+  // "Hide powered by" is a Launch feature, so it is not trusted from the client.
+  const next: Record<string, unknown> = { ...thankYou };
   if ((project.plan as string) !== "launch") {
     next.hide_branding = false;
   }

@@ -102,7 +102,9 @@ export function buildWidgetHtml(params: {
         if (thankMessage) {
           html += '<div class="wl-msg success">' + escapeHtml(thankMessage) + '</div>';
         } else {
-          var posText = thankPositionText.replace(/{POSITION}/g, data.position || (thankShowPosition ? data.position : ""));
+          var posText = thankPositionText
+            .replace(/{POSITION}/g, thankShowPosition ? data.position || "" : "")
+            .replace(/{TOTAL}/g, thankShowPosition ? data.total || "" : "");
           html += '<div class="wl-msg success">' + escapeHtml(posText) + '</div>';
         }
         if (thankShowReferral) {
