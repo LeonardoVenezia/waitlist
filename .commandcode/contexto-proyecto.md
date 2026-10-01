@@ -1,302 +1,152 @@
-# Contexto del Proyecto — Startpack
+# Contexto técnico — Startpack
 
-> Actualizado: 2026-08-22
-> Stack: Next.js 16 + Supabase + shadcn/ui + Tailwind CSS v4
-> Dominios: `https://waitlist.leovenezia.dev` (producción) · `https://waitlist-nine-pink.vercel.app` (preview)
+> Revisado: 2026-10-01. Este documento describe el código del repositorio, no confirma el estado de producción ni de la base cloud.
+> Producto: suite Startpack para founders. Repo Next.js en Vercel; Supabase para auth, Postgres y storage.
 
----
+## Cómo usar este documento
 
-## El producto
+- Es la guía de onboarding técnico para retomar el trabajo en una sesión nueva.
+- `PRODUCT.md` es la referencia de capacidades/planes desde la experiencia del producto.
+- `DESIGN.md` documenta el lenguaje visual.
+- `PRODUCTION.md` y `PADDLE.md` son runbooks operativos; `CHANGELOG.md` es histórico, no fuente del estado actual.
+- Si el código y estos docs divergen, verificar código + migraciones y actualizar el documento correspondiente.
 
-**Startpack** es una suite de herramientas para founders/indie hackers. El núcleo actual es el **showcase / directorio de productos**: la home es el directorio, y cada proyecto puede publicar una ficha de producto con nombre, descripción, categorías, imágenes, video y link.
+## Producto y modelo actual
 
-Sobre ese núcleo se integra:
+Startpack combina el directorio público de productos con herramientas por proyecto: showcase, waitlist/referrals, landing builder y testimonials. La tabla principal es `projects` (el nombre `waitlists` quedó en historial/migraciones antiguas). Un proyecto tiene showcase y waitlist; testimonials y el builder usan el mismo `project_id`.
 
-- **Waitlist viral con referidos** (`/p/[slug]` + widget embebible)
+Planes mensuales por proyecto (`src/lib/plans.ts`):
 
-**Testimonials** está activo: formulario público multi-paso estilo Senja (`/t/[formSlug]`) con foto del autor, logo/website de empresa, feedback privado, consentimiento de uso público/privado y código de recompensa. Los pasos se derivan de la config del form (campos habilitados + preguntas custom + toggles de pasos extra).
+| Plan | Precio en código | Límite de waitlist | Capacidades distintivas |
+|---|---:|---:|---|
+| Free | $0 | 100 | Page builder básico, widget, export; showcase expira al año; atribución Startpack en widgets |
+| Launch | $9/mes | 1.000 | Templates, double opt-in, Slack notifications; showcase sin expiración |
+| Grow | $29/mes | 10.000 | Team/webhooks/Zapier/custom domain, remove branding y otras funciones definidas en `FEATURE_MATRIX` |
 
-Cada proyecto es una unidad independiente con su propio plan. Los planes son de **suscripción mensual por proyecto** vía Paddle:
+Los precios/IDs de Paddle dependen de env vars y configuración externa. Para la matriz exacta de gating consultar `src/lib/plans.ts`; no inferir funciones por el nombre comercial del plan.
 
-- **Free** — $0, showcase por 1 año, hasta 100 emails en la waitlist
-- **Launch** — $9/mes, showcase sin límite, hasta 1.000 emails en la waitlist, acceso a templates de page builder
+## Stack y comandos
 
-El showcase del plan Free expira al año (`expires_at`); el job diario `expire_due_showcases` lo flipea a `expired` y los datos persisten hasta que el user upgradee. Al upgradear a Launch el producto vuelve a `published` y los subscribers `pending_unlock` se activan.
+- Next.js 16.2 / App Router, React 19, TypeScript 5.
+- Supabase JS + SSR: auth, Postgres, storage; Tailwind CSS v4; Recharts para analytics.
+- Resend vía REST (`src/lib/email.ts`), Paddle para suscripciones, Cloudflare Turnstile (apagado actualmente por constante).
+- Scripts comprobados en `package.json`:
+  - `pnpm dev`
+  - `pnpm build`
+  - `pnpm start`
+  - `pnpm lint`
+  - Typecheck: `pnpm exec tsc --noEmit`
+- No hay runner de tests propio configurado en `package.json` al revisar este documento.
+- Variables de ejemplo: `.env.example`. `NEXT_PUBLIC_SITE_URL` no se usa en el código revisado; la URL pública se construye desde `NEXT_PUBLIC_APP_URL`.
 
----
+## Rutas públicas
 
-## Stack técnico
-
-| Capa | Tecnología | Variables de entorno |
-|---|---|---|
-| Frontend + Backend | Next.js 16 (App Router, React 19, RSC, Server Actions) | `NEXT_PUBLIC_APP_URL` |
-| UI | shadcn/ui + Tailwind CSS v4 | — |
-| BD + Auth + Storage | Supabase (Postgres + pg_cron) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` |
-| Pagos | Paddle (suscripción) | `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_PRICE_LAUNCH` |
-| Anti-bot | Cloudflare Turnstile | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` |
-| Email | Resend (API REST directa, sin SDK) | `RESEND_API_KEY`, `EMAIL_FROM` |
-| Cron | Vercel Cron Jobs + Supabase pg_cron | `CRON_SECRET` |
-| Fonts | Geist (body) + Italiana (headings) | — |
-
----
-
-## Cuentas e infraestructura
-
-- **Supabase**: proyecto `dxgxbugfjxzgvqzsjgff`
-- **Vercel**: proyecto `waitlist-nine-pink`; dominio custom `waitlist.leovenezia.dev`
-- **Paddle**: vendedor `LeoVenezia Studios`
-- **Resend**: dominio `leovenezia.dev` verificado; remitente `EMAIL_FROM="Startpack <hola@leovenezia.dev>"`
-- **Cloudflare**: zona `leovenezia.dev` gestionada por Cloudflare; subdominio `waitlist` proxied hacia Vercel
-
----
-
-## Rutas principales
-
-### Públicas
-
-| Ruta | Descripción |
+| Ruta | Función |
 |---|---|
-| `/` | Directorio de productos |
-| `/product/[slug]` | Detalle de producto del directorio |
-| `/products` | Listado de productos |
-| `/launches` | Lanzamientos recientes |
-| `/coming-soon` | Productos por lanzar |
-| `/p/[slug]` | Página hosteada de waitlist (SSR, con page builder o template) |
-| `/t/[formSlug]` | Formulario público de testimonios |
-| `/login`, `/signup` | Auth |
-| `/auth/callback` | Callback OAuth Supabase |
+| `/` | Directorio/home |
+| `/products`, `/launches`, `/coming-soon` | Listados de showcases |
+| `/product/[slug]` | Ficha de producto; testimonials aprobados solo con consentimiento público explícito |
+| `/p/[slug]` | Waitlist hosteada: template, builder de secciones o fallback clásico |
+| `/t/[formSlug]` | Formulario de testimonials; un formulario archivado presenta estado cerrado |
+| `/t/[formSlug]/embed` | Variante iframe del formulario |
+| `/w/e/[publicKey]` | Widget de waitlist |
+| `/w/e/[publicKey]/leaderboard` | Leaderboard embebible |
+| `/w/t/[publicKey]` | Widget de testimonials, proyección pública acotada |
+| `/login`, `/signup`, `/auth/callback` | Autenticación |
 
-### API públicas
+Los testimonials no se muestran en Coming soon ni en `/p`; se muestran en la ficha de producto lanzado y se pueden insertar como widget externo desde Integration.
 
-| Ruta | Método | Descripción |
-|---|---|---|
-| `/api/public/waitlist/[publicKey]` | GET | Config pública de waitlist |
-| `/api/public/subscribe` | POST | Registro de suscriptor (Turnstile, rate limit, referidos, email) |
-| `/api/public/subscriber` | PATCH | Respuestas post-signup |
-| `/api/public/position` | GET | Posición actual y referral_count |
-| `/api/public/verify` | GET | Verificación de email (double opt-in) |
-| `/api/public/pageview` | POST | Track de page views |
-| `/api/testimonials/submit` | POST | Submit de testimonios (wizard multi-paso) |
-| `/api/testimonials/upload-url` | POST | Signed upload URL para foto/logo del autor (rate limit + Turnstile) |
-| `/api/webhooks/paddle` | POST | Webhook de Paddle |
+## Dashboard
 
-### Dashboard
+Rutas bajo `/dashboard/projects/[id]`:
 
-| Ruta | Descripción |
-|---|---|
-| `/dashboard` | Overview |
-| `/dashboard/projects` | Lista de proyectos |
-| `/dashboard/projects/new` | Crear proyecto |
-| `/dashboard/projects/[id]` | Detalle del proyecto |
-| `/dashboard/projects/[id]/settings` | Branding, hero, submissions, post-signup, email, notifications, team, block |
-| `/dashboard/projects/[id]/page-builder` | Page builder + selector de templates |
-| `/dashboard/projects/[id]/thank-you` | Pantalla post-registro: experiencia, copy, compartir, preview en vivo |
-| `/dashboard/projects/[id]/integration` | Widget, custom form, leaderboard |
-| `/dashboard/projects/[id]/subscribers` | Gestión de suscriptores |
-| `/dashboard/projects/[id]/analytics` | Analíticas |
-| `/dashboard/projects/[id]/export` | Export CSV/XLSX |
-| `/dashboard/projects/[id]/upgrade` | Checkout Paddle |
-| `/dashboard/projects/[id]/testimonials` | Testimonios del proyecto |
-| `/dashboard/showcases/[id]` | Directorio/showcase del proyecto |
+- Overview, subscribers, analytics, export, settings y upgrade.
+- `page-builder`: landing de waitlist con secciones custom o templates.
+- `integration`: configuración/instalación de widget y leaderboard; preview de testimonials.
+- `thank-you`: configuración del copy clásico y preview real; campos sin consumidor fueron retirados de la UI, sin borrar de golpe config histórica.
+- `testimonials`: listado/moderación, detalle editable, forms e invites.
+- `/dashboard/showcases/[id]`: edición/publicación del producto del directorio.
+- `/admin/claims`: gestión de claims de showcases seeded.
 
----
+## Datos y flujos
 
-## Base de datos
+### Modelo principal
 
-Tabla principal renombrada de `waitlists` a **`projects`** (migración `010`).
+Tablas relevantes definidas en SQL base/migraciones: `profiles`, `accounts`, `account_members`, `projects`, `subscribers`, `purchases`, `subscriptions`, `page_events`, `showcases`, `testimonial_forms`, `testimonials`, `testimonial_form_visits`, `testimonial_invites`, `email_queue` y claims. Consultar `supabase/migrations/` para esquema vigente; `src/lib/supabase/types.ts` es el snapshot tipado del cliente, no reemplaza la verificación de la DB.
 
-### Tablas
+### Waitlist
 
-- **`profiles`** — 1:1 con `auth.users`, creada por trigger
-- **`accounts`** — backbone multi-producto
-- **`account_members`** — miembros de equipo
-- **`projects`** — proyecto (waitlist + showcase + testimonials); incluye `settings` JSONB
-- **`subscribers`** — suscriptores con `referral_count` denormalizado
-- **`purchases`** — auditoría de transacciones Paddle
-- **`page_events`** — views y signups de páginas hosteadas
-- **`showcases`** — entradas del directorio
-- **`testimonial_forms`** — formularios de testimonios
-- **`testimonials`** — testimonios recolectados
+- Alta pública: `/api/public/subscribe`; valida proyecto/public key, email, disposable domains, rate limit y configuración de plan; crea referral code, calcula posición y despacha emails/avisos.
+- El exceso del límite se conserva como `pending_unlock`; la activación depende del flujo de plan.
+- Referral codes se usan con `?ref=CODE`; el contador se incrementa vía RPC.
+- Widgets de signup usan iframe (`public/widget.js` → `/w/e/[publicKey]`).
+- Analytics hosted filtra eventos `source='hosted'`; referer/origin se usa para atribuir, no es una prueba criptográfica resistente a falsificación. Eventos anteriores a la columna `source` quedan `legacy` y no se reatribuyen.
 
-### RLS
+### Page Builder / Thank You
 
-- **`createClient()`** — cliente RLS para lecturas autenticadas
-- **`createAdminClient()`** — service role para escrituras; siempre verificar ownership con una lectura RLS antes del write
-- Endpoints públicos usan service role con validación manual
+- `settings.page_sections` almacena `template_id`, `template_data`, secciones y globales.
+- Un template activo sustituye el renderer de secciones. `src/lib/templates.ts` y `src/components/templates/template-renderer.tsx` son las fuentes centrales de registro/normalización/render.
+- La confirmación post-signup pertenece al template activo; el copy editable de `settings.thank_you` aplica a la pantalla clásica cuando no hay template.
+- `thank_you` conserva claves históricas que ya no tienen controles/consumidores. No volver a prometer su efecto sin conectar salida real.
 
-### Funciones/triggers
+### Testimonials y privacidad
 
-- `get_position(subscriber_id)` — posición por `ROW_NUMBER()`
-- `increment_referral_count(subscriber_id)` — incremento atómico
-- `handle_new_user()` / `on_auth_user_created` — crea profile + account + member al registrarse
+- El formulario recoge rating/mensaje, preguntas custom (`answers`), contacto/perfil, feedback privado y opción de uso `public`/`private` cuando está habilitada.
+- Envíos públicos pasan por `/api/testimonials/submit`, que valida el form publicado y valida website HTTP(S); el consentimiento es requerido si el formulario tiene `ask_consent`.
+- Moderación: `pending`, `approved`, `rejected`; se puede destacar. Dashboard detail deja revisar campos privados y editar nombre/empresa/cargo/mensaje.
+- Publicación: solo `approved` + `consent='public'`. `private` y `null` no se publican; la ficha y widget consultan server-side una allowlist de columnas.
+- Un `null` legacy solo puede publicarse tras una confirmación explícita del propietario de que ya obtuvo permiso. Se guarda `consent_confirmed_by/at`; una elección `private` del autor no se cambia por ese control.
+- La migración 020 elimina SELECT anónimo directo de `testimonials`. El service role no se expone al cliente; endpoints/render público lo usan solo en servidor.
 
----
+## Seguridad: patrones y límites confirmados
 
-## Loop de referidos
+- Server components/authenticated reads: `createClient()` con RLS.
+- Admin writes con service role: verificar ownership con lectura RLS previa (patrón en `src/lib/testimonials/actions.ts` y otras actions). El service role nunca va en `NEXT_PUBLIC_*`.
+- Formularios públicos escriben vía API server-side, no insert anónimo directo.
+- `TURNSTILE_ENABLED` está en `false` en `src/lib/turnstile.ts`: CAPTCHA no se renderiza ni valida aunque existan claves. Para activarlo hay que cambiar la constante y configurar las dos env vars.
+- Rate limit es in-memory; no es distribuido y no equivale a control robusto multi-instancia.
+- **Paddle webhook es un riesgo crítico abierto**: `readVerifiedPayload()` solo comprueba presencia de `paddle-signature` si existe `PADDLE_WEBHOOK_SECRET`; no valida criptográficamente el valor. Sin secret permite JSON sin verificar (modo dev). No habilitar cobros en producción hasta implementar y probar la verificación oficial de Paddle. Ver `PADDLE.md`.
 
-1. Cada signup genera `referral_code` único
-2. `?ref=CODE` identifica al referidor
-3. Se inserta subscriber con `referred_by` y se incrementa `referral_count`
-4. Posición calculada al leer
-5. Leaderboard muestra top N con emails enmascarados
+## Migraciones / estado cloud
 
----
+- Migraciones SQL se mantienen en `supabase/migrations/` y se aplican manualmente en Supabase SQL Editor (preferencia del proyecto).
+- El repo contiene migraciones hasta `022` en esta revisión. **No se verificó la versión aplicada en la base cloud**; no asumir que repo == producción.
+- Para el trabajo reciente de testimonials, aplicar en orden `020_testimonial_public_access.sql`, `021_page_event_sources.sql`, `022_testimonial_consent_confirmation.sql` antes de deploy:
+  1. 020 retira lectura pública directa de la tabla `testimonials`.
+  2. 021 añade `page_events.source`, default `legacy`.
+  3. 022 añade actor/fecha de confirmación de consentimiento legacy.
+- No se aplicaron desde este agente. Comprobar primero estado de columnas/policies en Supabase para evitar duplicar modificaciones manuales.
 
-## Anti-spam
+## Emails y jobs
 
-- Cloudflare Turnstile (implícito en la página hosteada)
-- Lista de emails desechables
-- Rate limit in-memory (no apto multi-instancia)
-- Validación de formato y MX lookup
-
----
-
-## Email (Resend)
-
-Envío server-side en `src/lib/email.ts` con `fetch` directo a `https://api.resend.com/emails`.
-
-Emails implementados:
-
-- Welcome al suscriptor (según plan y settings)
-- Notificación de signup al owner
-- Verificación de email (double opt-in)
-- Milestone de referidos
-
-Configuración por proyecto guardada en `settings.email` y parseada por `src/lib/email-settings.ts`. Remitente global vía `EMAIL_FROM`.
-
-### Estética
-
-Cada email se renderiza con un `EmailBrand` (paleta plana, todo hex) resuelto según a quién pertenece el email:
-
-- **Emails de la waitlist** (welcome, verificación, aviso al owner, hito de referidos, invitación a testimonio) → `resolveWaitlistEmailBrand`, que espeja los 3 niveles de `p/[slug]`: template → secciones custom → branding. Los 4 primeros se resuelven inline (el proyecto está en scope); los 2 últimos viajan **dentro del payload** de `email_queue`, porque el cron renderiza después.
-- **Resto de emails del proyecto** (claim-result) → `resolveProjectEmailBrand`: el `branding` (logo + color primario).
-- **Emails de sistema** (claim-notification al staff, showcase-expiry) → `APP_EMAIL_BRAND`.
-
-Piezas: `src/lib/email-brand.ts` (resolvers, conversión `oklch()` → hex, `contrastTextOn`), `src/lib/brand.ts` (los literales del acento web, a sincronizar con `--primary`), y `src/emails/layout.ts` (shell de tablas, `color-scheme: light only`, `escapeHtml`). Los `emailPalette` por template viven en `src/lib/templates.ts`, al lado de `thumbnail`.
-
-Los clientes de email no soportan `var()`, `oklch()`, gradientes ni `@font-face`: por eso la paleta se cura (todos los pares pasan AA, cosa que los colores de la página no hacen) y las fuentes se aproximan con stacks del sistema.
-
----
-
-## Widget
-
-`public/widget.js` monta el widget de waitlist dentro de un iframe usando el selector `.startpack-widget[data-key-id]`.
-
-- El iframe apunta a `/w/e/[publicKey]`.
-- `settings.widget.mode` define el origen:
-  - `"custom"`: formulario genérico configurable (`settings.widget`).
-  - `"template"`: usa el template activo del Page Builder (`settings.page_sections.template_id`).
-- Si hay un template activo y `mode === "template"`, `/w/e` redirige a la página pública en modo embebido (`?embed=1`).
-- Los proyectos Free muestran un backlink dofollow "Made with Startpack" al pie del widget custom. Los planes pagos no lo muestran.
-- El preview de Integration usa las mismas fuentes de render que producción:
-  - Custom: `buildWidgetHtml` en un `iframe srcDoc`.
-  - Template: `TemplateRenderer` con `embedded`.
-- El snippet correcto se genera en **Integration** (`/dashboard/projects/[id]/integration`).
-
----
-
-## Page Builder y templates
-
-`settings.page_sections` contiene:
-
-```json
-{
-  "template_id": "neon" | "carbon" | "pastel" | "editorial" | "split" | "mono" | "aurora" | null,
-  "template_data": { ... },
-  "sections": [ ... ],
-  "global": { ... }
-}
-```
-
-- Si `template_id` es válido, la página pública ignora `sections` y renderiza el template.
-- Templates disponibles solo para planes pagos (`hasTemplateAccess`).
-- La elección es reversible: elegir "Custom builder" restaura el editor de secciones.
-- `src/lib/templates.ts` define tipos, defaults y normalización.
-- El guardado es **un solo botón** (`savePageDesign`): escribe `template_id`, `template_data`, `sections` y `global` en una única actualización. No hay que "aplicar" el template por separado.
-- `saveTemplateData` sigue existiendo y es independiente: la usa la página de integración del widget embebido, que solo escribe `template_data` (nunca `template_id`).
-- `global.page_enabled` y `global.seo_*` se aplican aunque haya un template activo; el resto de `global` (colores, toggles de display) solo lo consume el render por secciones.
-- `src/components/templates/template-renderer.tsx` es la **única fuente** de layout/switch de templates, usada tanto por la página pública como por el preview del Page Builder.
-- Superficie derivada del mismo sistema: `emailPalette` por template (ver **Email → Estética**).
-
-## Pantalla post-registro
-
-La pantalla que ve el visitante después del alta la define el **template de landing** (`page_sections.template_id`): cada uno de los 7 templates tiene su propio bloque `done` hardcodeado, así que la identidad visual continúa después del submit. No es una superficie restylable por el dueño, y los 8 bloques (7 templates + `public-waitlist-form`) siguen duplicados: no hay componente compartido.
-
-- `settings.thank_you.*` es el **copy de la pantalla clásica** (proyectos sin template: secciones custom o página clásica), que sí lo leen `public-waitlist-form.tsx` y `widget-html.ts`. Con un template activo esos textos no aplican.
-- Se edita en su propia sección, `/dashboard/projects/[id]/thank-you` (títulos `text-lg`, panel con estado controlado + barra de guardado con dirty tracking), con su action `saveThankYouSettings`, que escribe **solo** `settings.thank_you` y fuerza `hide_branding: false` fuera del plan `launch`.
-- **Preview real**: el panel derecho renderiza la pantalla tal como se va a ver. Con template, envuelve `TemplateRenderer` en `PreviewDoneContext` (`src/components/templates/preview-done.tsx`), que hace que `useWaitlistSubscribe` arranque directo en `done` con un result mock — así el template muestra su propio post-registro sin que ningún template tenga que saber de previews. Sin template, renderiza `ClassicThankYou` con el estado vivo del formulario, así que reacciona mientras escribís.
-- **Defaults en un solo lugar**: `src/lib/thank-you.ts` (`CLASSIC_THANK_YOU_DEFAULTS`) es la fuente de los textos por defecto de la pantalla clásica. La usan `ClassicThankYou`, `widget-html.ts` y los `placeholder`/`hint` de la sección, así que un placeholder dice exactamente lo que se vería por defecto. Los templates tienen su copy hardcodeado por template: no hay defaults equivalentes.
-- `src/components/thank-you/classic-thank-you.tsx` es la pantalla clásica extraída, usada por `public-waitlist-form.tsx` y por el preview de la sección.
-- Tokens implementados: `{POSITION}` y `{TOTAL}`. El total llega en `SubscribeResult.total` desde `/api/public/subscribe` (ya se calculaba en el servidor; solo no se devolvía). El resto de los campos sin consumidor están marcados en el panel.
-
-## Guardado de settings (patrón obligatorio)
-
-Los tabs de Settings se renderizan condicionalmente, así que un submit **solo lleva los campos del tab activo**. Por eso la construcción de `settings` vive en `src/lib/project-settings.ts` (`buildProjectSettings`) y cada sección se reconstruye **solo si su tab es el activo**, preservándose desde la fila guardada en caso contrario. Antes solo `email` tenía ese guard y guardar desde cualquier tab reseteaba las demás secciones.
-
-Sin dueño (siempre se preservan): `thank_you` (ahora tiene su propia sección), `form` y `remove_branding` (no tienen UI), más los pass-through `widget`, `page_sections` y `leaderboard`. Al agregar una sección nueva al form, hay que sumarla a esa función con su guard.
-
----
-
-## Planes y gating
-
-Archivo: `src/lib/plans.ts` (antes `plan-gates.ts`).
-
-`hasFeature(plan, feature)` para features por plan. `FeatureGate` en `src/components/shared/feature-gate.tsx` para UI con candado. Templates usan `hasTemplateAccess(plan)` en `src/lib/templates.ts`.
-
----
-
-## Limitaciones y pendientes
-
-- **Rate limit in-memory**: no funciona en multi-instancia. Migrar a Redis/Upstash.
-- **Paddle webhook**: la firma no está verificada todavía.
-- **Turnstile en widget iframe**: el widget embebido no envía Turnstile.
-- **`verify-token.ts`** usa `SUPABASE_SERVICE_ROLE_KEY` como secret; ideal sería una env propia.
-- **i18n**: el widget y la página hosteada no usan el idioma configurado.
-- **Team UI**: `account_members` existe pero la gestión es parcial.
-- **Webhooks + Zapier**: configuración de webhooks personalizados (plan Grow).
-
----
-
-## Cómo levantar en local
-
-```bash
-pnpm dev
-# requiere .env.local con todas las variables
-```
-
-## Cómo deployar
-
-Push a `main` → Vercel deploya automáticamente. Env vars en Vercel → Settings → Environment Variables.
-
----
+- Emails salen server-side con `EMAIL_FROM`; envíos encolados usan `/api/cron/dispatch-emails`, protegido por `Authorization: Bearer <CRON_SECRET>` y procesa hasta 50 filas por lote.
+- `email_queue` incluye invitaciones a testimonials y emails de claims/lifecycle. Branding de email se resuelve en `src/lib/email-brand.ts`.
+- Expiración/reminders dependen de migraciones/jobs Supabase (`013`, `014`) y del cron dispatcher. Verificar extensiones/jobs en el dashboard Supabase/Vercel; el código local no prueba que estén configurados en producción.
 
 ## Archivos clave
 
-| Archivo | Propósito |
+| Archivo | Responsabilidad |
 |---|---|
-| `supabase/schema.sql` | Esquema base (usa nombre `waitlists`) |
-| `supabase/migrations/` | Migraciones aplicadas manualmente |
-| `src/lib/supabase/types.ts` | Tipos TypeScript para BD |
 | `src/lib/plans.ts` | Planes y feature gating |
-| `src/lib/templates.ts` | Tipos, defaults y validación de templates |
-| `src/lib/email-settings.ts` | Parseo de `settings.email` |
-| `src/lib/email.ts` | Envío Resend |
-| `src/lib/api/cors.ts` | CORS para endpoints públicos |
-| `src/lib/api/verify-token.ts` | Tokens de verificación de email |
-| `src/lib/api/rate-limit.ts` | Rate limiter in-memory |
-| `src/lib/api/referral-code.ts` | Generación de referral codes |
-| `src/lib/api/position.ts` | Posición y conteo de suscriptores |
-| `src/lib/api/leaderboard.ts` | Leaderboard |
-| `src/lib/api/slack.ts` | Notificaciones Slack |
-| `src/lib/api/validate-turnstile.ts` | Validación Turnstile |
-| `src/lib/disposable-emails.ts` | Dominios desechables |
-| `src/components/templates/` | Templates de waitlist + renderer |
-| `src/components/shared/feature-gate.tsx` | Candado por plan |
-| `src/components/shared/paddle-init.tsx` | Inicialización Paddle |
-| `src/proxy.ts` | Proxy de sesión |
-| `public/widget.js` | Widget embebible |
-| `src/app/p/[slug]/public-waitlist-form.tsx` | Formulario de página hosteada |
-| `PRODUCT.md` | Visión de producto |
-| `PRODUCTION.md` | Guía de salida a producción |
-| `DESIGN.md` | Sistema de diseño |
-| `CHANGELOG.md` / `CHANGELOG.es.md` | Historial de cambios |
+| `src/lib/supabase/{server,admin,client}.ts` | Clientes Supabase; separar RLS/admin |
+| `src/lib/supabase/types.ts` | Tipos DB usados en app |
+| `src/lib/templates.ts` | Registro/defaults/normalización templates |
+| `src/components/templates/template-renderer.tsx` | Render compartido de templates |
+| `src/lib/testimonials/actions.ts` | Actions de forms, moderación, edición/invites |
+| `src/app/api/testimonials/submit/route.ts` | Boundary de envío público testimonial |
+| `src/app/(public)/product/[slug]/product-testimonials.tsx` | Testimonials en ficha lanzada |
+| `src/app/w/t/[publicKey]/route.ts` | Widget testimonial allowlisted |
+| `src/app/dashboard/projects/[id]/analytics/page.tsx` | Cálculo de métricas |
+| `src/app/api/webhooks/paddle/route.ts` | Webhook con verificación pendiente |
+| `src/lib/email.ts`, `src/lib/email-brand.ts` | Envío y branding email |
+| `src/lib/turnstile.ts` | Kill switch Turnstile |
+| `public/widget.js` | Loader de embeds waitlist/testimonials |
+| `supabase/migrations/` | Evolución SQL manual |
+
+## Cómo retomar
+
+1. Leer este archivo y `PRODUCT.md`/`PRODUCTION.md` según la tarea.
+2. Revisar `git status` y el código de las rutas relevantes; este contexto no sustituye el estado actual del repo.
+3. Para DB, inspeccionar migraciones + estado cloud. No ejecutar SQL de migraciones pendientes sin comprobar qué se aplicó.
+4. Para cambios de seguridad, revisar los límites service role/RLS y qué datos salen por ruta pública.
+5. Validar con `pnpm exec tsc --noEmit` y `pnpm build`; `pnpm lint` existe, pero al 2026-10-01 falla por errores preexistentes en archivos de showcase, Turnstile y home. Volver a correrlo antes de asumir que siguen iguales.

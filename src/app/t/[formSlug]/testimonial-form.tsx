@@ -186,6 +186,16 @@ export function TestimonialForm({
     if (current === "consent" && !consent) {
       return fail("consent", "Please choose an option.");
     }
+    if (current === "company" && fields.includes("website") && website.trim()) {
+      try {
+        const parsed = new URL(website.trim());
+        if (!parsed.hostname || !["http:", "https:"].includes(parsed.protocol)) {
+          return fail("website", "Enter a website URL starting with https:// or http://.");
+        }
+      } catch {
+        return fail("website", "Enter a valid website URL starting with https:// or http://.");
+      }
+    }
     if (current === "about") {
       if (fields.includes("name") && !name.trim()) {
         return fail("name", "Please enter your name.");
@@ -566,12 +576,17 @@ export function TestimonialForm({
                   <label className="text-base font-medium">Website</label>
                   <input
                     value={website}
-                    onChange={(e) => setWebsite(e.target.value)}
+                    onChange={(e) => {
+                      setWebsite(e.target.value);
+                      if (invalidField === "website") setInvalidField(null);
+                    }}
                     placeholder="https://example.com"
                     inputMode="url"
                     autoComplete="url"
+                    aria-invalid={invalidField === "website"}
                     className={fieldClass}
                   />
+                  {invalidField === "website" && error && <p className="mt-2 text-sm text-destructive">{error}</p>}
                 </div>
               )}
               {fields.includes("logo") && (

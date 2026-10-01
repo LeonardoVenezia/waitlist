@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateReferralCode } from "@/lib/api/referral-code";
 import { isDisposableEmail } from "@/lib/disposable-emails";
@@ -360,10 +359,34 @@ export async function POST(request: Request) {
     ).catch(() => {});
   }
 
-  // Track signup event (fire-and-forget)
+  // Attribute only same-origin hosted-page submissions to hosted analytics.
+  const referer = request.headers.get("referer");
+  const origin = request.headers.get("origin");
+  const appOrigin = new URL(process.env.NEXT_PUBLIC_APP_URL ?? request.url).origin;
+  let eventSource: "hosted" | "embed" | "api" = "api";
+  if (origin === appOrigin && referer) {
+    try {
+      const refererUrl = new URL(referer);
+      if (
+        refererUrl.origin === appOrigin &&
+        /^\/p\/[^/]+\/?$/.test(refererUrl.pathname) &&
+        refererUrl.searchParams.get("embed") !== "1" &&
+        refererUrl.pathname.split("/")[2] === waitlist.slug
+      ) {
+        eventSource = "hosted";
+      } else if (refererUrl.origin === appOrigin && refererUrl.pathname.startsWith("/w/e/")) {
+        eventSource = "embed";
+      }
+    } catch {
+      eventSource = "api";
+    }
+  }
   void supabase.from("page_events").insert({
     waitlist_id: waitlist.id,
     type: "signup",
+    source: eventSource,
+  }).then(({ error }) => {
+    if (error) console.error("Signup event tracking failed:", error.message);
   });
 
   return jsonResponse({

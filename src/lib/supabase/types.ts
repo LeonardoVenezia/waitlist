@@ -357,18 +357,21 @@ export interface Database {
           id: string;
           waitlist_id: string;
           type: "view" | "signup";
+          source: "hosted" | "embed" | "api" | "legacy";
           created_at: string;
         };
         Insert: {
           id?: string;
           waitlist_id: string;
           type: "view" | "signup";
+          source?: "hosted" | "embed" | "api" | "legacy";
           created_at?: string;
         };
         Update: {
           id?: string;
           waitlist_id?: string;
           type?: "view" | "signup";
+          source?: "hosted" | "embed" | "api" | "legacy";
           created_at?: string;
         };
         Relationships: [
@@ -454,6 +457,8 @@ export interface Database {
           is_featured: boolean;
           answers: Json;
           consent: "public" | "private" | null;
+          consent_confirmed_by: string | null;
+          consent_confirmed_at: string | null;
           private_feedback: string | null;
           website: string | null;
           company_logo_url: string | null;
@@ -479,6 +484,8 @@ export interface Database {
           is_featured?: boolean;
           answers?: Json;
           consent?: "public" | "private" | null;
+          consent_confirmed_by?: string | null;
+          consent_confirmed_at?: string | null;
           private_feedback?: string | null;
           website?: string | null;
           company_logo_url?: string | null;
@@ -504,6 +511,8 @@ export interface Database {
           is_featured?: boolean;
           answers?: Json;
           consent?: "public" | "private" | null;
+          consent_confirmed_by?: string | null;
+          consent_confirmed_at?: string | null;
           private_feedback?: string | null;
           website?: string | null;
           company_logo_url?: string | null;

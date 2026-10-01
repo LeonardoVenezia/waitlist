@@ -163,7 +163,7 @@ export default async function HostedPage(props: {
         className="min-h-screen"
         style={{ backgroundColor: global.bg_color ?? "#f9fafb" }}
       >
-        <PageViewTracker waitlistId={waitlist.id} />
+        {!isEmbed && <PageViewTracker waitlistId={waitlist.id} />}
         <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px" }}>
           {visibleSections.map((section) => {
             const s = section.settings ?? {};
@@ -396,7 +396,7 @@ export default async function HostedPage(props: {
       className="flex min-h-screen flex-col items-center justify-center px-4"
       style={{ "--wl-primary": primaryColor } as React.CSSProperties}
     >
-      <PageViewTracker waitlistId={waitlist.id} />
+      {!isEmbed && <PageViewTracker waitlistId={waitlist.id} />}
       <div className="w-full max-w-md space-y-6 text-center">
         {(branding.logo_url as string) && (
           <img

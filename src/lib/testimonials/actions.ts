@@ -7,7 +7,6 @@ import { resolveWaitlistEmailBrand } from "@/lib/email-brand";
 import type { Database, Json } from "@/lib/supabase/types";
 
 type TestimonialFormRow = Database["public"]["Tables"]["testimonial_forms"]["Row"];
-type TestimonialRow = Database["public"]["Tables"]["testimonials"]["Row"];
 
 // ---- Forms ----
 
@@ -97,6 +96,70 @@ export async function createTestimonial(
   });
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard/projects/[id]/testimonials", "layout");
+  revalidatePath("/product/[slug]", "page");
+}
+
+export async function confirmLegacyTestimonialConsent(projectId: string, testimonialId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("You must be signed in.");
+
+  const { data: ownedTestimonial } = await supabase
+    .from("testimonials")
+    .select("id")
+    .eq("id", testimonialId)
+    .eq("project_id", projectId)
+    .is("consent", null)
+    .maybeSingle();
+  if (!ownedTestimonial) throw new Error("Testimonial not found or consent is already recorded.");
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("testimonials")
+    .update({ consent: "public", consent_confirmed_by: user.id, consent_confirmed_at: new Date().toISOString() })
+    .eq("id", testimonialId)
+    .eq("project_id", projectId)
+    .is("consent", null);
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/dashboard/projects/${projectId}/testimonials`);
+  revalidatePath("/product/[slug]", "page");
+}
+
+export async function updateTestimonial(
+  projectId: string,
+  testimonialId: string,
+  data: { name: string; company: string | null; role: string | null; message: string },
+) {
+  const supabase = await createClient();
+  const { data: ownedTestimonial } = await supabase
+    .from("testimonials")
+    .select("id")
+    .eq("id", testimonialId)
+    .eq("project_id", projectId)
+    .maybeSingle();
+  if (!ownedTestimonial) throw new Error("Testimonial not found");
+
+  const name = data.name.trim();
+  const message = data.message.trim();
+  if (!name || !message || name.length > 200 || message.length > 5000) {
+    throw new Error("Name and message are required; name must be under 200 characters and message under 5000.");
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("testimonials")
+    .update({
+      name,
+      company: data.company?.trim().slice(0, 200) || null,
+      role: data.role?.trim().slice(0, 200) || null,
+      message,
+    })
+    .eq("id", testimonialId)
+    .eq("project_id", projectId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/dashboard/projects/${projectId}/testimonials`);
   revalidatePath("/product/[slug]", "page");
 }
 

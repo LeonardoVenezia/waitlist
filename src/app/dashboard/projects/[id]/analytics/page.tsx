@@ -28,9 +28,10 @@ export default async function AnalyticsPage(props: { params: Promise<{ id: strin
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const [{ data: views }, { data: signups }] = await Promise.all([
-    supabase.from("page_events").select("created_at").eq("waitlist_id", id).eq("type", "view").gte("created_at", thirtyDaysAgo.toISOString()).order("created_at"),
-    supabase.from("page_events").select("created_at").eq("waitlist_id", id).eq("type", "signup").gte("created_at", thirtyDaysAgo.toISOString()).order("created_at"),
+  const [{ data: views }, { data: signups }, { count: legacyEvents }] = await Promise.all([
+    supabase.from("page_events").select("created_at").eq("waitlist_id", id).eq("type", "view").eq("source", "hosted").gte("created_at", thirtyDaysAgo.toISOString()).order("created_at"),
+    supabase.from("page_events").select("created_at").eq("waitlist_id", id).eq("type", "signup").eq("source", "hosted").gte("created_at", thirtyDaysAgo.toISOString()).order("created_at"),
+    supabase.from("page_events").select("id", { count: "exact", head: true }).eq("waitlist_id", id).eq("source", "legacy"),
   ]);
 
   // Aggregate by day for chart
@@ -38,8 +39,8 @@ export default async function AnalyticsPage(props: { params: Promise<{ id: strin
 
   // Overall page stats
   const [{ count: totalViews }, { count: pageSignups }] = await Promise.all([
-    supabase.from("page_events").select("*", { count: "exact", head: true }).eq("waitlist_id", id).eq("type", "view"),
-    supabase.from("page_events").select("*", { count: "exact", head: true }).eq("waitlist_id", id).eq("type", "signup"),
+    supabase.from("page_events").select("*", { count: "exact", head: true }).eq("waitlist_id", id).eq("type", "view").eq("source", "hosted"),
+    supabase.from("page_events").select("*", { count: "exact", head: true }).eq("waitlist_id", id).eq("type", "signup").eq("source", "hosted"),
   ]);
 
   return (
@@ -53,6 +54,7 @@ export default async function AnalyticsPage(props: { params: Promise<{ id: strin
         conversionRate: totalViews && totalViews > 0
           ? Math.round(((pageSignups ?? 0) / totalViews) * 1000) / 10
           : null,
+        legacyEvents: legacyEvents ?? 0,
       }}
       chartData={chartData}
     />

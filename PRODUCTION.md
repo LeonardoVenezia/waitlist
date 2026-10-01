@@ -1,156 +1,105 @@
-# Guía de salida a producción
+# Guía de producción — Startpack
 
-Estado: para usar tu propia waitlist funcionando mientras validás mercado. No todo es "lanzamiento público" todavía.
+**Última revisión:** 2026-10-01. Esta guía describe el repo; no certifica que la configuración de Vercel, Paddle o Supabase cloud esté aplicada. Verificá cada checklist en el panel correspondiente.
 
-## Orden recomendado
+## Bloqueo antes de cobrar
 
-Hacelo en este orden. Cada paso deja algo funcionando.
+El webhook de Paddle (`src/app/api/webhooks/paddle/route.ts`) **no valida criptográficamente `paddle-signature`**. Si `PADDLE_WEBHOOK_SECRET` está definida, el código solo exige que el header exista; sin secret, procesa JSON sin firma (modo desarrollo). No habilitar cobros/checkout de producción hasta implementar la verificación oficial y probar firmas válidas e inválidas.
 
-### Paso 1 — Deploy en Vercel (ya casi está)
+Los detalles y pendientes de billing están en [PADDLE.md](PADDLE.md).
 
-Ya tenés el repo en Vercel (`waitlist-nine-pink.vercel.app`). Lo que falta es configurar las variables de entorno en **Vercel → Settings → Environment Variables**.
+## 1. Deploy y variables
 
-### Paso 2 — Variables de entorno
+El deploy del repo se hace en Vercel. Confirmá dominio, branch de producción y variables desde el dashboard; no pegues valores secretos en documentación.
 
-Copiá de `.env.local` a Vercel. **Ojo**: hay una inconsistencia que arreglar.
-
-| Variable | Dónde obtenerla | Notas |
+| Variable | Uso | Sensibilidad |
 |---|---|---|
-| `NEXT_PUBLIC_APP_URL` | `https://tudominio.com` (sin barra final) | Usá el dominio real, no `vercel.app` |
-| `NEXT_PUBLIC_SITE_URL` | `https://tudominio.com` | **Falta en `.env.example`** — la usa testimonials (`/t/[slug]`). Agregala. |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Settings → API | |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Settings → API | |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API | **Secreto, nunca público** |
-| `RESEND_API_KEY` | Resend → API Keys | |
-| `PADDLE_WEBHOOK_SECRET` | Paddle → Developer Tools → Notifications | Ver Paso 6, crítico |
-| `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` | Paddle → Checkout settings | |
-| `PADDLE_PRICE_LAUNCH` | Paddle → Catálogo | ID del price (tipo **subscription**) |
-| `PADDLE_PRICE_GROW` | Paddle → Catálogo | ID del price (tipo **subscription**) |
-| `CRON_SECRET` | Generá uno con `openssl rand -hex 32` | Protege `/api/cron/dispatch-emails` |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare → Turnstile | |
-| `TURNSTILE_SECRET_KEY` | Cloudflare → Turnstile | Secreto |
+| `NEXT_PUBLIC_APP_URL` | URL base usada por enlaces/forms/widgets | Pública |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase URL | Pública |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Cliente Supabase con RLS | Pública |
+| `SUPABASE_SERVICE_ROLE_KEY` | Admin client server-side | **Secreto; nunca `NEXT_PUBLIC_*`** |
+| `RESEND_API_KEY` | Envío de email server-side | Secreto |
+| `EMAIL_FROM` | Remitente verificado, p. ej. `Startpack <hola@leovenezia.dev>` | Pública/config |
+| `CRON_SECRET` | Bearer para `/api/cron/dispatch-emails` | Secreto |
+| `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` | Paddle.js | Pública |
+| `PADDLE_API_KEY` | Paddle API si la ruta correspondiente lo usa | Secreto |
+| `PADDLE_WEBHOOK_SECRET` | Configurada para webhook; hoy no se valida criptográficamente | Secreto; **no resuelve el bloqueo por sí sola** |
+| `PADDLE_PRICE_LAUNCH`, `PADDLE_PRICE_GROW` | Price IDs mensuales | IDs/configuración |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Turnstile, solo al reactivarlo | Site key pública / secret privada |
+| `ADMIN_EMAILS` | Lista separada por coma para `/admin/*` | Configuración |
 
-**Arreglo obligatorio**: en `.env.example` agregá `NEXT_PUBLIC_SITE_URL=`. Y en el código, unificá para no depender de dos variables (idealmente todo debería usar `NEXT_PUBLIC_APP_URL`).
+`.env.example` es la lista base. El código revisado no usa `NEXT_PUBLIC_SITE_URL`; usar `NEXT_PUBLIC_APP_URL` salvo que el código cambie.
 
-### Paso 3 — Supabase: alinear la base de datos
+## 2. Base de datos y migraciones
 
-Tu BD cloud está parcheada a mano y desincronizada con las migraciones. Pegá este script idempotente en el **SQL Editor** (se puede re-ejecutar sin romper nada):
+Las migraciones del repo están en `supabase/migrations/` y se aplican manualmente desde Supabase SQL Editor. No hay confirmación automática de que producción esté al día.
 
-```sql
-alter table public.subscribers
-  add column if not exists email_status text,
-  add column if not exists name text,
-  add column if not exists country text;
+Procedimiento seguro:
 
-create index if not exists idx_subscribers_email_status
-  on public.subscribers(waitlist_id, email_status);
+1. Revisar qué migraciones ya se aplicaron en el proyecto cloud (historial de migraciones o inspección de esquema/policies).
+2. Aplicar solo las pendientes, en orden numérico y en una ventana controlada.
+3. Comprobar resultado de cada SQL y verificar columnas, índices, policies, triggers y funciones antes de continuar.
+4. No usar `supabase db push` como sustituto del procedimiento acordado sin cambiar esa decisión explícitamente.
 
-alter table public.showcases add column if not exists main_type text not null default 'image';
-alter table public.showcases add column if not exists main_image text;
-alter table public.showcases add column if not exists published_at timestamptz;
-alter table public.showcases add column if not exists card_image text;
+En particular, antes del despliegue del cambio de testimonials de octubre 2026, confirmar/aplicar en este orden:
 
-alter table public.showcases drop constraint if exists showcases_status_check;
-alter table public.showcases add constraint showcases_status_check
-  check (status in ('draft', 'published', 'rejected', 'coming_soon'));
-```
+- `020_testimonial_public_access.sql`: elimina la policy de lectura anónima de la tabla `testimonials`. La página de producto y `/w/t/[publicKey]` leen en servidor con service role y proyección allowlisted; el secreto nunca llega al browser.
+- `021_page_event_sources.sql`: agrega `page_events.source`; filas existentes quedan `legacy` y no se cuentan como métricas hosted.
+- `022_testimonial_consent_confirmation.sql`: agrega usuario/fecha para auditar confirmación de permiso legacy.
 
-Después creá las tablas de testimonials si todavía no existen (migración `011_testimonials.sql` completa, pegala entera). Si ya existen, aplicá las pendientes: `017_testimonials_moderation.sql`, `018_testimonial_invites_visits.sql` y `019_testimonial_wizard.sql` (esta última agrega `consent`, `private_feedback`, `website` y `company_logo_url` a `testimonials`).
+**Compatibilidad:** si se despliega el código sin estas migraciones, pueden fallar consultas/insert que usan `source` o campos de consentimiento; no quitar la policy pública de producción hasta que los server renders públicos seguros estén desplegados y probados. Idealmente coordinar el orden con una ventana de deploy y validar las rutas públicas inmediatamente después.
 
-### Paso 4 — Storage bucket público
+Las migraciones más antiguas también pueden faltar; no asumir que aplicar solo 020–022 alinea toda la base. Revisar `001`–`019` contra el cloud.
 
-Las imágenes del showcase y del page builder usan el bucket `showcase-images`. Tenés que hacerlo **público**:
+## 3. Storage
 
-- Supabase → Storage → crear bucket `showcase-images` (si no existe)
-- Marcarlo como **Public**
-- Verificar que la URL funcione: `https://tudominio.supabase.co/storage/v1/object/public/showcase-images/...`
+Las imágenes usan el bucket `showcase-images`. Confirmar en Supabase Storage que exista y que la lectura pública de objetos usados en la web sea intencional. Las rutas de signed upload URL son server-side; nunca exponer el service role. Revisar policies de upload además de que el bucket renderice imágenes.
 
-### Paso 5 — Resend: dominio verificado y remitente
+## 4. Email y cron
 
-El dominio `leovenezia.dev` ya está verificado en Resend. El remitente se configura con la variable `EMAIL_FROM`:
+- `EMAIL_FROM` debe usar un remitente de dominio verificado en Resend. El código no envía si falta la variable.
+- `/api/cron/dispatch-emails` exige `Authorization: Bearer $CRON_SECRET`, procesa hasta 50 filas por request y opera sobre `email_queue`.
+- Verificar `email_queue` y los jobs requeridos por las migraciones `013_expire_showcases_job.sql` / `014_email_queue.sql` en el dashboard de Supabase. El código local no comprueba que `pg_cron` esté habilitado ni que los jobs corran.
+- Si se configura cron externo/Vercel, usar HTTPS y el header Bearer secreto. No incluir el valor en logs ni en commits.
 
-```bash
-EMAIL_FROM="LaunchList <hola@leovenezia.dev>"
-```
+## 5. Cloudflare / Turnstile
 
-Tenés que setearla en `.env.local` y en Vercel → Settings → Environment Variables. Sin `EMAIL_FROM`, `sendEmail` no envía nada. No hace falta registrar la parte antes del `@` (ej. `hola`) por separado: con el dominio verificado, cualquier dirección de ese dominio es válida.
+`src/lib/turnstile.ts` define `TURNSTILE_ENABLED = false`. En el estado actual no se renderiza challenge ni se exige token en las rutas relacionadas, aun si existen las variables.
 
-### Paso 5.5 — Admin gate (project claims)
+Para reactivarlo: cambiar la constante, cargar `NEXT_PUBLIC_TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY`, configurar hostnames autorizados en Cloudflare y probar waitlist, testimonial submit y uploads. No basta con añadir env vars mientras el switch siga en `false`.
 
-Si vas a usar el panel de aprobación de claims en `/admin/claims`, definí la lista de emails admin:
+Cloudflare `CF-IPCountry` se usa para país cuando el header existe; la app tolera que falte.
 
-```bash
-ADMIN_EMAILS=hi@leovenezia.dev
-```
+## 6. Seguridad y verificación pre-deploy
 
-Acepta múltiples emails separados por coma. Solo esos emails pueden ver `/admin/*`; cualquier otro user autenticado se redirige a `/dashboard`.
+- **Paddle:** bloquear cobros hasta verificar firma según protocolo vigente del proveedor; `PADDLE_WEBHOOK_SECRET` presente no significa que la firma esté verificada.
+- Confirmar que service role solo exista en env server-side.
+- Confirmar policies RLS para tablas con datos de usuario. En particular, testimonials no deben tener SELECT anónimo directo tras migración 020; la salida pública se sirve con columnas permitidas desde servidor y solo para `approved` + `consent='public'`.
+- Recordar que el rate limiter actual es in-memory y no distribuido entre instancias.
+- Analytics hosted usa `Referer`/`Origin` y slug para atribuir eventos; no es autenticación criptográfica contra spoofing. `legacy` se excluye de métricas hosted.
 
-### Paso 6 — Paddle webhook (crítico de seguridad)
+## 7. Checklist
 
-Hoy `src/app/api/webhooks/paddle/route.ts` **no verifica la firma** del webhook. Lo dice el comentario en el código. Eso significa que cualquiera puede pegarle a tu endpoint y:
-- Activar una suscripción gratis
-- Cancelar la suscripción de otro usuario
+### Antes del deploy
 
-Para producción tenés que:
-1. Configurar `PADDLE_WEBHOOK_SECRET` en Vercel
-2. Implementar la verificación ed25519 de la firma `paddle-signature` (o usar el SDK oficial de Paddle)
-3. Configurar el webhook en Paddle para que apunte a `https://tudominio.com/api/webhooks/paddle`
+- [ ] `pnpm exec tsc --noEmit` y `pnpm build` pasan.
+- [ ] Confirmar diferencias entre el historial DB cloud y `supabase/migrations/`.
+- [ ] Aplicar migraciones pendientes; si corresponde, revisar 020–022 y la secuencia de deploy antes de retirar acceso público.
+- [ ] Verificar env vars en Vercel usando `.env.example` como referencia; secretos solo server-side.
+- [ ] Revisar bucket/policies de `showcase-images`.
+- [ ] Probar `/p/[slug]`, signup/referral, `/product/[slug]`, `/t/[formSlug]`, archivo de form, testimonials públicos y widget en host externo.
+- [ ] Verificar cron de expiración/queue y remitente Resend en los dashboards externos.
 
-**Si vas a cobrar suscripciones, esto es innegociable.** (FOLLOW-UP: ya está marcado con TODO en el código del webhook.)
+### Antes de habilitar cobros
 
-### Paso 6.5 — pg_cron para jobs de expiración
+- [ ] Implementar y probar validación criptográfica del webhook Paddle para firmas válidas, inválidas y timestamps fuera de tolerancia.
+- [ ] Configurar webhook y eventos necesarios en Paddle, con precio/entorno correctos.
+- [ ] Ejecutar checkout sandbox y comprobar activación/actualización de plan, periodo, cancelación y errores de entrega.
+- [ ] Definir/probar downgrade al finalizar periodo cancelado; revisar estado actual en `PADDLE.md`.
 
-Las migraciones `013_expire_showcases_job.sql` y `014_email_queue.sql` requieren:
-- La extensión `pg_cron` habilitada en tu proyecto Supabase (Supabase Dashboard → Database → Extensions)
-- La función `expire_due_showcases()` corre diariamente a las 03:00 UTC
-- La función `enqueue_expiry_reminders()` corre diariamente a las 03:05 UTC y encola emails 30d/7d antes del vencimiento
+## Documentos relacionados
 
-**Si pg_cron no está disponible**, el job se puede correr desde Vercel Cron Jobs o cualquier scheduler externo que llame a una RPC expuesta.
-
-El envío de los emails encolados se hace desde el endpoint `/api/cron/dispatch-emails` (protegido con `CRON_SECRET`). Configurá un Vercel Cron Job para llamarlo cada 5-10 minutos.
-
-### Paso 7 — Cloudflare (dominio + país + captcha)
-
-Cuando tengas dominio propio:
-1. Agregá el dominio a Cloudflare
-2. DNS: `CNAME` → `cname.vercel-dns.com` con nube **naranja** (proxied)
-3. En Vercel, agregá el dominio (Settings → Domains)
-4. El header `cf-ipcountry` empieza a llegar solo (ya lo usa el código para Country)
-
-Turnstile: creá un widget en Cloudflare → Turnstile con tu dominio. Configurá `NEXT_PUBLIC_TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY`.
-
-> **Turnstile está desactivado por ahora** (kill switch en `src/lib/turnstile.ts`, `TURNSTILE_ENABLED = false`). Con la bandera en `false` el captcha no se renderiza, no se ejecuta ningún challenge y las rutas de servidor no exigen token. Para reactivarlo: poner la bandera en `true` y verificar que las dos variables de entorno estén seteadas.
-
-### Paso 8 — Revisión de seguridad antes de cobrar
-
-- **Paddle webhook** (Paso 6) — obligatorio
-- **`SUPABASE_SERVICE_ROLE_KEY`** solo en el server, nunca en `NEXT_PUBLIC_*`
-- **RLS**: las tablas nuevas (testimonials) ya tienen políticas. Verificá que las de `subscribers` permitan lo necesario.
-- **Rate limit** (`src/lib/api/rate-limit.ts`) es in-memory — en Vercel multi-instancia no funciona bien. Para el MVP alcanza, pero anotalo.
-- **`verify-token.ts`** usa `SUPABASE_SERVICE_ROLE_KEY` como secret del token de verificación. Funciona, pero lo correcto es una variable propia (`VERIFY_TOKEN_SECRET`). Anotalo para endurecer después.
-
-## Checklist mínimo para "funciona"
-
-- [ ] Deploy en Vercel sin errores
-- [ ] Variables de entorno todas seteadas (incluido `NEXT_PUBLIC_SITE_URL` y `CRON_SECRET`)
-- [ ] Base de datos alineada — aplicar migraciones `012`, `013`, `014` además del Paso 3
-- [ ] Bucket `showcase-images` público
-- [ ] Resend con dominio verificado + `from` correcto
-- [ ] Tu waitlist pública carga y recibe signups
-- [ ] Emails de notificación llegan (probá con tu propio mail)
-- [ ] pg_cron habilitado y jobs `expire-showcases-daily` + `enqueue-expiry-reminders-daily` programados
-- [ ] Vercel Cron Job que llame a `/api/cron/dispatch-emails` cada 5-10 min
-
-## Checklist para "cobrar plata"
-
-- [ ] Paddle webhook con firma verificada
-- [ ] Turnstile activo (anti-spam)
-- [ ] Dominio propio con Cloudflare proxy
-- [ ] Backup de Supabase (PITR si el plan lo permite)
-
-## Lo que NO es urgente para validar mercado
-
-- Migrar al CLI de Supabase (podés seguir con SQL manual)
-- Rate limit distribuido (Redis/Upstash)
-- Verificación de email con servicio pago (ZeroBounce, etc.)
-- Geolocalización más precisa (Cloudflare `cf-ipcountry` alcanza)
+- [Contexto técnico](.commandcode/contexto-proyecto.md)
+- [Producto](PRODUCT.md)
+- [Pendientes de Paddle](PADDLE.md)
+- [Changelog](CHANGELOG.md)

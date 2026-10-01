@@ -15,6 +15,14 @@ export default async function EmbedFormPage(props: {
 
   const form = await getPublicForm(formSlug);
   if (!form) notFound();
+  if (form.status === "archived") {
+    return (
+      <div className="px-4 py-12 text-center">
+        <h1 className="font-heading text-2xl font-semibold">This form is closed</h1>
+        <p className="mt-2 text-sm text-muted-foreground">This testimonial form is no longer accepting responses.</p>
+      </div>
+    );
+  }
 
   await trackFormVisit(form.id);
 

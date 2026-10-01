@@ -1,5 +1,11 @@
 # Changelog — Waitlist by [PACK]
 
+## Sincronización de documentación (2026-10-01)
+
+- `.commandcode/contexto-proyecto.md` queda como guía técnica viva; `PRODUCT.md` describe capacidades/planes; `PRODUCTION.md` y `PADDLE.md` son runbooks; `CHANGELOG.md` sigue siendo histórico.
+- Se actualizaron README, producto y runbooks contra código y migraciones actuales. Se documentaron explícitamente las migraciones 020–022 pendientes de verificar en cloud, el gating público de testimonials y el bloqueo crítico de verificación criptográfica del webhook Paddle.
+- Sin cambios de comportamiento de la aplicación.
+
 ## Build output (22 routes)
 
 ```
@@ -340,3 +346,15 @@ Cuatro ajustes sobre la sección que quedó después del rollback de Embajadores
 - **Copy**: se reescribió la frase del panel para que el nombre del template no quede pegado a la palabra siguiente. En la fuente el espacio estaba, así que no pude reproducir el pegado, pero la construí de forma que no dependa de un espacio entre un `<strong>` y el texto contiguo.
 
 **Verificación**: widget (que sí es SSR) comprobado contra los defaults compartidos y los tokens `{POSITION}`/`{TOTAL}`; página pública renderizando; la ruta de la sección sigue protegida; `tsc`, `build` y lint (13 errores preexistentes). El preview en sí y la pantalla clásica viven en el cliente después de un submit, así que el pixel queda para el navegador.
+
+## Waitlist audit — testimonials, privacy and analytics
+
+- **Public testimonials are consent-gated**: the anon SELECT policy on `testimonials` is removed. The launched product page and the new `/w/t/[publicKey]` iframe expose only an explicit column allowlist and only `approved` + `consent='public'`; `private` and `null` stay out. Free/Launch retain a small “Made with Startpack” link; Grow removes it through `remove_branding`.
+- **Legacy consent**: the detail screen exposes all moderation context and editable author text/profile fields. A null-consent entry can be made public only after the owner explicitly confirms prior permission; actor and timestamp are retained. An author-recorded `private` choice cannot be flipped through that control. Pending entries can be rejected directly; list badges and actions are persistent, not hover-only.
+- **Testimonials embed**: Integration now offers a copyable embed snippet and a real iframe preview. The common `public/widget.js` loader mounts it without exposing service-role credentials. Testimonials remain on launched product pages only — not Coming soon or `/p`.
+- **Forms and product editor**: invalid Website URLs are rejected in the wizard and API; enabled consent is required server-side. Archived forms show a closed state in both full-page and iframe routes. Thank You no longer presents options with no consumer (saved legacy values are preserved). Main/card image requirements are explained beside the fields and in publish errors.
+- **Hosted analytics**: events carry `hosted`, `embed`, `api` or `legacy` source. Hosted views/signups require matching same-origin `/p/[slug]` referer and active project; embed/API events do not inflate hosted conversion. Old events remain `legacy` and are explicitly reported as unattributed. Embed rendering no longer adds hosted page views.
+- **Responsive public nav**: header links reflow on narrow screens rather than clipping Dashboard/account actions.
+- **Deferred roadmap (P2)**: testimonial import/export, advanced search/filters/tags, batch moderation, per-step form funnel metrics, invite email preview/deduplication and owner notifications.
+- **Manual production step**: apply migrations `020_testimonial_public_access.sql`, `021_page_event_sources.sql` and `022_testimonial_consent_confirmation.sql` in the Supabase SQL Editor, in order, before deploying. Migration 020 intentionally removes anonymous table reads; the public surfaces use server-side allowlisted queries instead.
+- **Verification**: `pnpm exec tsc --noEmit`, `pnpm build`, scoped ESLint (no errors; three existing warnings), `node --check public/widget.js`, and the Impeccable detector pass. Full lint still reports unrelated pre-existing errors.

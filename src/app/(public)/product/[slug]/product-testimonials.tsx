@@ -12,11 +12,11 @@ export async function ProductTestimonials({
 
   const { data: featured } = await admin
     .from("testimonials")
-    .select("*")
+    .select("id, name, company, role, message, rating, avatar_url, created_at, is_featured")
     .eq("project_id", projectId)
     .eq("status", "approved")
+    .eq("consent", "public")
     .eq("is_featured", true)
-    .or("consent.is.null,consent.eq.public")
     .order("created_at", { ascending: false })
     .limit(10);
 
@@ -26,10 +26,10 @@ export async function ProductTestimonials({
   if (!testimonials) {
     const { data: approved } = await admin
       .from("testimonials")
-      .select("*")
+      .select("id, name, company, role, message, rating, avatar_url, created_at, is_featured")
       .eq("project_id", projectId)
       .eq("status", "approved")
-      .or("consent.is.null,consent.eq.public")
+      .eq("consent", "public")
       .order("created_at", { ascending: false })
       .limit(4);
 

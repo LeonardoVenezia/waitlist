@@ -1,46 +1,50 @@
-# [PACK]
+# Startpack
 
-Suite of pre-launch tools for founders. Monthly subscription per project. Each project bundles a **showcase** (public directory entry), a **waitlist** (hosted page + widget + referral engine), **testimonials** (embeddable multi-step collection form), and a **page builder** to customize the waitlist page.
+Startpack combina un directorio público de productos con herramientas por proyecto: showcase, waitlist/referrals, landing builder y collection/moderación de testimonials. La propuesta y las capacidades vigentes están en [PRODUCT.md](PRODUCT.md); el contexto técnico para retomar sesiones vive en [.commandcode/contexto-proyecto.md](.commandcode/contexto-proyecto.md).
 
 ## Stack
 
-- **Next.js 16** (App Router, React 19, RSC, Server Actions)
-- **Supabase** (auth, Postgres, storage) — cloud project, migrations in `supabase/migrations/`
-- **Tailwind CSS v4** + shadcn/ui
-- **Resend** (transactional email)
-- **Paddle** (monthly subscriptions)
-- **Cloudflare Turnstile** (captcha) + `CF-IPCountry` (geo)
+- Next.js 16.2 (App Router), React 19, TypeScript 5
+- Supabase (auth, Postgres, storage)
+- Tailwind CSS v4
+- Resend (email), Paddle (billing), Cloudflare Turnstile (actualmente apagado por kill switch)
 
-## Run
+## Desarrollo local
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Env vars in `.env.local` (see `.env.example`).
+Comandos disponibles en `package.json`:
 
-## Key architecture
+```bash
+pnpm build
+pnpm start
+pnpm lint
+pnpm exec tsc --noEmit
+```
 
-- **Data model**: `account` → `project` (one project = waitlist + showcase + page builder). Table `projects` (was `waitlists`, renamed in migration 010).
-- **Auth**: Supabase. `handle_new_user()` trigger auto-creates profile + account.
-- **RLS pattern**: `createClient()` (RLS) for reads, `createAdminClient()` (service role) for writes, always verifying ownership with an RLS read first.
-- **Feature gating**: `src/lib/plans.ts` — `hasFeature(plan, feature)`. Plans are per-project, monthly subscription. Three tiers: Free, Launch, Grow.
-- **Public routes**: `/` (directory), `/product/[slug]`, `/p/[slug]` (waitlist page, customizable via page builder), `/t/[slug]` (testimonial form, multi-step), `/w/e/[publicKey]` (widget).
-- **Dashboard**: `/dashboard/projects/[id]/...` with sub-nav for Overview, Submissions, Page Builder, Integration, Analytics, Export, Settings, Upgrade.
+Variables de entorno: `.env.example`. No copies secretos al cliente ni a variables `NEXT_PUBLIC_*`; `SUPABASE_SERVICE_ROLE_KEY` es server-only.
 
-## Database migrations
+## Arquitectura breve
 
-Migrations live in `supabase/migrations/` and are applied **manually** via Supabase SQL Editor (no CLI). The production DB may be out of sync — check missing columns by running the SQL in each migration.
+- Modelo: `account` → `project`; proyecto agrupa waitlist/showcase y sus herramientas.
+- El directorio vive en `/`, `/products`, `/launches`, `/coming-soon` y `/product/[slug]`.
+- Waitlist hosted: `/p/[slug]`; embeds de waitlist y testimonials: `/w/e/[publicKey]` y `/w/t/[publicKey]`.
+- Forms de testimonials: `/t/[formSlug]` y `/t/[formSlug]/embed`.
+- Dashboard: `/dashboard/projects/[id]/...`.
+- Supabase SQL está versionado en `supabase/migrations/`; revisar `.commandcode/contexto-proyecto.md` y `PRODUCTION.md` antes de tocar/escalar DB. El repo no demuestra qué migraciones llegaron a cloud.
 
-## Docs
+## Documentación
 
-- `PRODUCT.md` — product vision, business model, current state
-- `DESIGN.md` — design system and component guidance
-- `PRODUCTION.md` — production deploy checklist (env vars, webhooks, cron, security)
-- `PADDLE.md` — payments integration status, pending fixes and config checklist
-- `CHANGELOG.md` — milestone history
+- [Contexto técnico](.commandcode/contexto-proyecto.md) — onboarding, rutas, arquitectura, privacidad y límites actuales.
+- [Producto](PRODUCT.md) — propuesta, planes y capacidades de cara al usuario.
+- [Diseño](DESIGN.md) — lenguaje visual y componentes.
+- [Producción](PRODUCTION.md) — variables, migraciones manuales, cron y checklist operativo.
+- [Paddle](PADDLE.md) — flujo de pagos, riesgo de webhook y pendientes.
+- [Changelog](CHANGELOG.md) — historial de cambios; no es fuente de verdad del estado actual.
 
-## Agent instructions
+## Nota de seguridad
 
-This codebase uses **Next.js 16**, which has breaking changes from earlier versions — APIs, conventions, and file structure may differ from training data. Before writing any code, read the relevant guide in `node_modules/next/dist/docs/`. Heed deprecation notices.
+La service role de Supabase solo se utiliza desde el servidor. El webhook Paddle todavía no valida criptográficamente la firma; no habilitar cobros en producción hasta resolver y probar ese bloqueo. Los testimonials solo son públicos con estado aprobado y consentimiento público explícito.

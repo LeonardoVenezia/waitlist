@@ -127,12 +127,12 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
     setError(null);
 
     if (!pendingMainFile && !mainImage) {
-      setError("Main image is required.");
+      setError("Add a main image before publishing the product.");
       setPublishing(false);
       return;
     }
     if (target === "coming_soon" && !pendingCardFile && !cardImage) {
-      setError("Card image is required for Coming soon.");
+      setError("Add a card image before publishing as Coming soon.");
       setPublishing(false);
       return;
     }
@@ -479,6 +479,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
           {/* Main media: image or video */}
           <div className="space-y-3 pt-2 border-t">
             <Label>Main media</Label>
+            <p className="text-xs text-muted-foreground">A main image is required to publish, including when you choose a video.</p>
             <RadioGroup
               name="main_type_local"
               value={mainType}
@@ -492,7 +493,8 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
 
             {mainType === "image" && (
               <div className="space-y-2">
-                <Label>Main image</Label>
+                <Label>Main image <span className="text-destructive">*</span></Label>
+                <p className="text-xs text-muted-foreground">Required to publish in any status.</p>
                 {(pendingMainPreview || mainImage) ? (
                   <div className="relative w-48 rounded-lg border overflow-hidden group">
                     <img
@@ -546,7 +548,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
           {/* Card image */}
           <div className="space-y-2 pt-2 border-t">
             <Label>Card image</Label>
-            <p className="text-xs text-muted-foreground">Shown on the product card in directory and home page.</p>
+            <p className="text-xs text-muted-foreground">Shown on the product card. Required for Coming soon; optional for a launched product.</p>
             {(pendingCardPreview || cardImage) ? (
               <div className="relative w-40 rounded-lg border overflow-hidden group">
                 <img

@@ -6,17 +6,14 @@ import {
   featureTestimonial,
   deleteTestimonial,
 } from "@/lib/testimonials/actions";
-import Link from "next/link";
 import { useTransition } from "react";
 
 export function TestimonialActions({
   id,
-  projectId,
   status,
   isFeatured,
 }: {
   id: string;
-  projectId: string;
   status: string;
   isFeatured: boolean;
 }) {
@@ -29,13 +26,22 @@ export function TestimonialActions({
   return (
     <div className="flex items-center gap-1 bg-background border rounded-lg shadow-sm p-1">
       {status === "pending" && (
-        <button
-          onClick={() => run(() => approveTestimonial(id))}
-          disabled={pending}
-          className="px-2 py-1 text-xs rounded hover:bg-green-50 text-green-600"
-        >
-          Approve
-        </button>
+        <>
+          <button
+            onClick={() => run(() => approveTestimonial(id))}
+            disabled={pending}
+            className="px-2 py-1 text-xs rounded hover:bg-green-50 text-green-600"
+          >
+            Approve
+          </button>
+          <button
+            onClick={() => run(() => rejectTestimonial(id))}
+            disabled={pending}
+            className="px-2 py-1 text-xs rounded hover:bg-red-50 text-red-600"
+          >
+            Reject
+          </button>
+        </>
       )}
       {status === "approved" && (
         <button

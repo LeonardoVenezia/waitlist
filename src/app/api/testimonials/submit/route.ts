@@ -48,6 +48,18 @@ export async function POST(req: NextRequest) {
   const consent =
     body.consent === "public" || body.consent === "private" ? body.consent : null;
 
+  if (website) {
+    let parsedWebsite: URL;
+    try {
+      parsedWebsite = new URL(website);
+    } catch {
+      return NextResponse.json({ error: "Enter a valid website URL using http:// or https://." }, { status: 400 });
+    }
+    if (!parsedWebsite.hostname || !["http:", "https:"].includes(parsedWebsite.protocol)) {
+      return NextResponse.json({ error: "Enter a valid website URL using http:// or https://." }, { status: 400 });
+    }
+  }
+
   if (!form_id || !project_id || !name || !message) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
@@ -70,13 +82,18 @@ export async function POST(req: NextRequest) {
   // moderation setting and questions (to map `question_<i>` keys to labels).
   const { data: form } = await admin
     .from("testimonial_forms")
-    .select("id, project_id, moderation, questions")
+    .select("id, project_id, moderation, questions, design")
     .eq("id", form_id as string)
     .eq("status", "published")
     .maybeSingle();
 
   if (!form || form.project_id !== project_id) {
     return NextResponse.json({ error: "Invalid form" }, { status: 400 });
+  }
+
+  const design = (form.design ?? {}) as { ask_consent?: boolean };
+  if (design.ask_consent === true && !consent) {
+    return NextResponse.json({ error: "Please choose whether this testimonial may be used publicly or privately." }, { status: 400 });
   }
 
   // Collect answers to the form's custom questions (keys `question_<i>`) and

@@ -208,6 +208,7 @@ export function IntegrationClient({
   const embedScript = `<script async src="${appUrl}/widget.js"></script>`;
   const embedDiv = `<div class="startpack-widget" data-key-id="${publicKey}"></div>`;
   const leaderboardIframe = `<iframe scrolling="yes" src="${appUrl}/w/e/${publicKey}/leaderboard" style="width: 100%; display: block; border: none; height: 100vh;"></iframe>`;
+  const testimonialEmbed = `<script async src="${appUrl}/widget.js"></script>\n<div class="startpack-testimonials" data-key-id="${publicKey}"></div>`;
   const customAjaxCode = `<!-- Add this form to your site -->
 <form id="wl-form" onsubmit="joinWaitlist(event)">
   <input type="email" id="wl-email" placeholder="you@example.com" required />
@@ -633,6 +634,23 @@ async function joinWaitlist(e) {
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground">Change colors and layout in the <span className="font-medium text-foreground">Design</span> tab.</p>
+
+                <section className="space-y-3 border-t pt-5">
+                  <div>
+                    <h3 className="font-heading text-lg">Testimonials widget</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">Displays approved testimonials with explicit public-use consent.</p>
+                  </div>
+                  <pre className="overflow-x-auto rounded-lg bg-foreground p-4 text-sm text-background"><code>{testimonialEmbed}</code></pre>
+                  <button onClick={() => copy("testimonial-embed", testimonialEmbed)} className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+                    {copied === "testimonial-embed" ? "Copied!" : "Copy embed code"}
+                  </button>
+                  <iframe
+                    title="Testimonials widget preview"
+                    src={`${appUrl}/w/t/${publicKey}`}
+                    className="min-h-[360px] w-full rounded-lg border bg-background"
+                    loading="lazy"
+                  />
+                </section>
               </div>
             </div>
           ) : (

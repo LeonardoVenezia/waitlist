@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Field, ToggleRow } from "@/components/dashboard/settings-fields";
 import { toHexColor } from "@/lib/color";
 import { CLASSIC_THANK_YOU_DEFAULTS } from "@/lib/thank-you";
@@ -16,32 +15,6 @@ import type { SubscribeResult } from "@/components/templates/use-waitlist-subscr
 import type { TemplateId } from "@/lib/templates";
 import type { Plan } from "@/lib/plans";
 import { saveThankYouSettings } from "./actions";
-
-const SHARE_PLATFORMS = [
-  "whatsapp",
-  "x",
-  "linkedin",
-  "facebook",
-  "telegram",
-  "reddit",
-  "email",
-  "threads",
-  "vk",
-] as const;
-
-const SOCIAL_LINKS: Array<[key: string, label: string, placeholder: string]> = [
-  ["social_twitter", "X/Twitter", "https://twitter.com/username"],
-  ["social_instagram", "Instagram", "https://instagram.com/username"],
-  ["social_threads", "Threads", "https://threads.net/@username"],
-  ["social_linkedin", "LinkedIn", "https://linkedin.com/in/username"],
-  ["social_facebook", "Facebook", "https://facebook.com/username"],
-  ["social_reddit", "Reddit", "https://reddit.com/s/name"],
-  ["social_telegram", "Telegram", "https://t.me/username"],
-  ["social_whatsapp", "WhatsApp", "https://wa.me/phone"],
-  ["social_tiktok", "TikTok", "https://tiktok.com/@username"],
-  ["social_youtube", "YouTube", "https://youtube.com/channel/name"],
-  ["social_discord", "Discord", "https://discord.gg/name"],
-];
 
 export function ThankYouClient({
   waitlistId,
@@ -91,8 +64,6 @@ export function ThankYouClient({
   const str = (key: string) => (thankYou[key] as string) ?? "";
   const bool = (key: string, fallback = true) =>
     typeof thankYou[key] === "boolean" ? (thankYou[key] as boolean) : fallback;
-  const list = (key: string) =>
-    Array.isArray(thankYou[key]) ? (thankYou[key] as string[]) : [];
 
   const save = useCallback(async () => {
     setSaveState("saving");
@@ -214,70 +185,11 @@ export function ThankYouClient({
                 placeholder={CLASSIC_THANK_YOU_DEFAULTS.position_text}
               />
             </Field>
-            <Field
-              label="Referred text"
-              htmlFor="thank_you.referred_text"
-              hint="Token: {REFERRED}. No consumer yet."
-            >
-              <Input
-                id="thank_you.referred_text"
-                value={str("referred_text")}
-                onChange={(e) => update("referred_text", e.target.value)}
-                placeholder="You have referred {REFERRED} friends"
-              />
-            </Field>
           </section>
 
-          <section className="space-y-4 rounded-xl border bg-card p-5">
-            <h3 className="font-semibold text-lg">Sharing</h3>
-            <Field label="Share message" htmlFor="thank_you.social_message" hint="No consumer yet.">
-              <Input
-                id="thank_you.social_message"
-                value={str("social_message")}
-                onChange={(e) => update("social_message", e.target.value)}
-                placeholder="I just joined the waitlist!"
-              />
-            </Field>
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">
-                Share buttons · no consumer yet
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                {SHARE_PLATFORMS.map((platform) => (
-                  <Checkbox
-                    key={platform}
-                    checked={list("social_buttons").includes(platform)}
-                    onChange={(e) => {
-                      const next = e.target.checked
-                        ? [...list("social_buttons"), platform]
-                        : list("social_buttons").filter((p) => p !== platform);
-                      update("social_buttons", next);
-                    }}
-                    label={platform.charAt(0).toUpperCase() + platform.slice(1)}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="space-y-3 border-t pt-4">
-              <p className="text-xs font-medium text-muted-foreground">
-                Profile links · saved, nothing renders them yet
-              </p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {SOCIAL_LINKS.map(([key, label, placeholder]) => (
-                  <Input
-                    key={key}
-                    aria-label={label}
-                    value={str(key)}
-                    onChange={(e) => update(key, e.target.value)}
-                    placeholder={placeholder}
-                  />
-                ))}
-              </div>
-            </div>
-          </section>
 
           <section className="space-y-4 rounded-xl border bg-card p-5">
-            <h3 className="font-semibold text-lg">Style &amp; tracking</h3>
+            <h3 className="font-semibold text-lg">Brand color</h3>
             <Field
               label="Brand color"
               htmlFor="thank_you.brand_color"
@@ -297,40 +209,6 @@ export function ThankYouClient({
                   onChange={(e) => update("brand_color", e.target.value)}
                   className="flex-1 font-mono text-xs"
                   placeholder="Leave empty to use your brand color"
-                />
-              </div>
-            </Field>
-            <Field
-              label="Tracking code"
-              htmlFor="thank_you.tracking_code"
-              hint="Injected before </head>. No consumer yet."
-            >
-              <textarea
-                id="thank_you.tracking_code"
-                value={str("tracking_code")}
-                onChange={(e) => update("tracking_code", e.target.value)}
-                rows={3}
-                className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm"
-                placeholder="Google Analytics, Ads, etc."
-              />
-            </Field>
-            <Field
-              label="Secondary CTA"
-              htmlFor="thank_you.cta_label"
-              hint="Label and URL, no consumer yet."
-            >
-              <div className="flex gap-2">
-                <Input
-                  id="thank_you.cta_label"
-                  value={str("cta_label")}
-                  onChange={(e) => update("cta_label", e.target.value)}
-                  placeholder="Back to site"
-                />
-                <Input
-                  aria-label="Secondary CTA URL"
-                  value={str("cta_url")}
-                  onChange={(e) => update("cta_url", e.target.value)}
-                  placeholder="https://example.com"
                 />
               </div>
             </Field>
@@ -360,27 +238,6 @@ export function ThankYouClient({
               label="Show leaderboard"
               checked={bool("show_leaderboard")}
               onCheckedChange={(v) => update("show_leaderboard", v)}
-            />
-            <ToggleRow
-              id="thank_you.hide_confetti"
-              label="Hide confetti"
-              description="No consumer yet"
-              checked={bool("hide_confetti", false)}
-              onCheckedChange={(v) => update("hide_confetti", v)}
-            />
-            <ToggleRow
-              id="thank_you.hide_referral"
-              label="Hide referral"
-              description="No consumer yet"
-              checked={bool("hide_referral", false)}
-              onCheckedChange={(v) => update("hide_referral", v)}
-            />
-            <ToggleRow
-              id="thank_you.hide_until_verified"
-              label="Hide success until verified"
-              description="No consumer yet"
-              checked={bool("hide_until_verified", false)}
-              onCheckedChange={(v) => update("hide_until_verified", v)}
             />
             <ToggleRow
               id="thank_you.hide_branding"

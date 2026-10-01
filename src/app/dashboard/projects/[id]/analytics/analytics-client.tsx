@@ -12,6 +12,7 @@ interface Stats {
   pageViews: number;
   pageSignups: number;
   conversionRate: number | null;
+  legacyEvents: number;
 }
 
 interface ChartPoint {
@@ -25,7 +26,7 @@ export function AnalyticsClient({ stats, chartData }: { stats: Stats; chartData:
 
   const filteredData = chartData.slice(-Number(range));
 
-  const hasData = stats.total > 0;
+  const hasData = stats.total > 0 || stats.pageViews > 0 || stats.pageSignups > 0 || stats.legacyEvents > 0;
 
   return (
     <div className="space-y-8">
@@ -76,6 +77,11 @@ export function AnalyticsClient({ stats, chartData }: { stats: Stats; chartData:
               <h2 className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Hosted page analytics</h2>
               <span className="text-[11px] text-muted-foreground/60">Hosted page only — excludes embeds & API</span>
             </div>
+            {stats.legacyEvents > 0 && (
+              <p className="mb-4 text-sm text-muted-foreground">
+                {stats.legacyEvents} earlier event{stats.legacyEvents === 1 ? " is" : "s are"} not attributed to a source and excluded from hosted-page metrics.
+              </p>
+            )}
             <div className="grid gap-4 sm:grid-cols-3 mb-6">
               <Card>
                 <CardHeader className="pb-2">

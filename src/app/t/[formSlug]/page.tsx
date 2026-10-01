@@ -14,6 +14,16 @@ export default async function PublicFormPage(props: {
 
   const form = await getPublicForm(formSlug);
   if (!form) notFound();
+  if (form.status === "archived") {
+    return (
+      <main className="flex min-h-screen items-center justify-center px-6 text-center">
+        <div className="max-w-md">
+          <h1 className="font-heading text-3xl font-semibold">This form is closed</h1>
+          <p className="mt-3 text-muted-foreground">This testimonial form is no longer accepting responses.</p>
+        </div>
+      </main>
+    );
+  }
 
   await Promise.all([trackFormVisit(form.id), markInviteOpened(inviteToken)]);
 

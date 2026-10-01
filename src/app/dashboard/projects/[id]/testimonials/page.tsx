@@ -142,7 +142,14 @@ export default async function TestimonialsPage(props: {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {testimonials.map((t: TestimonialRow) => (
-            <div key={t.id} className="relative group">
+            <div key={t.id} className="space-y-3 rounded-xl border bg-card p-4">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="rounded-full border px-2 py-1 capitalize">{t.status}</span>
+                <span className={`rounded-full border px-2 py-1 ${t.consent === "public" ? "text-success" : "text-muted-foreground"}`}>
+                  {t.consent === "public" ? "Public use" : t.consent === "private" ? "Private use" : "Consent not recorded"}
+                </span>
+                {t.is_featured && <span className="rounded-full border border-primary/30 bg-primary/5 px-2 py-1 text-primary">Featured</span>}
+              </div>
               <TestimonialCard
                 name={t.name}
                 company={t.company}
@@ -152,9 +159,11 @@ export default async function TestimonialsPage(props: {
                 avatarUrl={t.avatar_url}
                 date={t.created_at}
                 compact
+                answers={t.answers as Record<string, string> | null}
               />
-              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                <TestimonialActions id={t.id} projectId={id} status={t.status} isFeatured={t.is_featured} />
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Link href={`/dashboard/projects/${id}/testimonials/${t.id}`} className="text-sm font-medium text-primary underline-offset-4 hover:underline">Review details</Link>
+                <TestimonialActions id={t.id} status={t.status} isFeatured={t.is_featured} />
               </div>
             </div>
           ))}

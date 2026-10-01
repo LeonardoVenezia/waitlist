@@ -1,60 +1,77 @@
-# Paddle — Pendientes de integración
+# Paddle — Estado de integración y pendientes
 
-Estado al 2026-08-29. Auditoría de la integración de pagos. Lo que está funcionando y lo que falta, para retomar con contexto.
+**Revisado:** 2026-10-01. Este documento separa el comportamiento visto en el repo de la configuración que debe verificarse en Paddle/Vercel.
 
-## Lo que ya funciona
+## Flujo que existe en el código
 
-- **Checkout**: Paddle.js carga solo en `/dashboard/projects/[id]/upgrade` con `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`. El checkout pasa `custom_data` (`account_id`, `waitlist_id`, `plan`) que el webhook lee.
-- **Price IDs** por env var (`PADDLE_PRICE_LAUNCH`, `PADDLE_PRICE_GROW`), no hardcodeados.
-- **Webhook** (`src/app/api/webhooks/paddle/route.ts`) maneja `subscription.created/updated` (upsert en `subscriptions`, activa plan, desbloquea subscribers `pending_unlock`, re-publica showcase expirado), `subscription.canceled/paused/past_due`, y el legacy `transaction.completed`.
-- **Límites**: subscribe API aplica `getWaitlistLimit(plan)` (100/1000/10000) con overflow como `pending_unlock`. Los `PLAN_LIMITS` del webhook matchean `plans.ts`.
-- **UX de cancelación**: upgrade page muestra "Plan actual" y linkea al portal de cliente de Paddle.
+- Checkout se inicia desde `/dashboard/projects/[id]/upgrade` con `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`.
+- Prices Launch/Grow se leen de `PADDLE_PRICE_LAUNCH` y `PADDLE_PRICE_GROW`.
+- `custom_data` lleva `account_id`, `waitlist_id` (ID de `projects`) y `plan`.
+- `src/app/api/webhooks/paddle/route.ts` maneja `subscription.created`/`updated`: hace upsert en `subscriptions`, asigna el plan si la suscripción queda activa, actualiza límite, desbloquea suscriptores `pending_unlock` y vuelve a publicar showcases expirados.
+- `subscription.canceled` registra estado/fin de periodo, pero no hace downgrade del proyecto en ese handler. `paused` y `past_due` actualizan el registro de suscripción.
+- `transaction.completed` permanece como ruta legacy para transacciones históricas; nuevas altas deben entrar por eventos de suscripción.
 
-## Pendientes de código (por prioridad)
+Los IDs de precio, token, URL del webhook, eventos habilitados y entorno real deben comprobarse en los dashboards externos; la existencia de las env vars no demuestra que Paddle esté configurado correctamente.
 
-### 1. CRÍTICO — Verificación de firma del webhook no implementada
+## Bloqueo crítico: firma del webhook
 
-`src/app/api/webhooks/paddle/route.ts` (función `readVerifiedPayload`): si `PADDLE_WEBHOOK_SECRET` está seteada, solo se chequea que el header `paddle-signature` **exista**, no que la firma sea válida (TODO explícito en el código).
+En `readVerifiedPayload()` el código:
 
-**Riesgo**: cualquiera puede POSTear un payload falso a `/api/webhooks/paddle` y activarse Grow gratis. Explotable en producción hoy.
+1. Lee el body sin procesar y el header `paddle-signature`.
+2. Si `PADDLE_WEBHOOK_SECRET` está ausente, parsea JSON sin verificación (modo desarrollo).
+3. Si la variable está presente, solo exige que el header no esté vacío y luego parsea JSON. **No calcula ni verifica una firma criptográfica.**
 
-**Fix**: implementar verificación ed25519. El header trae `ts=<timestamp>;h1=<signature>`; el secret de Paddle webhook es una clave pública que se usa para verificar el HMAC del `raw body` + timestamp. Referencia: PRODUCTION.md "Paso 6" y docs de Paddle (verificación de webhooks).
+Por lo tanto, configurar la variable y recibir un header no protege el endpoint. No habilitar cobros de producción hasta implementar la verificación exactamente según la documentación/protocolo vigente de Paddle y probar eventos válidos, firma inválida, body modificado y timestamp fuera de tolerancia. No asumir que el secreto es HMAC o Ed25519: confirmar el algoritmo/formato oficial vigente al implementar.
 
-### 2. ALTO — No hay downgrade cuando la suscripción termina
+## Pendientes de código
 
-`subscription.canceled` solo marca la fila `subscriptions` como canceled. **Nadie vuelve el proyecto a `free`** cuando `current_period_end` pasa. No existe cron de suscripciones vencidas.
+### P0 — Verificar firma antes de procesar eventos
 
-**Riesgo**: un founder que cancela conserva Launch/Grow para siempre. Fuga de ingresos silenciosa.
+- Implementar verificación criptográfica usando el raw body, header y secreto/formato oficial de Paddle.
+- Rechazar firma ausente/inválida y timestamps expirados; cubrir replay/idempotencia según protocolo.
+- Añadir pruebas de evento válido, firma errónea, body alterado y timestamp fuera de tolerancia.
+- Mantener cualquier bypass solo en entorno local no productivo, sin que `NODE_ENV=production` pueda aceptarlo por falta de secreto.
 
-**Fix propuesto**: cron diario (pg_cron o el endpoint cron existente) que:
-1. Busque suscripciones `canceled` con `current_period_end < now()`.
-2. Downgrade del proyecto a `free` (plan + `submission_limit` 100).
-3. Setee `expires_at = now() + 1 año` en el showcase (coherente con el ciclo Free) o lo marque expired directo — decidir cuál es el comportamiento de producto deseado.
-4. Vuelva los subscribers que excedan 100 a `pending_unlock`.
-5. Encole email al founder avisando el downgrade.
+### P1 — Downgrade al final del periodo
 
-### 3. BAJO — Idempotencia de `transaction.completed`
+El evento cancelado marca `subscriptions.status='canceled'`, pero no se observa una rutina que, cuando `current_period_end < now()`, cambie proyecto a Free. Definir y luego implementar el comportamiento de showcase y waitlist al expirar:
 
-Inserta en `purchases` sin chequear duplicados; el unique constraint de `paddle_transaction_id` rechaza con 500 y Paddle reintenta infinito. Devolver `ok: true` si la transacción ya existe.
+- plan y límite de submissions;
+- subscribers por encima de límite (`pending_unlock` u otra política de producto ya acordada);
+- expiración/reactivación del showcase;
+- comunicación al owner.
 
-### 4. BAJO — Sin entorno sandbox
+No ejecutar ni documentar como existente hasta que haya código/job y prueba.
 
-No hay `Paddle.Environment.set("sandbox")` en `PaddleInit`. Solo funciona con token de producción. Agregar rama sandbox (ej. `NEXT_PUBLIC_PADDLE_ENV=sandbox`) para poder probar checkouts sin cobrar.
+### P2 — Idempotencia / manejo de estados
 
-### 5. COSMÉTICO — Polling en PaddleInit
+- Revisar retries de Paddle y eventos duplicados para que todos los handlers sean idempotentes y devuelvan 2xx para eventos ya aplicados.
+- El insert legacy de `transaction.completed` debe manejar conflicto por `paddle_transaction_id` sin provocar retries permanentes.
+- Probar transición `past_due`, `paused`, `canceled`, reactivación y cambio de plan con eventos reales de sandbox.
 
-`paddle-init.tsx` usa `setInterval` de 200ms esperando `window.Paddle` en vez del callback `onLoad` de `next/script`. Funciona, pero es el antipatrón que ya se eliminó en otro lado.
+### P3 — Sandbox
 
-## Pendientes fuera del código (responsabilidad de Leo)
+Confirmar si Paddle.js recibe el entorno esperado para pruebas; si no, exponer configuración no secreta y probar checkout sandbox antes de cualquier cobro real.
 
-- [ ] Verificar env vars en Vercel: `PADDLE_WEBHOOK_SECRET`, `PADDLE_PRICE_LAUNCH`, `PADDLE_PRICE_GROW`, `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`. Si falta el client token, los botones de upgrade quedan en "Cargando..." para siempre.
-- [ ] Dashboard de Paddle: webhook configurado apuntando a `https://waitlist.leovenezia.dev/api/webhooks/paddle` con los eventos `subscription.created`, `subscription.updated`, `subscription.canceled`, `subscription.paused`, `subscription.past_due`, `transaction.completed`.
-- [ ] Catálogo: confirmar que los prices sean de tipo **suscripción** (mensual) y que el producto esté aprobado/en vivo en Paddle.
-- [ ] Prueba end-to-end: un checkout real (o sandbox una vez implementado el punto 4) confirmando que el webhook llega y el plan se activa en la DB.
+## Pendientes externos (verificar manualmente)
 
-## Orden sugerido al retomar
+- [ ] Vercel: `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`, `PADDLE_PRICE_LAUNCH`, `PADDLE_PRICE_GROW`, `PADDLE_WEBHOOK_SECRET` y `PADDLE_API_KEY` si la integración la utiliza.
+- [ ] Paddle: webhook apunta al endpoint de producción y tiene habilitados eventos subscription `created`, `updated`, `canceled`, `paused`, `past_due` y cualquier evento necesario para la transición de estado.
+- [ ] Confirmar que el catálogo usa los precios/planes correctos y entorno Live/Sandbox correcto.
+- [ ] No habilitar transacciones Live hasta completar P0.
+- [ ] Después del fix, realizar checkout sandbox y revisar logs/respuesta del webhook y cambios DB.
 
-1. Fix de firma (1) — único explotable ahora mismo.
-2. Downgrade cron (2) — dinero perdiéndose silenciosamente.
-3. Config en Paddle dashboard + prueba E2E.
-4. 3/4/5 en cualquier momento.
+## Orden recomendado
+
+1. Implementar y probar verificación de firma (bloquea cobros).
+2. Revisar/definir ciclo de cancelación y downgrade con comportamiento de producto.
+3. Endurecer idempotencia y transiciones.
+4. Validar env/configuración del dashboard Paddle y completar E2E sandbox.
+5. Activar cobros solo cuando el P0 esté desplegado y probado.
+
+## Referencias locales
+
+- Handler: `src/app/api/webhooks/paddle/route.ts`
+- Planes/feature gates: `src/lib/plans.ts`
+- Checkout UI: `src/app/dashboard/projects/[id]/upgrade/`
+- Runbook general: `PRODUCTION.md`

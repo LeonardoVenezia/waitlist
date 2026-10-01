@@ -41,8 +41,8 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
     supabase.from("subscribers").select("*", { count: "exact", head: true }).eq("waitlist_id", id).eq("status", "active"),
     supabase.from("subscribers").select("*", { count: "exact", head: true }).eq("waitlist_id", id).eq("status", "hidden"),
     supabase.from("subscribers").select("email, referral_count, created_at").eq("waitlist_id", id).eq("status", "active").order("created_at", { ascending: false }).limit(5),
-    supabase.from("page_events").select("*", { count: "exact", head: true }).eq("waitlist_id", id).eq("type", "view"),
-    supabase.from("page_events").select("*", { count: "exact", head: true }).eq("waitlist_id", id).eq("type", "signup"),
+    supabase.from("page_events").select("*", { count: "exact", head: true }).eq("waitlist_id", id).eq("type", "view").eq("source", "hosted"),
+    supabase.from("page_events").select("*", { count: "exact", head: true }).eq("waitlist_id", id).eq("type", "signup").eq("source", "hosted"),
   ]);
 
   const totalActive = activeCount ?? 0;

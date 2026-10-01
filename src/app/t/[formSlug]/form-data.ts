@@ -11,7 +11,7 @@ export async function getPublicForm(slug: string): Promise<TestimonialFormRow | 
     .from("testimonial_forms")
     .select("*")
     .eq("slug", slug)
-    .eq("status", "published")
+    .in("status", ["published", "archived"])
     .maybeSingle();
   return form ?? null;
 }
