@@ -385,6 +385,7 @@ export function FormEditor({ form, projectId }: { form: FormRow; projectId: stri
           }}
           url={`/t/${form.slug}`}
           externalHref={`/preview/forms/${form.id}`}
+          variant="editor"
         />
       </div>
     </div>

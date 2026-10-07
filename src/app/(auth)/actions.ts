@@ -33,17 +33,23 @@ export async function signUp(prevState: unknown, formData: FormData) {
   const next = (formData.get("next") as string | null) ?? null;
   const claim = (formData.get("claim") as string | null) ?? null;
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: { full_name: fullName },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent(resolvePostAuthRedirect(next, claim))}`,
     },
   });
 
   if (error) {
     return { error: error.message };
+  }
+
+  // With "Confirm email" enabled in Supabase, signUp returns no session and the
+  // user must click the emailed link before landing on the app.
+  if (!data.session) {
+    return { checkEmail: true as const, email };
   }
 
   revalidatePath("/", "layout");

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { signUp, signInWithGoogle } from "../actions";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GoogleIcon } from "@/components/shared/google-icon";
 
-type State = { error: string } | null;
+type State = { error: string } | { checkEmail: true; email: string } | null;
 
 export function SignUpForm({
   next,
@@ -20,6 +21,24 @@ export function SignUpForm({
     async (_prev, formData) => signUp(null, formData),
     null,
   );
+
+  if (state && "checkEmail" in state) {
+    return (
+      <div className="space-y-4 text-center">
+        <div className="space-y-2">
+          <h2 className="font-heading text-lg font-semibold">Check your email</h2>
+          <p className="text-sm text-muted-foreground">
+            We sent a confirmation link to{" "}
+            <span className="font-medium text-foreground">{state.email}</span>. Click it to
+            activate your account.
+          </p>
+        </div>
+        <Link href="/login" className="inline-block text-sm text-primary hover:underline">
+          Back to sign in
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

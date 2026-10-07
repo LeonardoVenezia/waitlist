@@ -153,8 +153,13 @@ export default async function FormsPage(props: {
                 )
               : [];
             const fields = Array.isArray(form.fields) ? (form.fields as string[]) : [];
-            const thankYouMessage =
-              ((form.design ?? {}) as { thank_you_message?: string }).thank_you_message ?? null;
+            const design = (form.design ?? {}) as {
+              thank_you_message?: string;
+              ask_private_feedback?: boolean;
+              ask_consent?: boolean;
+              reward_code?: string;
+            };
+            const thankYouMessage = design.thank_you_message ?? null;
 
             const visits = visitCounts.get(form.id) ?? 0;
             const collected = testimonialCounts.get(form.id) ?? 0;
@@ -174,6 +179,11 @@ export default async function FormsPage(props: {
                       fields={fields}
                       questions={questions}
                       thankYouMessage={thankYouMessage}
+                      wizard={{
+                        askPrivateFeedback: design.ask_private_feedback === true,
+                        askConsent: design.ask_consent === true,
+                        rewardCode: design.reward_code?.trim() || null,
+                      }}
                       url={`/t/${form.slug}`}
                       externalHref={`/preview/forms/${form.id}`}
                     />

@@ -190,7 +190,7 @@ export function TestimonialForm({
       try {
         const parsed = new URL(website.trim());
         if (!parsed.hostname || !["http:", "https:"].includes(parsed.protocol)) {
-          return fail("website", "Enter a website URL starting with https:// or http://.");
+          return fail("website", "Enter a valid website URL starting with https:// or http://.");
         }
       } catch {
         return fail("website", "Enter a valid website URL starting with https:// or http://.");
@@ -637,7 +637,7 @@ export function TestimonialForm({
         </div>
       </div>
 
-      {error && (
+      {error && invalidField !== "website" && (
         <p role="alert" className="text-base text-destructive">
           {error}
         </p>
