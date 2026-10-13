@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getShowcaseExpiryMonths } from "@/lib/plans";
 import { revalidatePath } from "next/cache";
+import type { Database } from "@/lib/supabase/types";
+
+type ShowcaseUpdate = Database["public"]["Tables"]["showcases"]["Update"];
 
 // ── create ──
 export async function createShowcase(waitlistId: string, formData: FormData) {
@@ -105,29 +108,33 @@ export async function updateShowcase(
   }
 
   // Update text fields
-  const updates: Record<string, string | boolean | null> = {};
-  for (const key of ["name", "slug", "link", "description", "category_1", "video_url", "main_type"]) {
+  const updates: ShowcaseUpdate = {};
+  const textFields = ["name", "slug", "link", "description", "category_1", "video_url"] as const;
+  for (const key of textFields) {
     const val = formData.get(key) as string;
     if (val !== null) updates[key] = val;
   }
 
+  const mainType = formData.get("main_type") as string | null;
+  if (mainType !== null) updates.main_type = mainType as "image" | "video";
+
   const cat2 = formData.get("category_2") as string;
   updates.category_2 = cat2 || null;
 
-  if (updates.description && (updates.description as string).length < 200) {
+  if (updates.description && updates.description.length < 200) {
     return { error: `La descripción debe tener al menos 200 caracteres.` };
   }
 
   const featuredBadge = formData.get("featured_badge");
   if (featuredBadge !== null) updates.featured_badge = featuredBadge === "on";
 
-  updates.images = finalImages as any;
-  if (mainImagePath) (updates as any).main_image = mainImagePath;
-  if (cardImagePath) (updates as any).card_image = cardImagePath;
+  updates.images = finalImages;
+  if (mainImagePath) updates.main_image = mainImagePath;
+  if (cardImagePath) updates.card_image = cardImagePath;
 
   const { error } = await supabase
     .from("showcases")
-    .update({ ...updates } as any)
+    .update(updates)
     .eq("id", showcaseId);
 
   if (error) {
@@ -179,7 +186,7 @@ export async function publishShowcase(
     // 3. Anti-spam (puntapié)
 
     // 4. Guardar checks + publicar
-    const updateFields: Record<string, unknown> = {
+    const updateFields: ShowcaseUpdate = {
       status: targetStatus,
       domain_check_passed: targetStatus === "published",
       spam_check_passed: true,
@@ -217,7 +224,7 @@ export async function publishShowcase(
 
     const { error } = await admin
       .from("showcases")
-      .update(updateFields as any)
+      .update(updateFields)
       .eq("id", showcaseId);
 
     if (error) return { error: error.message };
@@ -226,8 +233,8 @@ export async function publishShowcase(
     revalidatePath("/", "layout");
     revalidatePath("/products", "layout");
     return { success: true, status: targetStatus };
-  } catch (e: any) {
-    return { error: e?.message ?? "Error al publicar. ¿Ejecutaste las migraciones en producción?" };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Error al publicar. ¿Ejecutaste las migraciones en producción?" };
   }
 }
 
@@ -240,7 +247,7 @@ export async function updateShowcaseStatus(
   const supabase = await createClient();
   const admin = createAdminClient();
 
-  const updateFields: Record<string, unknown> = { status };
+  const updateFields: ShowcaseUpdate = { status };
 
   // Re-publishing: reset expiry if plan is free
   if (status === "published" || status === "coming_soon") {
@@ -265,7 +272,7 @@ export async function updateShowcaseStatus(
 
   const { error } = await supabase
     .from("showcases")
-    .update(updateFields as any)
+    .update(updateFields)
     .eq("id", showcaseId);
 
   if (error) return { error: error.message };

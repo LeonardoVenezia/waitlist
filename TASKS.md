@@ -4,9 +4,9 @@ Pendientes del proyecto. Armado el 6/10/2026 a partir del repo (último push 1/1
 
 ## Último check / próximo paso
 
-- **Fecha:** 2026-10-06
-- **Último check:** implementados los fixes del bloque A (A.2-A.5) y creada la migración 023. Verificado con `tsc` y `build` OK; smoke test de `/signup`, `/login` y `/pricing` (200). Lint sin errores nuevos (quedan 13 errores pre-existentes en archivos no tocados, ver bloque F). Falta la parte de config (bloque B): aplicar la 023 en cloud, Site URL, env vars y diagnóstico de A.1.
-- **Próximo paso:** checklist de config B, pasos 1-5 (empezar por ver qué migraciones están aplicadas). Después, Paddle P0.
+- **Fecha:** 2026-10-13
+- **Último check:** completados el **bloque F** (deuda de lint: 13 errores → 0; quedan 34 warnings pre-existentes) y el **bloque D** (import CSV/XLSX, export CSV/XLSX, Wall of Love público, y 4 variantes de widget de testimonials). Verificado con `pnpm lint` (0 errores), `pnpm exec tsc --noEmit` y `pnpm build` OK; smoke test de `/wall/[slug]` (200 con branding) y `/w/t/[publicKey]?variant=` (200 en las 4 variantes; el estado vacío es lo único que se pudo ver porque no hay testimonios approved+public en la DB). **Sin migraciones SQL nuevas**: el schema ya soportaba todo. No se probó el render con testimonios reales ni el import end-to-end (falta data).
+- **Próximo paso:** sigue pendiente el **bloque B** (config): ver qué migraciones están aplicadas en cloud y correr la 023, `NEXT_PUBLIC_APP_URL` en Vercel, Site URL de Supabase Auth. Después **Paddle P0** (firma del webhook). Probar import/export/Wall/widgets con testimonios reales.
 - (Actualizar esta sección al cerrar cada sesión: fecha, qué se hizo, qué sigue.)
 
 ## Orden sugerido
@@ -51,12 +51,14 @@ Pendientes del proyecto. Armado el 6/10/2026 a partir del repo (último push 1/1
 
 Meta de Leo: que nadie vea necesario pasarse a Senja. Mínimo para paridad, por impacto:
 
-1. Import de testimonials (sin esto nadie migra).
-2. 3-4 widgets distintos (hoy hay uno solo).
-3. Wall of Love (página pública).
-4. Export de testimonials (hoy solo exporta subscribers).
+1. Import de testimonials *(hecho 13/10)* — archivo CSV/XLSX en `/dashboard/projects/[id]/testimonials/import` (parseo en cliente con `xlsx`). Entran `approved` + `consent='public'` con `consent_confirmed_by/at`. Entrada también en el sidebar (sección Testimonials).
+2. Widgets distintos *(hecho 13/10)* — 4 variantes: `grid`, `carousel`, `marquee`, `quote`. Se eligen en Integration → tab **Testimonials**; la ruta `/w/t/[publicKey]?variant=` las sirve (`src/lib/testimonials/widget-html.ts`). Config en `projects.settings.testimonial_widget`.
+3. Wall of Love *(hecho 13/10)* — página pública `/wall/[slug]` con todos los approved + public (masonry, branding para Free). Link en el header de Testimonials y en Integration.
+4. Export de testimonials *(hecho 13/10)* — CSV/XLSX en `/api/projects/[id]/testimonials/export` (filtra por status/form), botones en el header de Testimonials.
 5. Búsqueda por texto y tags (filtros por estado y form ya existen en la lista de testimonials).
 6. Video testimonials, moderación por lote, notificación al owner, métricas por paso.
+
+Nota de gating: import/wall/widgets quedaron sin límite por plan (decisión pendiente de Leo). El único límite activo es `remove_branding` (branding en Wall/widget para Free).
 
 Ojo con JSON-LD: Google no muestra estrellas para reseñas autopromocionales vía widgets propios. No prometer "estrellas en Google".
 
@@ -69,10 +71,12 @@ Ojo con JSON-LD: Google no muestra estrellas para reseñas autopromocionales ví
 
 ## F. Deuda técnica
 
-- 13 errores de lint pre-existentes (no introducidos por los fixes del 6/10): 9 `no-explicit-any` (`showcases/[id]/actions.ts`, `showcases/[id]/showcase-form.tsx`, `paddle-init.tsx`) y 2 de react-hooks (`public-waitlist-form.tsx` inmutabilidad, `page.tsx` llama `Date.now` durante render). `pnpm lint` falla por esto; limpiar aparte.
+- *(Resuelto 13/10)* Lint en 0 errores. Eran 11 `no-explicit-any` (`showcases/[id]/actions.ts` ×7, `showcases/[id]/showcase-form.tsx` ×2, `paddle-init.tsx` ×2) y 2 de `react-hooks` (`public-waitlist-form.tsx` inmutabilidad de `window`, `page.tsx` con `Date.now()` en render). Fixes: updates de showcases tipados con `Database[...]["showcases"]["Update"]`; `catch (e: unknown)` + narrowing; helpers de módulo para los globals de Turnstile; `thisWeekCutoff()` fuera del componente. Quedan **34 warnings** (`no-img-element` y un par de `no-unused-vars`) que no rompen el lint; no se tocaron.
 
 ## Hecho
 
 **Hasta 1/10:** Detalle de testimonial con editor, badges y Reject, validación de Website, header mobile, Thank You, /projects/new, migración 020 (se retira el SELECT anónimo a testimonials), docs sincronizados.
 
 **6/10:** Revisión de AGENTS.md y TASKS.md; fixes de bugs A.2-A.5 (migración 023, preview de pasos, error de URL duplicado, pantalla "Check your email") con `tsc`/`build` OK y smoke test de páginas públicas.
+
+**13/10:** Bloque D completo — import de testimonials (CSV/XLSX), 4 variantes de widget (+ tab Testimonials en Integration), Wall of Love público (`/wall/[slug]`), export CSV/XLSX. Bloque F resuelto — `pnpm lint` en 0 errores (11 `any` + 2 react-hooks). Sin migraciones SQL nuevas. `tsc`/`build` OK, smoke test de rutas públicas nuevas.

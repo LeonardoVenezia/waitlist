@@ -47,6 +47,7 @@ const waitlistSubNav: SubNavItem[] = [
 const testimonialSubNav: SubNavItem[] = [
   { label: "Testimonials", href: (id) => `/dashboard/projects/${id}/testimonials`, icon: <IconChat /> },
   { label: "Forms", href: (id) => `/dashboard/projects/${id}/testimonials/forms`, icon: <IconForm /> },
+  { label: "Import", href: (id) => `/dashboard/projects/${id}/testimonials/import`, icon: <IconDownload /> },
 ];
 
 function SubNavSection({

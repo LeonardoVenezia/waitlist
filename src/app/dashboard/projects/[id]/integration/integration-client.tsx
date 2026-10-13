@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { IconPalette, IconCode, IconTrophy } from "@/components/ui/icon";
-import { updateWidgetSettings, updateLeaderboardSettings } from "./actions";
+import { IconPalette, IconCode, IconTrophy, IconChat } from "@/components/ui/icon";
+import { updateWidgetSettings, updateLeaderboardSettings, updateTestimonialWidgetSettings } from "./actions";
 import { saveTemplateData } from "../page-builder/actions";
 import { getTemplateDefinition, hasTemplateAccess, type TemplateId } from "@/lib/templates";
 import { TemplateEditor } from "@/components/templates/template-editor";
@@ -26,9 +26,16 @@ const TEMPLATE_ACCENT_COLOR: Record<TemplateId, string> = {
   aurora: "#141019",
 };
 
+const TESTIMONIAL_VARIANTS = [
+  { id: "grid", label: "Grid", desc: "Cards in a responsive grid." },
+  { id: "carousel", label: "Carousel", desc: "Swipeable row with arrows." },
+  { id: "marquee", label: "Marquee", desc: "Auto-scrolling ticker." },
+  { id: "quote", label: "Featured quote", desc: "One highlighted testimonial." },
+] as const;
+
 // ── Types ──────────────────────────────────────────────
 
-type Tab = "design" | "install" | "leaderboard";
+type Tab = "design" | "install" | "testimonials" | "leaderboard";
 
 interface WidgetSettings {
   [key: string]: unknown;
@@ -203,6 +210,11 @@ export function IntegrationClient({
   // ── Install state ──
   const [installView, setInstallView] = useState<"embed" | "custom">("embed");
 
+  // ── Testimonials widget state ──
+  const [twVariant, setTwVariant] = useState<string>(
+    ((settings.testimonial_widget as Record<string, unknown> | undefined)?.variant as string) ?? "grid",
+  );
+
   // ── URLs ──
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const embedScript = `<script async src="${appUrl}/widget.js"></script>`;
@@ -284,15 +296,26 @@ async function joinWaitlist(e) {
     router.refresh();
   }, [waitlistId, slug, activeTemplateId, templateData, router]);
 
+  const saveTestimonialWidget = useCallback(async () => {
+    setSaving(true);
+    await updateTestimonialWidgetSettings(waitlistId, { variant: twVariant });
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+    router.refresh();
+  }, [waitlistId, twVariant, router]);
+
   const handleSave = useCallback(async () => {
     if (tab === "leaderboard") {
       await saveLeaderboard();
+    } else if (tab === "testimonials") {
+      await saveTestimonialWidget();
     } else if (widgetMode === "template") {
       await saveTemplate();
     } else {
       await saveWidget();
     }
-  }, [tab, widgetMode, saveLeaderboard, saveTemplate, saveWidget]);
+  }, [tab, widgetMode, saveLeaderboard, saveTestimonialWidget, saveTemplate, saveWidget]);
 
   const updateTemplateData = useCallback((patch: Record<string, unknown>) => {
     setTemplateData((prev) => ({ ...prev, ...patch }));
@@ -332,9 +355,9 @@ async function joinWaitlist(e) {
 
       {/* Tab selector */}
       <div className="inline-flex items-center gap-0.5 p-1 bg-card border rounded-full">
-        {(["design", "install", "leaderboard"] as Tab[]).map((t) => {
+        {(["design", "install", "testimonials", "leaderboard"] as Tab[]).map((t) => {
           const Icon =
-            t === "design" ? IconPalette : t === "install" ? IconCode : IconTrophy;
+            t === "design" ? IconPalette : t === "install" ? IconCode : t === "testimonials" ? IconChat : IconTrophy;
           return (
             <button
               key={t}
@@ -667,6 +690,84 @@ async function joinWaitlist(e) {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── TESTIMONIALS TAB ── */}
+      {tab === "testimonials" && (
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+          {/* Left: settings + install */}
+          <div className="lg:col-span-7 space-y-4">
+            <div className="bg-card border rounded-2xl shadow-sm p-5">
+              <h3 className="text-sm font-semibold">Layout</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Pick how your approved, publicly-consented testimonials are displayed.
+              </p>
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {TESTIMONIAL_VARIANTS.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => setTwVariant(v.id)}
+                    className={`rounded-xl border px-4 py-3 text-left transition ${
+                      twVariant === v.id ? "bg-card border-primary ring-1 ring-primary" : "bg-card hover:border-foreground/20"
+                    }`}
+                  >
+                    <span className="block text-sm font-medium">{v.label}</span>
+                    <span className="block text-xs text-muted-foreground mt-0.5">{v.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-card border rounded-2xl shadow-sm p-5">
+              <h3 className="text-sm font-semibold">Install</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">Paste this where the testimonials should appear.</p>
+              <pre className="mt-3 overflow-x-auto rounded-lg bg-foreground p-4 text-sm text-background"><code>{testimonialEmbed}</code></pre>
+              <button
+                onClick={() => copy("testimonial-embed-tab", testimonialEmbed)}
+                className="mt-2 text-sm font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {copied === "testimonial-embed-tab" ? "Copied!" : "Copy embed code"}
+              </button>
+
+              <div className="mt-5 border-t pt-4">
+                <h3 className="text-sm font-semibold">Wall of Love</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">A public page with all your approved testimonials.</p>
+                <div className="mt-3 flex items-center gap-2">
+                  <code className="flex-1 min-w-0 truncate rounded-lg border bg-muted px-3 py-2 text-xs">{`${appUrl}/wall/${slug}`}</code>
+                  <a
+                    href={`${appUrl}/wall/${slug}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-primary hover:underline shrink-0"
+                  >
+                    Open ↗
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: preview */}
+          <div className="lg:col-span-5">
+            <div className="sticky top-24 overflow-hidden bg-card border rounded-2xl shadow-sm">
+              <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b">
+                <div>
+                  <h3 className="text-sm font-semibold">Widget preview</h3>
+                  <p className="text-xs text-muted-foreground">Updates as you pick a layout</p>
+                </div>
+              </div>
+              <div className="p-4 bg-muted/30">
+                <iframe
+                  title="Testimonials widget preview"
+                  src={`${appUrl}/w/t/${publicKey}?variant=${twVariant}`}
+                  className="min-h-[420px] w-full rounded-lg border bg-background"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

@@ -6,6 +6,13 @@ import { buildPlanMap, sortShowcases } from "@/lib/showcase-sort";
 
 export const dynamic = "force-dynamic";
 
+// Impure by design: this is a server component, so the cutoff is computed per
+// request. Kept out of the component body so the React Compiler doesn't flag
+// `Date.now()` as a render-time impurity.
+function thisWeekCutoff() {
+  return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+}
+
 interface ShowcaseRow {
   slug: string;
   name: string;
@@ -34,7 +41,7 @@ export default async function HomePage() {
     .eq("status", "published")
     .not("published_at", "is", null)
     .or("expires_at.is.null,expires_at.gt.now()")
-    .gte("published_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+    .gte("published_at", thisWeekCutoff())
     .limit(15);
 
   // All products

@@ -34,6 +34,16 @@ declare global {
   }
 }
 
+// Turnstile communicates through globals on `window`. These live at module
+// scope so the React Compiler doesn't treat them as render-time mutations.
+function setWindowGlobal(name: string, value: unknown) {
+  (window as unknown as Record<string, unknown>)[name] = value;
+}
+
+function clearWindowGlobal(name: string) {
+  delete (window as unknown as Record<string, unknown>)[name];
+}
+
 export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor, buttonTextColor, showCount = true, showLeaderboard = true }: WaitlistFormProps) {
   const searchParams = useSearchParams();
   const refCode = searchParams.get("ref") ?? undefined;
@@ -55,9 +65,9 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
 
   // Expose callback globally for implicit turnstile
   useEffect(() => {
-    (window as unknown as Record<string, (token: string) => void>).handleTurnstileCallback = (token: string) => {
+    setWindowGlobal("handleTurnstileCallback", (token: string) => {
       turnstileToken.current = token;
-    };
+    });
   }, []);
 
   // Reset turnstile after use so each submit triggers a new challenge
@@ -83,10 +93,10 @@ export function PublicWaitlistForm({ publicKey, settings, ctaLabel, buttonColor,
     if (window.turnstile) {
       const el = turnstileRef.current?.querySelector<HTMLIFrameElement>("iframe")?.parentElement;
       if (el) {
-        (window as unknown as Record<string, (token: string) => void>).__cfTurnstileCb = async (token: string) => {
-          delete (window as unknown as Record<string, unknown>).__cfTurnstileCb;
+        setWindowGlobal("__cfTurnstileCb", async (token: string) => {
+          clearWindowGlobal("__cfTurnstileCb");
           await doSubmit(token);
-        };
+        });
         try { window.turnstile.execute(el, { callback: "__cfTurnstileCb" }); } catch {
           await doSubmit("");
         }

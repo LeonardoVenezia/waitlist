@@ -355,3 +355,106 @@ export async function resendInvite(projectId: string, inviteId: string) {
 
   revalidatePath(`/dashboard/projects/${projectId}/testimonials/forms/${invite.form_id}/invites`);
 }
+
+// ---- Import ----
+
+export type ImportTestimonialRow = {
+  name?: string;
+  message?: string;
+  email?: string;
+  company?: string;
+  role?: string;
+  rating?: string | number;
+  avatar_url?: string;
+  website?: string;
+  tags?: string;
+};
+
+function importStr(v: unknown, max: number): string | null {
+  if (typeof v !== "string") return null;
+  const t = v.trim();
+  return t ? t.slice(0, max) : null;
+}
+
+/**
+ * Bulk-imports testimonials from a parsed CSV/XLSX file.
+ *
+ * The owner is asserting they have permission to use these testimonials, so
+ * rows land `approved` + `consent='public'` with the confirming user/date
+ * recorded (same audit fields as the legacy-consent flow, migration 022).
+ * Rows missing a name or message are skipped.
+ */
+export async function importTestimonials(
+  projectId: string,
+  rows: ImportTestimonialRow[],
+): Promise<{ inserted: number; skipped: number }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("You must be signed in.");
+
+  // RLS-protected ownership check.
+  const { data: project } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("id", projectId)
+    .maybeSingle();
+  if (!project) throw new Error("Project not found");
+
+  const now = new Date().toISOString();
+
+  const inserts = rows
+    .map((row) => {
+      const name = importStr(row.name, 200);
+      const message = importStr(row.message, 5000);
+      if (!name || !message) return null;
+
+      const ratingNum = Number(row.rating);
+      const rating = Number.isFinite(ratingNum)
+        ? Math.min(5, Math.max(1, Math.round(ratingNum)))
+        : 5;
+
+      const avatar = importStr(row.avatar_url, 500);
+      const website = importStr(row.website, 500);
+      const tags =
+        typeof row.tags === "string"
+          ? row.tags
+              .split(/[,;]/)
+              .map((t) => t.trim())
+              .filter(Boolean)
+              .slice(0, 10)
+          : [];
+
+      return {
+        project_id: projectId,
+        form_id: null,
+        source: "import" as const,
+        status: "approved" as const,
+        consent: "public" as const,
+        consent_confirmed_by: user.id,
+        consent_confirmed_at: now,
+        name,
+        message,
+        email: importStr(row.email, 320),
+        company: importStr(row.company, 200),
+        role: importStr(row.role, 200),
+        rating,
+        avatar_url: avatar?.startsWith("http") ? avatar : null,
+        website: website?.startsWith("http") ? website : null,
+        tags,
+        answers: {} as Json,
+      };
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null);
+
+  if (inserts.length === 0) return { inserted: 0, skipped: rows.length };
+
+  const { error } = await supabase.from("testimonials").insert(inserts);
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/dashboard/projects/${projectId}/testimonials`);
+  revalidatePath("/product/[slug]", "page");
+
+  return { inserted: inserts.length, skipped: rows.length - inserts.length };
+}

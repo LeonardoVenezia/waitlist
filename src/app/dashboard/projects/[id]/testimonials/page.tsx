@@ -28,10 +28,16 @@ export default async function TestimonialsPage(props: {
 
   const { data: project } = await supabase
     .from("projects")
-    .select("id, name, plan")
+    .select("id, name, plan, slug")
     .eq("id", id)
     .maybeSingle();
   if (!project) notFound();
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const exportParams = new URLSearchParams();
+  if (statusFilter) exportParams.set("status", statusFilter);
+  if (formFilter) exportParams.set("form", formFilter);
+  const exportQs = exportParams.toString() ? `&${exportParams.toString()}` : "";
 
   let query = supabase
     .from("testimonials")
@@ -63,7 +69,33 @@ export default async function TestimonialsPage(props: {
             {project.name}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/dashboard/projects/${id}/testimonials/import`}
+            className="inline-flex shrink-0 items-center justify-center rounded-lg border border-border bg-background text-sm font-medium h-8 gap-1.5 px-2.5 hover:bg-muted hover:text-foreground transition-all"
+          >
+            Import
+          </Link>
+          <a
+            href={`/api/projects/${id}/testimonials/export?format=csv${exportQs}`}
+            className="inline-flex shrink-0 items-center justify-center rounded-lg border border-border bg-background text-sm font-medium h-8 gap-1.5 px-2.5 hover:bg-muted hover:text-foreground transition-all"
+          >
+            Export CSV
+          </a>
+          <a
+            href={`/api/projects/${id}/testimonials/export?format=xlsx${exportQs}`}
+            className="inline-flex shrink-0 items-center justify-center rounded-lg border border-border bg-background text-sm font-medium h-8 gap-1.5 px-2.5 hover:bg-muted hover:text-foreground transition-all"
+          >
+            Export XLSX
+          </a>
+          <a
+            href={`${appUrl}/wall/${project.slug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex shrink-0 items-center justify-center rounded-lg border border-border bg-background text-sm font-medium h-8 gap-1.5 px-2.5 hover:bg-muted hover:text-foreground transition-all"
+          >
+            Wall of Love
+          </a>
           <Link
             href={`/dashboard/projects/${id}/testimonials/forms`}
             className="inline-flex shrink-0 items-center justify-center rounded-lg border border-border bg-background text-sm font-medium h-8 gap-1.5 px-2.5 hover:bg-muted hover:text-foreground transition-all"

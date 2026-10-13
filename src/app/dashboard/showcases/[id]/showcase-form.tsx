@@ -189,8 +189,8 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
       } else {
         window.location.reload();
       }
-    } catch (e: any) {
-      setError(e.message ?? "Upload failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed");
       setPublishing(false);
       setUploadStatus("");
     }
@@ -244,8 +244,8 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
       setUpdating(false);
       setUploadStatus("");
       window.location.reload();
-    } catch (e: any) {
-      setError(e.message ?? "Upload failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed");
       setUpdating(false);
       setUploadStatus("");
     }
