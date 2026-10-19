@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
+import { getWaitlistLimit } from "@/lib/plans";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/shared/copy-button";
@@ -21,6 +22,9 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
     .maybeSingle();
 
   if (!waitlist) notFound();
+
+  // Single source of truth: the limit comes from the plan (same as enforcement in /api/public/subscribe).
+  const planLimit = getWaitlistLimit(waitlist.plan);
 
   const cookieStore = await cookies();
   const dismissedOnboarding = cookieStore.get("onboarding-dismissed")?.value === "true";
@@ -50,7 +54,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
   const pageViews = totalViews ?? 0;
   const pageSignupCount = pageSignups ?? 0;
   const conversionRate = pageViews > 0 ? Math.round((pageSignupCount / pageViews) * 1000) / 10 : null;
-  const nearLimit = waitlist.submission_limit && totalActive >= waitlist.submission_limit * 0.8;
+  const nearLimit = planLimit && totalActive >= planLimit * 0.8;
   const isNewProject = totalActive === 0 && totalHidden === 0 && pageViews === 0;
 
   const headersList = await headers();
@@ -159,7 +163,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
           <span className="text-muted-foreground">Plan</span>
           <span className="ml-2 font-medium capitalize">{waitlist.plan}</span>
           <span className="ml-1 text-muted-foreground">
-            {waitlist.submission_limit ? `/ ${waitlist.submission_limit} max` : "· Unlimited"}
+            {planLimit ? `/ ${planLimit} max` : "· Unlimited"}
           </span>
         </div>
         <div className="h-4 w-px bg-border" />
@@ -185,7 +189,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
       {/* Near-limit alert */}
       {nearLimit && totalHidden === 0 && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          You&apos;re approaching your plan limit ({totalActive} of {waitlist.submission_limit}).{" "}
+          You&apos;re approaching your plan limit ({totalActive} of {planLimit}).{" "}
           <Link href={`/dashboard/projects/${id}/upgrade`} className="font-medium underline">
             Upgrade to keep growing
           </Link>
@@ -287,7 +291,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
             </div>
             <div className="rounded-lg bg-card px-4 py-3">
               <p className="text-xs text-muted-foreground">Plan limit</p>
-              <p className="text-xl mt-0.5">{waitlist.submission_limit ?? "Unlimited"}</p>
+              <p className="text-xl mt-0.5">{planLimit ?? "Unlimited"}</p>
             </div>
             <div className="rounded-lg bg-card px-4 py-3">
               <p className="text-xs text-muted-foreground">Waitlist URL</p>

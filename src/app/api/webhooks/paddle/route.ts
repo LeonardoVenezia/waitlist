@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createHmac, timingSafeEqual } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const PLAN_LIMITS: Record<string, number> = {
@@ -6,23 +7,43 @@ const PLAN_LIMITS: Record<string, number> = {
   grow: 10000,
 };
 
+// Paddle Billing signs webhooks with HMAC-SHA256: header `Paddle-Signature: ts=<unix>;h1=<hex>`,
+// where h1 = HMAC(secret, `${ts}:${rawBody}`). Reject stale timestamps (replay protection).
+const MAX_SKEW_SECONDS = 300;
+
+function verifyPaddleSignature(raw: string, header: string, secret: string): boolean {
+  const parts = Object.fromEntries(
+    header.split(";").map((kv) => {
+      const i = kv.indexOf("=");
+      return [kv.slice(0, i).trim(), kv.slice(i + 1).trim()];
+    }),
+  );
+  const ts = parts.ts;
+  const h1 = parts.h1;
+  if (!ts || !h1) return false;
+
+  const tsNum = Number(ts);
+  if (!Number.isFinite(tsNum) || Math.abs(Date.now() / 1000 - tsNum) > MAX_SKEW_SECONDS) {
+    return false;
+  }
+
+  const expected = createHmac("sha256", secret).update(`${ts}:${raw}`).digest("hex");
+  const a = Buffer.from(expected, "hex");
+  const b = Buffer.from(h1, "hex");
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 async function readVerifiedPayload(request: Request): Promise<{ raw: string; payload: unknown } | null> {
   const raw = await request.text();
   const signature = request.headers.get("paddle-signature") ?? "";
+  const secret = process.env.PADDLE_WEBHOOK_SECRET;
 
-  if (!process.env.PADDLE_WEBHOOK_SECRET) {
-    // Dev mode — skip verification (FOLLOW-UP: implement ed25519 verification)
-    try {
-      return { raw, payload: JSON.parse(raw) };
-    } catch {
-      return null;
-    }
+  if (!secret) {
+    // Never accept unsigned webhooks in production. Dev only.
+    if (process.env.NODE_ENV === "production") return null;
+  } else if (!verifyPaddleSignature(raw, signature, secret)) {
+    return null;
   }
-
-  // TODO(security): implement ed25519 signature verification with PADDLE_WEBHOOK_SECRET.
-  // The webhook MUST be signed before subscriptions are activated in production.
-  // See PRODUCTION.md — "Paso 6 — Paddle webhook".
-  if (!signature) return null;
 
   try {
     return { raw, payload: JSON.parse(raw) };

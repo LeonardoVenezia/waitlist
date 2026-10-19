@@ -22,7 +22,7 @@ const italiana = Italiana({
 export const metadata: Metadata = {
   title: "Waitlist — Build hype before you launch",
   description:
-    "Create a viral waitlist with unique referral links. Free up to 150 subscribers.",
+    "Create a viral waitlist with unique referral links. Free up to 100 subscribers.",
 };
 
 export default function RootLayout({
