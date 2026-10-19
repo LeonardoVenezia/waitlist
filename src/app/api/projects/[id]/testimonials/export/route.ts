@@ -46,13 +46,16 @@ export async function GET(
     return new NextResponse("No testimonials to export", { status: 404 });
   }
 
+  // Neutralise spreadsheet formulas (=, +, -, @) in user-provided text.
+  const safe = (v: string): string => (/^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
+
   const rows = testimonials.map((t) => ({
-    name: t.name,
-    email: t.email ?? "",
-    company: t.company ?? "",
-    role: t.role ?? "",
+    name: safe(t.name),
+    email: safe(t.email ?? ""),
+    company: safe(t.company ?? ""),
+    role: safe(t.role ?? ""),
     rating: t.rating,
-    message: t.message,
+    message: safe(t.message),
     status: t.status,
     consent: t.consent ?? "",
     source: t.source,

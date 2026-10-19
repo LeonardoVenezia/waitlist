@@ -111,7 +111,9 @@ export function Sidebar({
   projects: ProjectSummary[];
 }) {
   const pathname = usePathname();
-  const currentId = pathname.match(/\/(?:projects|showcases)\/([^/]+)/)?.[1] ?? null;
+  const rawId = pathname.match(/\/(?:projects|showcases)\/([^/]+)/)?.[1] ?? null;
+  // "/dashboard/projects/new" is the create form, not a project.
+  const currentId = rawId === "new" ? null : rawId;
   const [expandedSection, setExpandedSection] = useState<string | null>(() => {
     if (pathname.includes("/showcases/")) return "product";
     if (pathname.includes("/testimonials/")) return "testimonials";
