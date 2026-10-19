@@ -3,6 +3,9 @@ import { ShowcaseCard } from "@/components/shared/showcase-card";
 import { PublicHeader } from "@/components/shared/public-header";
 import { buildPlanMap, sortShowcases } from "@/lib/showcase-sort";
 
+export const metadata = { title: "Coming soon" };
+
+
 export const dynamic = "force-dynamic";
 
 interface ShowcaseRow {
@@ -44,7 +47,7 @@ export default async function ComingSoonPage() {
       <div className="mx-auto max-w-5xl px-6 py-16">
         <div className="mb-10">
           <h1 className="font-heading text-3xl font-bold tracking-tight mb-3">Coming soon</h1>
-          <p className="text-muted-foreground">Productos en construcción. Sé el primero en enterarte cuando lancen.</p>
+          <p className="text-muted-foreground">Products under construction. Be the first to know when they launch.</p>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

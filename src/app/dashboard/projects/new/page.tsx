@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getAccountId } from "@/lib/api/account";
 import { CreateProjectForm } from "./create-project-form";
 
+export const metadata = { title: "New project" };
+
+
 export default async function NewProjectPage() {
   const supabase = await createClient();
   const {

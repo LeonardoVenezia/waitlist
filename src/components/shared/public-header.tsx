@@ -13,7 +13,7 @@ export async function PublicHeader({ currentTab }: Props) {
     <header className="sticky top-0 z-50 border-b bg-background/90 backdrop-blur-sm">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2 sm:h-14 sm:flex-nowrap sm:px-6 sm:py-0">
         <Link href="/" className="font-heading text-xl">
-          [PACK]
+          startups.army
         </Link>
         <nav className="order-3 flex w-full min-w-0 items-center justify-between gap-0.5 sm:order-none sm:w-auto sm:gap-1">
           <Link

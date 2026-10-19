@@ -188,7 +188,7 @@ export default async function ProductDetailPage(props: {
           /* Coming soon: link to waitlist landing */
           <div className="rounded-xl border-2 border-coming-soon/30 bg-coming-soon/[0.03] p-8 mb-12 text-center">
             <h2 className="font-heading text-xl font-semibold mb-2">Coming soon</h2>
-            <p className="text-muted-foreground mb-6">Este producto está en construcción.</p>
+            <p className="text-muted-foreground mb-6">This product is under construction.</p>
             {product.waitlist && (
               <a
                 href={`/p/${product.waitlist.slug}`}

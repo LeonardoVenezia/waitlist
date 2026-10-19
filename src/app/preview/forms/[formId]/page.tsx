@@ -158,7 +158,7 @@ export default function FormPreviewPage() {
         <footer className="px-6 pb-10 text-center text-xs text-muted-foreground">
           Powered by{" "}
           <Link href="/" className="underline transition-colors hover:text-foreground">
-            [PACK]
+            startups.army
           </Link>
         </footer>
       </div>

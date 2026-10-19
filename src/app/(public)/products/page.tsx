@@ -4,6 +4,9 @@ import { PublicHeader } from "@/components/shared/public-header";
 import ProductsDirectoryClient from "./products-directory-client";
 import { buildPlanMap, sortShowcases } from "@/lib/showcase-sort";
 
+export const metadata = { title: "All products" };
+
+
 export const dynamic = "force-dynamic";
 
 const CATEGORIES = [

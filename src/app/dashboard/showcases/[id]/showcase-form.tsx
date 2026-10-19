@@ -264,7 +264,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
     const remaining = 5 - images.length - pendingFiles.length;
     const toAdd = files.slice(0, remaining).filter((f) => {
       if (f.size > 2 * 1024 * 1024) {
-        setError(`"${f.name}" supera los 2 MB.`);
+        setError(`"${f.name}" is over 2 MB.`);
         return false;
       }
       if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(f.type)) {
@@ -299,7 +299,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      setError(`"${file.name}" supera los 2 MB.`);
+      setError(`"${file.name}" is over 2 MB.`);
       return;
     }
     if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) {
@@ -338,7 +338,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      setError(`"${file.name}" supera los 2 MB.`);
+      setError(`"${file.name}" is over 2 MB.`);
       return;
     }
     if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) {
@@ -405,8 +405,8 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
           <CardTitle className="font-heading text-xl">{isNew ? "Create product" : "Edit product"}</CardTitle>
           <CardDescription>
             {isNew
-              ? "Publicá tu producto en el directorio. Aparecerá en /product."
-              : "Editá los detalles de tu producto."}
+              ? "Publish your product in the directory. It will appear under /product."
+              : "Edit your product details."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -443,7 +443,7 @@ export function ShowcaseForm({ waitlistId, projectSlug, plan, showcase }: Props)
               onChange={(e) => setDesc(e.target.value)}
               rows={6}
               className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm resize-y"
-              placeholder="Describe tu producto en al menos 200 caracteres..."
+              placeholder="Describe your product in at least 200 characters..."
             />
           </div>
 

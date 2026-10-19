@@ -6,3 +6,7 @@
  */
 export const BRAND_ACCENT_OKLCH = "oklch(0.48 0.19 70)"; // keep in sync with --primary in globals.css
 export const BRAND_ACCENT_HEX = "#9D3E00"; // keep in sync with --primary in globals.css
+
+/** Provisional product name. Change it here (and in the few literals that cannot import it). */
+export const BRAND_NAME = "startups.army";
+export const BRAND_TAGLINE = "Launch with a waitlist, collect testimonials, get discovered.";

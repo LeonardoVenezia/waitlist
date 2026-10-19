@@ -4,16 +4,19 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { PLANS } from "@/lib/plans";
 
+export const metadata = { title: "Pricing" };
+
+
 export default function PricingPage() {
   return (
     <div className="px-4 py-16">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-3xl sm:text-4xl">
-            Suscripción simple, sin sorpresas
+            Simple pricing, no surprises
           </h1>
           <p className="mt-4 text-base text-muted-foreground">
-            Empezás gratis. Upgradéas solo cuando tu producto despega.
+            Start free. Upgrade only when your product takes off.
           </p>
         </div>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -35,7 +38,7 @@ export default function PricingPage() {
                 <div>
                   <span className="text-3xl font-bold">{plan.price}</span>
                   {plan.interval && (
-                    <span className="text-sm text-muted-foreground"> / {plan.interval === "month" ? "mes" : "año"}</span>
+                    <span className="text-sm text-muted-foreground"> / {plan.interval === "month" ? "month" : "year"}</span>
                   )}
                 </div>
                 <ul className="space-y-2 text-sm">

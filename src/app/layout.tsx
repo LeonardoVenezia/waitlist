@@ -20,7 +20,10 @@ const italiana = Italiana({
 });
 
 export const metadata: Metadata = {
-  title: "Waitlist — Build hype before you launch",
+  title: {
+    default: "startups.army — Launch with a waitlist",
+    template: "%s · startups.army",
+  },
   description:
     "Create a viral waitlist with unique referral links. Free up to 100 subscribers.",
 };

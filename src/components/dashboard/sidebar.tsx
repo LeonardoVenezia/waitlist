@@ -130,7 +130,7 @@ export function Sidebar({
       {/* Brand */}
       <div className="flex h-12 items-center px-5 border-b shrink-0">
         <Link href="/dashboard" className="font-heading text-lg">
-          [PACK]
+          startups.army
         </Link>
       </div>
 

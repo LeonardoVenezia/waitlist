@@ -284,7 +284,7 @@ export async function sendInvites(
   const { error: queueError } = await admin.from("email_queue").insert(
     (invites ?? []).map((inv) => ({
       to_email: inv.email,
-      subject: `¿Nos contás tu experiencia con ${projectName ?? "nuestro producto"}?`,
+      subject: `Would you share your experience with ${projectName ?? "our product"}?`,
       template: "testimonial-invite",
       payload: {
         invite_id: inv.id,
@@ -340,7 +340,7 @@ export async function resendInvite(projectId: string, inviteId: string) {
 
   const { error: queueError } = await admin.from("email_queue").insert({
     to_email: invite.email,
-    subject: `¿Nos contás tu experiencia?`,
+    subject: `Would you share your experience?`,
     template: "testimonial-invite",
     payload: {
       invite_id: invite.id,

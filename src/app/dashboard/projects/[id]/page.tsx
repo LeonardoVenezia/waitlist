@@ -35,6 +35,11 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
     .eq("waitlist_id", id)
     .maybeSingle();
 
+  const { count: formCount } = await supabase
+    .from("testimonial_forms")
+    .select("*", { count: "exact", head: true })
+    .eq("project_id", id);
+
   const [
     { count: activeCount },
     { count: hiddenCount },
@@ -55,7 +60,34 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
   const pageSignupCount = pageSignups ?? 0;
   const conversionRate = pageViews > 0 ? Math.round((pageSignupCount / pageViews) * 1000) / 10 : null;
   const nearLimit = planLimit && totalActive >= planLimit * 0.8;
-  const isNewProject = totalActive === 0 && totalHidden === 0 && pageViews === 0;
+  const steps = [
+    {
+      key: "share",
+      title: "Share your waitlist",
+      description: "Send people to your page. They subscribe and get a referral link.",
+      done: totalActive > 0 || totalHidden > 0 || pageViews > 0,
+      href: `/dashboard/projects/${id}/page-builder`,
+      cta: "Customize your page",
+    },
+    {
+      key: "listing",
+      title: "List your product in the directory",
+      description: "Publish your product page to get discovered and earn a backlink.",
+      done: showcase?.status === "published",
+      href: `/dashboard/showcases/${id}`,
+      cta: showcase ? "Finish your listing" : "Set up your listing",
+    },
+    {
+      key: "testimonials",
+      title: "Collect your first testimonial",
+      description: "Create a form and send the link to your first users.",
+      done: (formCount ?? 0) > 0,
+      href: `/dashboard/projects/${id}/testimonials`,
+      cta: "Set up testimonials",
+    },
+  ];
+  const doneCount = steps.filter((st) => st.done).length;
+  const allStepsDone = doneCount === steps.length;
 
   const headersList = await headers();
   const host = headersList.get("host") ?? process.env.NEXT_PUBLIC_APP_URL?.replace("https://", "") ?? "localhost:3000";
@@ -74,75 +106,89 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
         </div>
       </div>
 
-      {/* Onboarding card — only for new projects, dismissable */}
-      {isNewProject && !dismissedOnboarding && (
+      {/* Getting-started checklist: stays until every step is done or it is dismissed for this project */}
+      {!allStepsDone && !dismissedOnboarding && (
         <div className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/[0.02] p-6">
           <div className="flex items-start justify-between gap-4">
-            <div className="space-y-3 max-w-prose">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🚀</span>
-                <h2 className="font-heading text-lg font-semibold">Your project is ready</h2>
+            <div className="space-y-4 max-w-prose w-full">
+              <div>
+                <h2 className="font-heading text-lg font-semibold">Get your launch ready</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {doneCount} of {steps.length} done. Each step takes about two minutes.
+                </p>
+                <div className="mt-3 h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all"
+                    style={{ width: `${Math.round((doneCount / steps.length) * 100)}%` }}
+                  />
+                </div>
               </div>
-              <div className="space-y-3 text-sm text-muted-foreground">
-                <div className="flex gap-3">
-                  <span className="shrink-0 mt-0.5 text-base">1.</span>
-                  <div>
-                    <p className="font-medium text-foreground">Share your waitlist</p>
-                    <p>Send people to your landing page. They can subscribe and get a referral link.</p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <code className="text-xs bg-muted px-2 py-1 rounded truncate max-w-[200px] sm:max-w-xs">{publicUrl}</code>
-                      <CopyButton text={publicUrl} />
-                      <a
-                        href={publicUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-primary hover:underline shrink-0"
-                      >
-                        Open ↗
-                      </a>
+              <ol className="space-y-4 text-sm text-muted-foreground">
+                {steps.map((step, i) => (
+                  <li key={step.title} className="flex gap-3">
+                    <span
+                      className={`shrink-0 mt-0.5 flex size-5 items-center justify-center rounded-full border text-xs ${
+                        step.done ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/40"
+                      }`}
+                      aria-label={step.done ? "Done" : "To do"}
+                    >
+                      {step.done ? "✓" : i + 1}
+                    </span>
+                    <div>
+                      <p className={`font-medium ${step.done ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                        {step.title}
+                      </p>
+                      {!step.done && <p>{step.description}</p>}
+                      {!step.done && step.key === "share" && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <code className="text-xs bg-muted px-2 py-1 rounded truncate max-w-[200px] sm:max-w-xs">{publicUrl}</code>
+                          <CopyButton text={publicUrl} />
+                          <a
+                            href={publicUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline shrink-0"
+                          >
+                            Open ↗
+                          </a>
+                        </div>
+                      )}
+                      {!step.done && (
+                        <Link
+                          href={step.href}
+                          className="inline-flex items-center gap-1 mt-2 text-sm text-primary hover:underline font-medium"
+                        >
+                          {step.cta} →
+                        </Link>
+                      )}
                     </div>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <span className="shrink-0 mt-0.5 text-base">2.</span>
-                  <div>
-                    <p className="font-medium text-foreground">Add your product to the directory</p>
-                    <p>Create your showcase page to get featured in our directory and attract more users.</p>
-                    <Link
-                      href={`/dashboard/showcases/${id}`}
-                      className="inline-flex items-center gap-1 mt-2 text-sm text-primary hover:underline font-medium"
-                    >
-                      {showcase?.status === "published" ? "Edit your listing →" : "Set up your listing →"}
-                    </Link>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <span className="shrink-0 mt-0.5 text-base">3.</span>
-                  <div>
-                    <p className="font-medium text-foreground">Collect testimonials</p>
-                    <p>Create a form and start gathering social proof from your users.</p>
-                    <Link
-                      href={`/dashboard/projects/${id}/testimonials`}
-                      className="inline-flex items-center gap-1 mt-2 text-sm text-primary hover:underline font-medium"
-                    >
-                      Set up testimonials →
-                    </Link>
-                  </div>
-                </div>
-              </div>
+                  </li>
+                ))}
+              </ol>
             </div>
             <form action="/api/dismiss-onboarding" method="POST">
               <input type="hidden" name="path" value={`/dashboard/projects/${id}`} />
               <button
                 type="submit"
                 className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                title="Dismiss"
+                title="Hide checklist"
               >
                 <svg className="size-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {totalActive === 0 && totalHidden === 0 && (
+        <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+          <p className="font-medium text-foreground">No signups yet</p>
+          <p className="mt-1">Share your waitlist link to get the first one. Try signing up yourself to see the full flow.</p>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <code className="text-xs bg-muted px-2 py-1 rounded truncate max-w-[200px] sm:max-w-xs">{publicUrl}</code>
+            <CopyButton text={publicUrl} />
           </div>
         </div>
       )}

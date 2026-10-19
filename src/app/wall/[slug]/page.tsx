@@ -114,10 +114,10 @@ export default async function WallOfLovePage(props: {
           <a
             href={BRAND_URL}
             target="_blank"
-            rel="dofollow"
+            rel="noopener"
             className="text-xs text-muted-foreground opacity-75 hover:opacity-100"
           >
-            Made with Startpack
+            Made with startups.army
           </a>
         </footer>
       )}
