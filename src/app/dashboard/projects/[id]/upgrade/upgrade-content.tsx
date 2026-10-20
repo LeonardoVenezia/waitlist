@@ -101,7 +101,7 @@ export function UpgradeContent({
       >
         {isPopular && !current && (
           <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-medium text-primary-foreground">
-            Más popular
+            Most popular
           </span>
         )}
         <CardHeader>
