@@ -3,50 +3,73 @@
 -- Supabase stops auto-granting new tables in `public` to the Data API roles
 -- (new projects since 2026-05-30, existing projects from 2026-10-30).
 -- Source: https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically
--- Existing tables keep their current grants, so running this on the live project
--- changes nothing that works today. It makes a fresh project / db reset / preview
--- branch work, and documents the minimum each role needs.
+-- Existing tables keep their grants, so running this on the live project changes nothing that works today.
 --
--- Grants are only a first layer. Row Level Security (already enabled on every
--- table) still decides which rows each role sees.
--- This migration only ADDS grants. It does not revoke anything.
--- Safe to run more than once.
+-- Grant-only (never revokes), idempotent, and skips tables/functions that do not exist
+-- (a table that is missing is reported with a NOTICE). RLS still decides which rows each role sees.
 
--- service_role: used by createAdminClient() on the server. Bypasses RLS but still needs table privileges.
-grant select, insert, update, delete on
-  public.profiles, public.accounts, public.account_members, public.projects,
-  public.subscribers, public.purchases, public.subscriptions, public.showcases,
-  public.page_events, public.testimonial_forms, public.testimonials,
-  public.testimonial_invites, public.testimonial_form_visits,
-  public.project_claims, public.email_queue
-to service_role;
-grant usage on all sequences in schema public to service_role;
-grant execute on function public.increment_referral_count(uuid) to service_role;
-grant execute on function public.get_position(uuid) to service_role;
+do $$
+declare
+  t text;
+  r record;
+  fn text;
+begin
+  -- [table, role, privileges]
+  for r in
+    select * from (values
+      -- service_role: server-side admin client
+      ('profiles','service_role','select, insert, update, delete'),
+      ('accounts','service_role','select, insert, update, delete'),
+      ('account_members','service_role','select, insert, update, delete'),
+      ('projects','service_role','select, insert, update, delete'),
+      ('subscribers','service_role','select, insert, update, delete'),
+      ('purchases','service_role','select, insert, update, delete'),
+      ('subscriptions','service_role','select, insert, update, delete'),
+      ('showcases','service_role','select, insert, update, delete'),
+      ('page_events','service_role','select, insert, update, delete'),
+      ('testimonial_forms','service_role','select, insert, update, delete'),
+      ('testimonials','service_role','select, insert, update, delete'),
+      ('testimonial_invites','service_role','select, insert, update, delete'),
+      ('testimonial_form_visits','service_role','select, insert, update, delete'),
+      ('project_claims','service_role','select, insert, update, delete'),
+      ('email_queue','service_role','select, insert, update, delete'),
+      -- authenticated: logged-in dashboard (RLS applies). Nothing on email_queue.
+      ('profiles','authenticated','select, update'),
+      ('accounts','authenticated','select, update'),
+      ('account_members','authenticated','select, insert, update, delete'),
+      ('projects','authenticated','select, insert, update, delete'),
+      ('subscribers','authenticated','select'),
+      ('purchases','authenticated','select'),
+      ('subscriptions','authenticated','select'),
+      ('showcases','authenticated','select, insert, update, delete'),
+      ('page_events','authenticated','select'),
+      ('testimonial_forms','authenticated','select, insert, update, delete'),
+      ('testimonials','authenticated','select, insert, update, delete'),
+      ('testimonial_invites','authenticated','select, insert, update, delete'),
+      ('testimonial_form_visits','authenticated','select'),
+      ('project_claims','authenticated','select, insert'),
+      -- anon: only what the existing public policies allow
+      ('projects','anon','select'),
+      ('showcases','anon','select'),
+      ('testimonial_forms','anon','select'),
+      ('testimonials','anon','select, insert')
+    ) as v(tbl, role_name, privs)
+  loop
+    if to_regclass('public.' || r.tbl) is null then
+      raise notice 'skipped: public.% does not exist', r.tbl;
+    else
+      execute format('grant %s on public.%I to %I', r.privs, r.tbl, r.role_name);
+    end if;
+  end loop;
 
--- authenticated: the logged-in dashboard (user client, RLS applies).
-grant select on
-  public.profiles, public.accounts, public.account_members, public.projects,
-  public.subscribers, public.purchases, public.subscriptions, public.showcases,
-  public.page_events, public.testimonial_forms, public.testimonials,
-  public.testimonial_invites, public.testimonial_form_visits, public.project_claims
-to authenticated;
-grant update on public.profiles, public.accounts to authenticated;
-grant insert, update, delete on
-  public.projects, public.showcases, public.testimonial_forms,
-  public.testimonials, public.testimonial_invites, public.account_members
-to authenticated;
-grant insert on public.project_claims to authenticated;
--- email_queue: no policies for users, so no grants for authenticated (server only).
+  execute 'grant usage on all sequences in schema public to service_role';
 
--- anon: only what the existing public policies allow.
-grant select on public.projects, public.showcases, public.testimonial_forms, public.testimonials to anon;
-grant insert on public.testimonials to anon;  -- policy "Anyone can insert testimonials"
--- Nothing for anon on subscribers, subscriptions, purchases, email_queue, invites, claims, accounts, profiles.
-
--- OPTIONAL hardening (do NOT run without checking the app first). Projects created before the
--- change still carry the old broad default grants (all privileges to anon/authenticated).
--- Review with the check query in TASKS.md, then trim, for example:
---   revoke all on public.subscribers, public.subscriptions, public.purchases, public.email_queue,
---     public.accounts, public.profiles, public.account_members, public.project_claims,
---     public.testimonial_invites, public.testimonial_form_visits, public.page_events from anon;
+  foreach fn in array array['public.increment_referral_count(uuid)', 'public.get_position(uuid)']
+  loop
+    if to_regprocedure(fn) is null then
+      raise notice 'skipped: function % does not exist', fn;
+    else
+      execute format('grant execute on function %s to service_role', fn);
+    end if;
+  end loop;
+end $$;
