@@ -21,15 +21,15 @@ export function renderShowcaseExpiryEmail({
 }) {
   const headline =
     daysLeft === 30
-      ? "Tu showcase vence en 30 días"
-      : "Tu showcase vence en 7 días";
+      ? "Your listing expires in 30 days"
+      : "Your listing expires in 7 days";
 
   const message =
     daysLeft === 30
-      ? `El producto <strong>${escapeHtml(productName)}</strong> que publicaste en el directorio está por cumplir 1 año. En 30 días lo vamos a retirar automáticamente del showcase público.`
-      : `Quedan 7 días antes de que retiremos <strong>${escapeHtml(productName)}</strong> del showcase público. Tus datos quedan guardados, pero el producto deja de ser visible.`;
+      ? `<strong>${escapeHtml(productName)}</strong> has been listed in the directory for almost a year. In 30 days we will automatically remove it from the public listing.`
+      : `There are 7 days left before we remove <strong>${escapeHtml(productName)}</strong> from the public listing. Your data stays saved, but the product stops being visible.`;
 
-  const cta = daysLeft === 30 ? "Suscribirme ahora" : "Reactivar mi showcase";
+  const cta = daysLeft === 30 ? "Subscribe now" : "Reactivate my listing";
 
   return renderEmailDocument({
     brand,
@@ -39,12 +39,12 @@ export function renderShowcaseExpiryEmail({
       emailP(brand, message),
       emailP(
         brand,
-        `Con el plan <strong>Launch</strong> ($9/mes) tu producto queda publicado sin límite de tiempo, tenés 1.000 emails en la waitlist y acceso a templates de page builder.`,
+        `With the <strong>Launch</strong> plan ($9/month) your product stays listed with no time limit, and you get 1,000 emails on the waitlist plus page builder templates.`,
       ),
       emailButton(brand, { label: cta, url: upgradeUrl }),
       emailFootnote(
         brand,
-        `El backlink desde el directorio sigue siendo tuyo mientras el producto esté publicado. Al vencer, perdés esa exposure.`,
+        `The backlink from the directory stays yours while the product is listed. When the listing expires, you lose that exposure.`,
       ),
     ].join("\n"),
   });

@@ -20,24 +20,23 @@ export function renderTestimonialInviteEmail({
   formUrl: string;
   senderName?: string | null;
 }) {
-  const from = senderName ? `${escapeHtml(senderName)} de` : "el equipo de";
+  const from = senderName ? `${escapeHtml(senderName)} from` : "the team at";
 
   return renderEmailDocument({
     brand,
-    preheader: `Contanos tu experiencia con ${productName}`,
+    preheader: `Tell us about your experience with ${productName}`,
     content: [
-      emailHeading(brand, "¿Nos contás tu experiencia?"),
+      emailHeading(brand, "Would you share your experience?"),
       emailP(
         brand,
-        `${from} <strong>${escapeHtml(productName)}</strong> nos encantaría saber qué te pareció.
-    Dejanos un testimonio corto — nos ayuda muchísimo a seguir mejorando y a
-    que más personas conozcan el producto.`,
+        `${from} <strong>${escapeHtml(productName)}</strong> we would love to hear what you thought.
+    A short testimonial helps us keep improving and helps more people discover the product.`,
         { preLine: true },
       ),
-      emailButton(brand, { label: "Dejar mi testimonio", url: formUrl }),
+      emailButton(brand, { label: "Leave my testimonial", url: formUrl }),
       emailFootnote(
         brand,
-        `Solo toma un minuto. Si el botón no funciona, copiá y pegá este enlace en tu navegador:<br>${emailLink(brand, formUrl, escapeHtml(formUrl))}`,
+        `It only takes a minute. If the button does not work, copy and paste this link into your browser:<br>${emailLink(brand, formUrl, escapeHtml(formUrl))}`,
       ),
     ].join("\n"),
   });

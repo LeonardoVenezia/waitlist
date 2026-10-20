@@ -80,3 +80,18 @@ Ojo con JSON-LD: Google no muestra estrellas para reseñas autopromocionales ví
 **6/10:** Revisión de AGENTS.md y TASKS.md; fixes de bugs A.2-A.5 (migración 023, preview de pasos, error de URL duplicado, pantalla "Check your email") con `tsc`/`build` OK y smoke test de páginas públicas.
 
 **13/10:** Bloque D completo — import de testimonials (CSV/XLSX), 4 variantes de widget (+ tab Testimonials en Integration), Wall of Love público (`/wall/[slug]`), export CSV/XLSX. Bloque F resuelto — `pnpm lint` en 0 errores (11 `any` + 2 react-hooks). Sin migraciones SQL nuevas. `tsc`/`build` OK, smoke test de rutas públicas nuevas.
+
+## Data API grants (Supabase, change from 2026-10-30)
+
+Migration: `supabase/migrations/024_explicit_data_api_grants.sql` (grant-only, idempotent). Check afterwards in the SQL editor:
+
+```sql
+select table_name, grantee, string_agg(privilege_type, ', ' order by privilege_type) as privileges
+from information_schema.role_table_grants
+where table_schema = 'public' and grantee in ('anon', 'authenticated', 'service_role')
+group by 1, 2 order by 1, 2;
+
+select tablename, rowsecurity from pg_tables where schemaname = 'public' order by 1;
+```
+
+Every table must show rowsecurity = true. anon should only have SELECT on projects, showcases, testimonial_forms, testimonials and INSERT on testimonials.

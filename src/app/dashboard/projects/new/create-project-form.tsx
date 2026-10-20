@@ -67,7 +67,7 @@ export function CreateProjectForm({
         <CardHeader>
           <CardTitle className="font-heading text-xl">Create project</CardTitle>
           <CardDescription>
-            Elegí un nombre y una URL para tu proyecto. Después podés configurar tu producto y waitlist.
+            Choose a name and URL for your project. You can set up your product page and waitlist next.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -83,7 +83,7 @@ export function buildTestimonialWidgetHtml(opts: {
 }): string {
   const { testimonials, variant, showBranding } = opts;
   const branding = showBranding
-    ? `<a class="brand" href="${BRAND_URL}" target="_blank" rel="dofollow">Made with Startpack</a>`
+    ? `<a class="brand" href="${BRAND_URL}" target="_blank" rel="noopener">Made with startups.army</a>`
     : "";
 
   const card = (t: WidgetTestimonial) => {

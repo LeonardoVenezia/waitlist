@@ -44,7 +44,14 @@ export async function POST(request: Request) {
   const name = (body.name as string)?.trim() || null;
   const refCode = body.ref as string | undefined;
   const turnstileToken = body.turnstile_token as string | undefined;
-  const customFields = body.fields ? JSON.parse(body.fields as string) : undefined;
+  let customFields: Record<string, unknown> | undefined;
+  if (body.fields) {
+    try {
+      customFields = typeof body.fields === "string" ? JSON.parse(body.fields) : (body.fields as Record<string, unknown>);
+    } catch {
+      return jsonResponse({ error: "Invalid fields" }, { status: 400 });
+    }
+  }
 
   // 1. Validate public key → find waitlist
   const { data: waitlist } = await supabase

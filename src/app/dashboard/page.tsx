@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { getAccountId } from "@/lib/api/account";
 
+export const metadata = { title: "Dashboard" };
+
+
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -20,7 +23,7 @@ export default async function DashboardPage() {
         <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center text-2xl">
           🎯
         </div>
-        <h1 className="text-2xl">Welcome to [PACK]</h1>
+        <h1 className="text-2xl">Welcome to startups.army</h1>
         <p className="text-sm text-muted-foreground">
           Create your first project to get started with waitlists, coming-soon pages, and more.
         </p>
@@ -44,7 +47,7 @@ export default async function DashboardPage() {
         <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center text-2xl">
           🎯
         </div>
-        <h1 className="text-2xl">Welcome to [PACK]</h1>
+        <h1 className="text-2xl">Welcome to startups.army</h1>
         <p className="text-sm text-muted-foreground">
           Create your first project to get started with waitlists, coming-soon pages, and more.
         </p>

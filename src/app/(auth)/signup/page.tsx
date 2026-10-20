@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { SignUpForm } from "./signup-form";
 
+export const metadata = { title: "Create your account" };
+
+
 export default async function SignUpPage(props: {
   searchParams: Promise<{ next?: string; claim?: string }>;
 }) {

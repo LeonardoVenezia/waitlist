@@ -112,7 +112,7 @@ export function UpgradeContent({
           <div>
             <span className="text-3xl font-bold">{plan.price}</span>
             {plan.interval && (
-              <span className="text-sm text-muted-foreground"> / {plan.interval === "month" ? "mes" : "año"}</span>
+              <span className="text-sm text-muted-foreground"> / {plan.interval === "month" ? "month" : "year"}</span>
             )}
           </div>
           <ul className="space-y-2 text-sm">
@@ -136,7 +136,7 @@ export function UpgradeContent({
               className="w-full"
               variant="outline"
               disabled
-              title="Contactá a soporte para bajar a Free"
+              title="Contact support to downgrade to Free"
             >
               Downgrade
             </Button>

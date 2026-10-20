@@ -71,7 +71,7 @@ export async function POST(request: Request) {
           // Platform lifecycle notice about a plan, so it carries the app brand.
           brand: APP_EMAIL_BRAND,
           daysLeft,
-          productName: payload.showcase_name ?? "tu producto",
+          productName: payload.showcase_name ?? "your product",
           upgradeUrl: payload.project_id
             ? `${appUrl}/dashboard/projects/${payload.project_id}/upgrade`
             : `${appUrl}/dashboard`,

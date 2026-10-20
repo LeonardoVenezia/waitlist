@@ -39,7 +39,7 @@ export function buildWidgetHtml(params: {
   const thankShowReferral = (thankYou.show_referral_link as boolean) ?? true;
 
   const brandingHtml = plan === "free"
-    ? `<div style="text-align:center;margin-top:12px;"><a href="https://waitlist.leovenezia.dev" target="_blank" rel="dofollow" style="font-size:11px;color:#9ca3af;text-decoration:none;opacity:0.7;">Made with Startpack</a></div>`
+    ? `<div style="text-align:center;margin-top:12px;"><a href="https://waitlist.leovenezia.dev" target="_blank" rel="noopener" style="font-size:11px;color:#9ca3af;text-decoration:none;opacity:0.7;">Made with startups.army</a></div>`
     : "";
 
   return `<!DOCTYPE html>

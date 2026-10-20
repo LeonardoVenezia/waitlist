@@ -30,7 +30,7 @@ export function renderClaimResultEmail({
         emailHeading(brand, "Your claim was approved"),
         emailP(
           brand,
-          `You now own <strong>${escapeHtml(showcaseName)}</strong> on [PACK]. The project is in your dashboard — you can manage the waitlist, customize the page builder, and publish your showcase.`,
+          `You now own <strong>${escapeHtml(showcaseName)}</strong> on startups.army. The project is in your dashboard — you can manage the waitlist, customize the page builder, and publish your showcase.`,
         ),
         emailButton(brand, {
           label: "Open dashboard",

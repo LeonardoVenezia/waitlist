@@ -31,7 +31,7 @@ export async function createShowcase(waitlistId: string, formData: FormData) {
   }
 
   if (!name || !finalSlug || !description || !category1) {
-    return { error: "Todos los campos obligatorios deben completarse." };
+    return { error: "Please fill in all required fields." };
   }
 
   if (description.length < 200) {
@@ -44,7 +44,7 @@ export async function createShowcase(waitlistId: string, formData: FormData) {
     .eq("waitlist_id", waitlistId)
     .maybeSingle();
 
-  if (existing) return { error: "Este proyecto ya tiene un showcase." };
+  if (existing) return { error: "This project already has a product page." };
 
   const { data: created, error } = await supabase
     .from("showcases")
@@ -62,7 +62,7 @@ export async function createShowcase(waitlistId: string, formData: FormData) {
     .single();
 
   if (error) {
-    if (error.code === "23505") return { error: "El slug ya está en uso." };
+    if (error.code === "23505") return { error: "That URL slug is already taken." };
     return { error: error.message };
   }
 
@@ -138,7 +138,7 @@ export async function updateShowcase(
     .eq("id", showcaseId);
 
   if (error) {
-    if (error.code === "23505") return { error: "El slug ya está en uso." };
+    if (error.code === "23505") return { error: "That URL slug is already taken." };
     return { error: error.message };
   }
 
@@ -234,7 +234,7 @@ export async function publishShowcase(
     revalidatePath("/products", "layout");
     return { success: true, status: targetStatus };
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "Error al publicar. ¿Ejecutaste las migraciones en producción?" };
+    return { error: e instanceof Error ? e.message : "Could not publish. Please try again." };
   }
 }
 
@@ -286,9 +286,9 @@ export async function uploadShowcaseImage(showcaseId: string, formData: FormData
   const admin = createAdminClient();
 
   const file = formData.get("file") as File;
-  if (!file) return { error: "No se recibió archivo." };
-  if (!file.type.startsWith("image/")) return { error: "Solo se permiten imágenes." };
-  if (file.size > 1 * 1024 * 1024) return { error: "Máximo 1 MB por imagen." };
+  if (!file) return { error: "No file received." };
+  if (!file.type.startsWith("image/")) return { error: "Only images are allowed." };
+  if (file.size > 1 * 1024 * 1024) return { error: "Maximum 1 MB per image." };
 
   const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif"];
   if (!allowedTypes.includes(file.type)) {
@@ -360,11 +360,11 @@ export async function uploadMainImage(showcaseId: string, formData: FormData) {
   const admin = createAdminClient();
 
   const file = formData.get("file") as File;
-  if (!file) return { error: "No se recibió archivo." };
+  if (!file) return { error: "No file received." };
   if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) {
     return { error: "Solo JPEG, PNG, WebP o AVIF." };
   }
-  if (file.size > 2 * 1024 * 1024) return { error: "Máximo 2 MB." };
+  if (file.size > 2 * 1024 * 1024) return { error: "Maximum 2 MB." };
 
   const extMap: Record<string, string> = {
     "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif",

@@ -3,6 +3,9 @@ import { LaunchesList } from "@/components/shared/launches-list";
 import { PublicHeader } from "@/components/shared/public-header";
 import { buildPlanMap, sortShowcases } from "@/lib/showcase-sort";
 
+export const metadata = { title: "Launches" };
+
+
 export default async function LaunchesPage() {
   const admin = createAdminClient();
 
