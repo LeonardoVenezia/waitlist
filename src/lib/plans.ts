@@ -40,7 +40,7 @@ export const PLANS: PlanInfo[] = [
   {
     id: "launch",
     name: "Launch",
-    price: "$9 / month",
+    price: "$9",
     interval: "month",
     description: "For founders launching now",
     showcaseExpiry: "indefinite",
@@ -60,7 +60,7 @@ export const PLANS: PlanInfo[] = [
   {
     id: "grow",
     name: "Grow",
-    price: "$29 / month",
+    price: "$29",
     interval: "month",
     description: "For growing products",
     showcaseExpiry: "indefinite",

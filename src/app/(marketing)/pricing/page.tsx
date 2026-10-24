@@ -27,7 +27,7 @@ export default function PricingPage() {
             >
               {plan.popular && (
                 <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                  Más popular
+                  Most popular
                 </Badge>
               )}
               <CardHeader>
